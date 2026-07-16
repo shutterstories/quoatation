@@ -351,6 +351,7 @@ const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12L9 17L20 6
 let clientName = '';
 let clientPhone = '';       // 10-digit, no country code — used for display / sheet
 let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
+let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
 
 // Access codes are now checked live against your Google Sheet (see SHEET_WEBHOOK_URL above).
 
@@ -393,6 +394,7 @@ document.getElementById('gate-code-submit').addEventListener('click', ()=>{
       btn.textContent = 'Continue';
       btn.disabled = false;
       if(data.valid){
+        usedAccessCode = codeVal;
         logToSheet({ stage: 'access-code-entered', clientName: data.clientName || '' });
         gateShowStep('details');
       } else if(data.reason === 'expired'){
@@ -1229,6 +1231,7 @@ async function shareOrDownloadPDF(triggerWhatsApp){
       stage: 'submission',
       clientName,
       clientPhone,
+      accessCode: usedAccessCode,
       events: allLines.map(l=>l.label).join(', '),
       eventDates: schedule.map(s=>`${s.name}: ${s.date}`).join(', '),
       total: fmt(total),
