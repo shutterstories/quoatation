@@ -351,7 +351,7 @@ let clientName = '';
 let clientPhone = '';       // 10-digit, no country code — used for display / sheet
 let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
 let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
-let totalRevealed = false;  // total/payment amounts stay masked until client submits via Get Quote / WhatsApp
+let lastSubmittedSignature = null;  // snapshot of the selection that was last submitted via Get Quote / WhatsApp
 
 // Access codes are now checked live against your Google Sheet (see SHEET_WEBHOOK_URL above).
 
@@ -876,6 +876,10 @@ function renderDeliverablesList(){
   el.innerHTML = deliverables.map(d=>`<li>${d}</li>`).join('');
 }
 
+function selectionSignature(lines, total){
+  return total + '|' + lines.map(l=>`${l.label}:${l.price}`).sort().join(',');
+}
+
 function updateTotal(){
   const {lines, total} = collectSelections();
   const totalAmtEl = document.getElementById('total-amt');
@@ -883,7 +887,9 @@ function updateTotal(){
   document.getElementById('send-btn').disabled = lines.length===0;
   document.getElementById('pdf-btn').disabled = lines.length===0;
 
-  if(totalRevealed){
+  const isRevealed = lastSubmittedSignature !== null && selectionSignature(lines, total) === lastSubmittedSignature;
+
+  if(isRevealed){
     totalAmtEl.classList.remove('masked');
     totalAmtEl.textContent = fmt(total);
     document.getElementById('pay-1').textContent = fmt(Math.round(total*0.35));
@@ -1220,7 +1226,7 @@ async function buildQuotationDoc(){
 }
 
 async function shareOrDownloadPDF(triggerWhatsApp){
-  const {lines} = collectSelections();
+  const {lines, total} = collectSelections();
   if(lines.length===0) return;
   const btn = triggerWhatsApp ? document.getElementById('send-btn') : document.getElementById('pdf-btn');
   const originalLabel = btn.textContent;
@@ -1234,7 +1240,6 @@ async function shareOrDownloadPDF(triggerWhatsApp){
 
   if(SHEET_WEBHOOK_URL){
     btn.textContent = 'Saving details…';
-    const {lines: allLines, total} = collectSelections();
     const schedule = collectSchedule();
     const pdfDataUri = doc.output('datauristring');
     const pdfBase64 = pdfDataUri.split(',')[1];
@@ -1243,14 +1248,14 @@ async function shareOrDownloadPDF(triggerWhatsApp){
       clientName,
       clientPhone,
       accessCode: usedAccessCode,
-      events: allLines.map(l=>l.label).join(', '),
+      events: lines.map(l=>l.label).join(', '),
       eventDates: schedule.map(s=>`${s.name}: ${s.date}`).join(', '),
       total: fmt(total),
       pdfBase64
     });
   }
 
-  totalRevealed = true;
+  lastSubmittedSignature = selectionSignature(lines, total);
   updateTotal();
 
   btn.textContent = originalLabel;
