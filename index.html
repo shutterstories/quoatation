@@ -147,6 +147,7 @@
   .ticket-top{ display:flex; justify-content:space-between; align-items:flex-end; max-width: 560px; margin: 0 auto 10px; }
   .ticket-top .lbl{ font-size:10.5px; letter-spacing:.6px; text-transform:uppercase; color: rgba(255,255,255,.55); }
   .ticket-top .amt{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size: 26px; color: var(--gold-soft); }
+  .ticket-top .amt.masked{ font-family:'Poppins',sans-serif; font-weight:500; font-size: 13px; letter-spacing:.2px; color: rgba(230,211,161,.85); }
   .ticket-top .count{ font-size: 11.5px; color: rgba(255,255,255,.7); }
   .send-btn{
     max-width: 560px; margin: 0 auto; display:flex; align-items:center; justify-content:center; gap:8px;
@@ -350,6 +351,7 @@ let clientName = '';
 let clientPhone = '';       // 10-digit, no country code — used for display / sheet
 let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
 let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
+let totalRevealed = false;  // total/payment amounts stay masked until client submits via Get Quote / WhatsApp
 
 // Access codes are now checked live against your Google Sheet (see SHEET_WEBHOOK_URL above).
 
@@ -876,14 +878,24 @@ function renderDeliverablesList(){
 
 function updateTotal(){
   const {lines, total} = collectSelections();
-  document.getElementById('total-amt').textContent = fmt(total);
+  const totalAmtEl = document.getElementById('total-amt');
   document.getElementById('item-count').textContent = `${lines.length} item${lines.length===1?'':'s'} selected`;
   document.getElementById('send-btn').disabled = lines.length===0;
   document.getElementById('pdf-btn').disabled = lines.length===0;
 
-  document.getElementById('pay-1').textContent = fmt(Math.round(total*0.35));
-  document.getElementById('pay-2').textContent = fmt(Math.round(total*0.60));
-  document.getElementById('pay-3').textContent = fmt(Math.round(total*0.05));
+  if(totalRevealed){
+    totalAmtEl.classList.remove('masked');
+    totalAmtEl.textContent = fmt(total);
+    document.getElementById('pay-1').textContent = fmt(Math.round(total*0.35));
+    document.getElementById('pay-2').textContent = fmt(Math.round(total*0.60));
+    document.getElementById('pay-3').textContent = fmt(Math.round(total*0.05));
+  } else {
+    totalAmtEl.classList.add('masked');
+    totalAmtEl.textContent = lines.length===0 ? 'Select events to begin' : 'Tap Get Quote to reveal';
+    document.getElementById('pay-1').textContent = '—';
+    document.getElementById('pay-2').textContent = '—';
+    document.getElementById('pay-3').textContent = '—';
+  }
 
   renderDeliverablesList();
 }
@@ -1237,6 +1249,9 @@ async function shareOrDownloadPDF(triggerWhatsApp){
       pdfBase64
     });
   }
+
+  totalRevealed = true;
+  updateTotal();
 
   btn.textContent = originalLabel;
   btn.disabled = false;
