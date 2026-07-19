@@ -1,1719 +1,1289 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shutter Stories — Client Gallery</title>
-<meta property="og:title" content="Shutter Stories — Wedding &amp; Event Photography">
-<meta property="og:description" content="View our portfolio of wedding and event photography.">
-<meta property="og:image" content="https://shutterstories.github.io/Client-Gallery/portfolio-cover.jpg">
-<meta property="og:url" content="https://shutterstories.github.io/Client-Gallery/">
+<head><meta property="og:title" content="Shutter Stories — Quotation Builder">
+<meta property="og:description" content="Get your custom photography & videography quote instantly.">
+<meta property="og:image" content="https://shutterstories.github.io/quoatation/cover.jpg">
+<meta property="og:url" content="https://shutterstories.github.io/quoatation/">
 <meta name="twitter:card" content="summary_large_image">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Shutter Stories — Quotation Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
-    --navy:#0A1B33; --navy-2:#122A4D; --gold:#C6A15B; --gold-soft:#E7D3A1;
-    --paper:#F7F3EA; --paper-2:#FFFFFF; --ink:#1E2233; --ink-soft:#5B6072; --line:#E4DCC8;
+    --navy: #0A1B33;
+    --navy-2: #122A4D;
+    --gold: #C6A15B;
+    --gold-soft: #E7D3A1;
+    --paper: #F7F3EA;
+    --paper-2: #FFFFFF;
+    --ink: #1E2233;
+    --ink-soft: #5B6072;
+    --line: #E4DCC8;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  body{background:var(--paper); color:var(--ink); font-family:'Poppins', sans-serif; -webkit-font-smoothing:antialiased;}
-  a{color:inherit; text-decoration:none;}
-  button{font-family:'Poppins';}
-
-  .topbar{display:flex; align-items:center; justify-content:space-between; padding:20px 5vw; background:var(--paper-2); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
-  .brand{font-family:'Cormorant Garamond', serif; font-size:22px; letter-spacing:2px; font-weight:600; color:var(--navy); cursor:pointer;}
-  .nav-links{display:flex; gap:22px; font-size:12px; letter-spacing:1px; color:var(--ink-soft);}
-  .nav-links span{cursor:pointer;}
-  .nav-links span:hover{color:var(--gold);}
-
-  .page{display:none;}
-  .page.active{display:block;}
-  .center-msg{text-align:center; padding:80px 20px; color:var(--ink-soft); font-size:13px; letter-spacing:1px;}
-
-  /* ===== HOMEPAGE ===== */
-  .home-hero{padding:80px 6vw 60px; text-align:center; background:radial-gradient(circle at top, var(--navy-2), var(--navy)); color:var(--paper-2);}
-  .avatar{width:88px; height:88px; border-radius:50%; margin:0 auto 20px; background:linear-gradient(135deg,#2b3a5c,#0A1B33); border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond'; font-size:30px; color:var(--gold-soft);}
-  .home-hero h1{font-family:'Cormorant Garamond', serif; font-size:clamp(28px,5vw,46px); letter-spacing:3px; font-weight:600;}
-  .home-hero .tagline{margin-top:8px; color:var(--gold-soft); font-size:12px; letter-spacing:3px; text-transform:uppercase;}
-  .home-hero .scroll-hint{margin-top:14px; color:#8b92a8; font-size:9px; letter-spacing:.5px; text-transform:none;}
-  .dot-strip{height:8px; background-image:repeating-linear-gradient(90deg, var(--gold) 0 8px, transparent 8px 16px);}
-  .cat-filter{display:flex; justify-content:center; gap:30px; padding:30px 5vw 10px; flex-wrap:wrap;}
-  .cat-filter button{background:none; border:none; font-size:13px; letter-spacing:1px; color:var(--ink-soft); padding-bottom:10px; border-bottom:2px solid transparent; cursor:pointer;}
-  .cat-filter button.active{color:var(--navy); border-color:var(--gold); font-weight:600;}
-  .collections-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; padding:20px 5vw 80px;}
-  .collection-card{background:transparent; border:none; border-radius:4px; overflow:hidden; cursor:pointer; transition:transform .3s, box-shadow .3s;}
-  .collection-card:hover{transform:translateY(-4px); box-shadow:0 16px 32px rgba(10,27,51,0.18);}
-  .collection-cover{position:relative; aspect-ratio:5/7; background:linear-gradient(160deg,#d9c9a3,#b9895a) center/cover; border-radius:4px; overflow:hidden;}
-  .collection-cover::after{content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 55%, rgba(10,27,51,0.75) 100%); pointer-events:none;}
-  .collection-caption{position:absolute; left:0; right:0; bottom:0; z-index:2; padding:10px 10px 8px;}
-  .collection-caption h3{font-family:'Cormorant Garamond'; font-size:13px; color:rgba(255,255,255,0.92); font-weight:500; line-height:1.2;}
-  .collection-caption p{font-size:8px; color:rgba(255,255,255,0.62); margin-top:2px; letter-spacing:.3px;}
-
-  @media (max-width:900px){
-    .collections-grid{grid-template-columns:repeat(3,1fr); gap:10px;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Poppins', sans-serif;
+    padding-bottom: 150px;
+    -webkit-font-smoothing: antialiased;
   }
-  @media (max-width:600px){
-    .collections-grid{grid-template-columns:repeat(3,1fr); gap:6px; padding:14px 3vw 60px;}
-    .collection-caption{padding:7px 7px 6px;}
-    .collection-caption h3{font-size:10px;}
-    .collection-caption p{font-size:7px;}
+  .hero{
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    color: var(--paper-2);
+    padding: 40px 20px 34px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
   }
-
-  /* ===== CONTACT / FOOTER SECTION (last section of the public portfolio) ===== */
-  .contact-section{background:linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 100%); color:var(--paper-2); padding:70px 6vw 50px; text-align:center;}
-  .contact-section .dot-strip-top{height:8px; background-image:repeating-linear-gradient(90deg, var(--gold) 0 8px, transparent 8px 16px);}
-  .contact-eyebrow{font-size:12px; letter-spacing:3px; color:var(--gold-soft); text-transform:uppercase; margin-bottom:14px;}
-  .contact-section h2{font-family:'Cormorant Garamond', serif; font-size:clamp(16px,2.4vw,22px); font-weight:500; max-width:520px; margin:0 auto 30px; line-height:1.4;}
-  .contact-grid{display:flex; justify-content:center; align-items:flex-start; gap:60px; flex-wrap:wrap; max-width:900px; margin:0 auto;}
-  .contact-details{text-align:left; display:flex; flex-direction:column; gap:18px; min-width:220px;}
-  .contact-row{display:flex; align-items:center; gap:12px; font-size:14px; letter-spacing:.5px;}
-  .contact-row .c-icon{width:36px; height:36px; border-radius:50%; border:1px solid rgba(230,211,161,0.4); display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--gold-soft); flex-shrink:0;}
-  .contact-row a{color:var(--paper-2); transition:color .2s;}
-  .contact-row a:hover{color:var(--gold-soft);}
-  .contact-row .c-label{font-size:9px; letter-spacing:2px; color:var(--gold-soft); text-transform:uppercase; display:block; margin-bottom:2px;}
-  .qr-block{text-align:center;}
-  .qr-block img{width:140px; height:140px; background:var(--paper-2); padding:10px; border-radius:6px; display:block; margin:0 auto 10px;}
-  .qr-block .qr-caption{font-size:11px; letter-spacing:1.5px; color:var(--gold-soft); text-transform:uppercase;}
-  .contact-cta-btn{display:inline-block; margin-top:40px; padding:14px 34px; border:1px solid var(--gold); color:var(--navy); background:var(--gold); font-size:12px; letter-spacing:2px; text-transform:uppercase; border-radius:3px; transition:all .25s;}
-  .contact-cta-btn:hover{background:transparent; color:var(--gold-soft);}
-  .contact-footer-note{margin-top:34px; font-size:10px; letter-spacing:1px; color:#8b92a8;}
-
-  @media (max-width:600px){
-    .contact-grid{flex-direction:column; align-items:center; gap:36px;}
-    .contact-details{align-items:flex-start;}
+  .hero::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:6px;
+    background: repeating-linear-gradient(90deg, var(--gold) 0 14px, transparent 14px 28px);
+    opacity:.8;
   }
+  .hero .mark{ letter-spacing: 6px; font-size: 11px; color: var(--gold-soft); text-transform: uppercase; font-weight: 500; }
+  .hero h1{ font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; letter-spacing: 1px; margin-top: 8px; color: #fff; }
+  .hero p{ margin-top: 8px; font-size: 13.5px; color: rgba(255,255,255,.65); font-weight: 300; }
 
-  /* ===== ADMIN LOGIN ===== */
-  .admin-lock{max-width:360px; margin:100px auto; text-align:center; padding:36px 28px; background:var(--paper-2); border:1px solid var(--line);}
-  .admin-lock h2{font-family:'Cormorant Garamond'; color:var(--navy); font-size:24px; margin-bottom:6px;}
-  .admin-lock p{font-size:12px; color:var(--ink-soft); margin-bottom:20px;}
-  .admin-lock input{width:100%; padding:11px 13px; border:1px solid var(--line); margin-bottom:12px; font-family:'Poppins'; font-size:13px;}
-  .admin-lock button{width:100%; padding:11px; background:var(--navy); color:var(--paper-2); border:none; letter-spacing:1px; font-size:13px; cursor:pointer;}
-  .admin-lock button:hover{background:var(--gold); color:var(--navy);}
-  .err{color:#B23B3B; font-size:11px; margin-top:8px;}
-
-  /* ===== ADMIN DASHBOARD ===== */
-  .admin-wrap{padding:30px 5vw 80px; max-width:1100px; margin:0 auto;}
-  .admin-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:10px;}
-  .admin-head h2{font-family:'Cormorant Garamond'; font-size:28px; color:var(--navy);}
-  .card{background:var(--paper-2); border:1px solid var(--line); padding:22px; border-radius:4px; margin-bottom:20px;}
-  .card h3{font-family:'Cormorant Garamond'; font-size:20px; color:var(--navy); margin-bottom:14px;}
-  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
-  .form-row.full{grid-template-columns:1fr;}
-  label{display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;}
-  input, select{width:100%; padding:10px 12px; border:1px solid var(--line); font-family:'Poppins'; font-size:13px; background:var(--paper);}
-  .btn{font-size:12px; letter-spacing:1px; padding:11px 20px; border-radius:3px; cursor:pointer; border:1px solid var(--navy); background:transparent; color:var(--navy); transition:all .25s; display:inline-flex; align-items:center; gap:8px;}
-  .btn.primary{background:var(--navy); color:var(--paper-2);}
-  .btn:hover{background:var(--gold); border-color:var(--gold); color:var(--navy);}
-  .btn:disabled{opacity:.5; cursor:not-allowed;}
-
-  .collection-list-row{display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line);}
-  .collection-list-row:last-child{border-bottom:none;}
-  .collection-list-row .meta{font-size:11px; color:var(--ink-soft); margin-top:3px;}
-  .collection-list-row .name{font-family:'Cormorant Garamond'; font-size:18px; color:var(--navy);}
-  .row-actions{display:flex; gap:8px;}
-
-  .event-pill-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
-  .event-pill{padding:8px 16px; border:1px solid var(--line); border-radius:20px; font-size:12px; cursor:pointer; color:var(--ink-soft);}
-  .event-pill.active{background:var(--navy); color:var(--paper-2); border-color:var(--navy);}
-
-  .upload-box{border:2px dashed var(--line); padding:30px; text-align:center; border-radius:4px; margin-bottom:16px; cursor:pointer;}
-  .upload-box:hover{border-color:var(--gold);}
-  .upload-box input{display:none;}
-  .progress-text{font-size:12px; color:var(--ink-soft); margin-bottom:14px;}
-
-  .admin-photo-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px;}
-  .admin-photo-tile{position:relative; aspect-ratio:1/1; background:var(--line); border-radius:3px; overflow:hidden; cursor:grab;}
-  .admin-photo-tile img{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;}
-  .admin-photo-tile .tile-actions{position:absolute; inset:0; background:rgba(10,27,51,0); opacity:0; transition:.2s; display:flex; align-items:center; justify-content:center; gap:6px; pointer-events:none;}
-  .admin-photo-tile:hover .tile-actions{background:rgba(10,27,51,0.45); opacity:1; pointer-events:auto;}
-  .admin-photo-tile.selected{outline:3px solid var(--gold); outline-offset:-3px;}
-  .admin-photo-tile.drag-over{outline:3px dashed var(--navy); outline-offset:-3px;}
-  .admin-photo-tile.pending{cursor:default;}
-  .admin-photo-tile.pending img{opacity:.45;}
-  .pending-overlay{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(10,27,51,0.25);}
-  .pending-spinner{width:26px; height:26px; border:3px solid rgba(255,255,255,0.5); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .select-checkbox{position:absolute; top:6px; left:6px; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,0.85); border:2px solid var(--navy); z-index:5; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--navy);}
-  .selection-bar{display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:12px; color:var(--ink-soft);}
-  .mini-icon{width:28px; height:28px; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer;}
-
-  .link-box{display:flex; gap:8px; align-items:center; background:var(--paper); border:1px solid var(--line); padding:10px 12px; font-size:12px; word-break:break-all;}
-
-  /* ===== CLIENT GALLERY ===== */
-  .g-cover{position:relative; height:100vh; background:linear-gradient(160deg,#d9c9a3,#b9895a) center/cover; display:flex; align-items:flex-end; padding:0 6vw 56px; color:var(--paper-2);}
-  .g-cover::after{content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,27,51,0) 55%, rgba(10,27,51,0.55) 100%);}
-  .g-cover-content{position:relative; z-index:2; width:100%;}
-  .gal-brand{position:absolute; top:24px; left:6vw; z-index:3; display:flex; align-items:center; gap:10px;}
-  .gal-back-btn{width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.85); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-size:16px; flex-shrink:0; transition:background .2s;}
-  .gal-back-btn:hover{background:rgba(255,255,255,0.15);}
-  .gal-brand .gal-avatar{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#2b3a5c,#0A1B33); border:1.5px solid rgba(255,255,255,0.85); display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond'; font-size:13px; color:#E7D3A1; flex-shrink:0;}
-  .gal-brand .gal-handle{font-size:11px; letter-spacing:2px; color:rgba(255,255,255,0.92); text-transform:uppercase;}
-  .gal-insta-link{position:absolute; top:24px; right:6vw; z-index:3; width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.85); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s;}
-  .gal-insta-link:hover{background:rgba(255,255,255,0.15);}
-  .gal-insta-link svg{width:17px; height:17px;}
-  .g-cover .eyebrow{font-size:11px; letter-spacing:4px; font-weight:300; color:rgba(255,255,255,0.85); margin-bottom:10px;}
-  .g-cover h1{font-family:'Cormorant Garamond'; font-size:clamp(30px,6.5vw,56px); font-weight:400; letter-spacing:1px;}
-  .g-cover .date{font-size:11px; letter-spacing:3px; font-weight:300; color:rgba(255,255,255,0.75); margin-top:8px;}
-  .view-gallery-btn{display:inline-flex; align-items:center; gap:8px; margin-top:26px; padding:12px 28px; border:1px solid rgba(255,255,255,0.6); color:#fff; background:rgba(255,255,255,0.05); font-size:11px; letter-spacing:2px; text-transform:uppercase; border-radius:2px; cursor:pointer; transition:all .25s;}
-  .view-gallery-btn:hover{background:rgba(255,255,255,0.15); border-color:#fff;}
-  .g-meta{display:flex; justify-content:space-between; align-items:center; padding:22px 6vw; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:14px;}
-  .event-tabs{display:flex; gap:30px; padding:0 6vw; border-bottom:1px solid var(--line); overflow-x:auto; background:var(--paper-2);}
-  .event-tabs button{background:none; border:none; font-size:13px; letter-spacing:1px; color:var(--ink-soft); padding:14px 0; border-bottom:2px solid transparent; white-space:nowrap; cursor:pointer;}
-  .event-tabs button.active{color:var(--navy); border-color:var(--gold); font-weight:600;}
-  .photo-grid{display:grid; grid-template-columns:repeat(2,1fr); grid-auto-flow:dense; gap:14px; padding:20px 6vw 100px;}
-  .photo-tile{position:relative; aspect-ratio:2/3; overflow:hidden; background:linear-gradient(150deg,#eadfc4,#c9a877); border-radius:8px; box-shadow:0 4px 18px rgba(10,27,51,0.10); cursor:pointer;}
-  .photo-tile.wide{grid-column:span 2; aspect-ratio:3/2;}
-  .photo-tile img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s ease;}
-  .photo-tile:hover img{transform:scale(1.03);}
-  .photo-tile .hover-actions{position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:flex-end; padding:12px; gap:10px; background:linear-gradient(180deg, transparent 60%, rgba(10,27,51,0.45) 100%); opacity:0; transition:opacity .25s; pointer-events:none;}
-  .photo-tile:hover .hover-actions{opacity:1;}
-  .photo-tile .hover-actions .icon-btn{pointer-events:auto;}
-  .icon-btn{width:34px; height:34px; border-radius:50%; background:rgba(247,243,234,0.92); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--navy); cursor:pointer;}
-  .lightbox-overlay{position:fixed; inset:0; background:rgba(10,27,51,0.97); z-index:200; align-items:center; justify-content:center; padding:30px; cursor:zoom-out;}
-  .lightbox-img{max-width:100%; max-height:100%; object-fit:contain; border-radius:2px; cursor:default;}
-  .lightbox-close{position:absolute; top:16px; right:20px; color:#fff; font-size:28px; cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center;}
-  .lightbox-nav{position:absolute; top:50%; transform:translateY(-50%); color:#fff; font-size:44px; cursor:pointer; width:52px; height:52px; display:flex; align-items:center; justify-content:center; opacity:0.7; transition:opacity .2s; user-select:none;}
-  .video-picker-item{padding:14px 16px; border:1px solid var(--line); border-radius:4px; margin-bottom:8px; cursor:pointer; font-size:13px; letter-spacing:.5px; color:var(--navy); transition:all .2s;}
-  .video-picker-item:hover{background:var(--gold); border-color:var(--gold);}
-  .lightbox-nav:hover{opacity:1;}
-  .lightbox-prev{left:8px;}
-  .lightbox-next{right:8px;}
-  @media (max-width:600px){
-    .lightbox-nav{font-size:34px; width:40px; height:40px;}
+  .client-info{
+    max-width: 560px; margin: -22px auto 0;
+    background: var(--paper-2); border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(10,27,51,.12);
+    padding: 18px; position: relative; z-index: 2;
   }
-  @media (max-width:600px){
-    .lightbox-overlay{padding:0;}
-    .lightbox-img{border-radius:0;}
+  .client-info .row{ display:flex; gap:10px; margin-bottom:10px; }
+  .client-info .row:last-child{ margin-bottom:0; }
+  .client-info input{
+    flex:1; width:100%; border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 12px; font-family:'Poppins'; font-size: 13.5px;
+    background: var(--paper); color: var(--ink);
   }
-  .download-bar{position:sticky; bottom:0; background:var(--navy); color:var(--paper-2); padding:10px 6vw; display:flex; justify-content:space-between; align-items:center; flex-wrap:nowrap; gap:10px; font-size:10px; opacity:0; pointer-events:none; transition:opacity .35s ease;}
-  .download-bar.visible{opacity:1; pointer-events:auto;}
-  .download-bar .dl-note{font-size:9px; color:rgba(255,255,255,0.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .download-bar .dl-mini-btn{flex-shrink:0; font-size:9px; letter-spacing:.5px; padding:6px 12px; border-radius:4px; border:1px solid rgba(230,211,161,0.5); background:transparent; color:var(--gold-soft); cursor:pointer; white-space:nowrap;}
-  .download-bar .dl-mini-btn:hover{background:rgba(230,211,161,0.15);}
+  .client-info input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+  .client-info label{ font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--ink-soft); display:block; margin-bottom: 4px; }
+  .field{flex:1;}
 
-  @media (max-width:720px){
-    .photo-grid{grid-template-columns:repeat(2,1fr); gap:6px; padding:10px 8px 80px;}
-    .admin-photo-grid{grid-template-columns:repeat(3,1fr);}
-    .g-cover{padding:0 5vw 44px;}
-    .form-row{grid-template-columns:1fr;}
-    .nav-links{gap:14px;}
-  }
+  .section-label{ max-width: 560px; margin: 30px auto 12px; padding: 0 20px; display:flex; align-items:center; gap: 10px; }
+  .section-label span{ font-family:'Cormorant Garamond', serif; font-weight:700; font-size: 20px; color: var(--navy); white-space: nowrap; }
+  .section-label .rule{ height:1px; flex:1; background: var(--line); }
 
-  /* ===== DESKTOP / LAPTOP REFINEMENTS (gallery only — mobile above is untouched) ===== */
-  @media (min-width:900px){
-    .g-cover{height:88vh; max-height:840px; padding:0 5vw 64px;}
-    .g-cover h1{font-size:clamp(40px,4.5vw,68px);}
-    .gal-brand{top:32px; left:5vw;}
-    .gal-insta-link{top:32px; right:5vw;}
-    .g-meta, .event-tabs, .photo-grid, .download-bar{max-width:1360px; margin-left:auto; margin-right:auto;}
-    .g-meta, .event-tabs{padding-left:3vw; padding-right:3vw;}
-    .download-bar{padding-left:3vw; padding-right:3vw;}
-    .photo-grid{grid-template-columns:repeat(4,1fr); gap:22px; padding:36px 3vw 120px;}
-    .photo-tile{border-radius:10px;}
-    .lightbox-overlay{padding:60px;}
-    .lightbox-img{max-width:82vw; max-height:88vh;}
-    .lightbox-nav{width:64px; height:64px; font-size:52px;}
-    .lightbox-prev{left:28px;}
-    .lightbox-next{right:28px;}
+  .events{ max-width: 560px; margin: 0 auto; padding: 0 20px; display:flex; flex-direction:column; gap:12px; }
+
+  .card{ background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .card-head{ padding: 14px 16px; display:flex; justify-content: space-between; align-items:center; cursor:pointer; }
+  .card-head .name{ font-family:'Cormorant Garamond', serif; font-weight:700; font-size: 18px; color: var(--navy); }
+  .card-head .right{ display:flex; align-items:center; gap:10px; }
+  .card-head .sub{ font-size: 12.5px; color: var(--gold); font-weight:600; }
+  .card-head .hint{ font-size: 11px; color: var(--ink-soft); }
+  .chevron{ width:9px; height:9px; border-right:2px solid var(--ink-soft); border-bottom:2px solid var(--ink-soft); transform: rotate(45deg); transition: transform .2s; }
+  .card.expanded .chevron{ transform: rotate(-135deg); }
+  .card-body{ display:none; padding: 0 16px 16px; flex-direction:column; gap: 8px; }
+  .card.expanded .card-body{ display:flex; }
+
+  .role-opt, .pkg-opt{ cursor:pointer; }
+  .role-opt{
+    display:flex; align-items:center; justify-content:space-between;
+    border: 1px solid var(--line); border-radius: 9px; padding: 11px 13px;
+    transition: border-color .15s, background .15s;
   }
+  .role-opt.selected{ border-color: var(--gold); background: #FBF5E7; }
+  .role-opt .left{ display:flex; align-items:center; gap:10px; }
+  .role-opt .box{ width:18px; height:18px; border-radius:5px; border: 1.5px solid #C9C2AC; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .role-opt.selected .box{ background: var(--gold); border-color: var(--gold); }
+  .role-opt .box svg{ display:none; width:11px; height:11px; }
+  .role-opt.selected .box svg{ display:block; }
+  .role-opt .rname{ font-size: 14px; font-weight:500; }
+  .role-opt .rprice{ font-size: 13.5px; color: var(--navy); font-weight:600; }
+
+  .pkg-opt{ border: 1.5px solid var(--line); border-radius: 10px; padding: 13px 14px; transition: border-color .15s, background .15s; }
+  .pkg-opt.selected{ border-color: var(--gold); background: #FBF5E7; }
+  .pkg-opt .pkg-top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .pkg-opt .pname{ font-weight:600; font-size: 14.5px; color: var(--navy); }
+  .pkg-opt .pprice{ font-weight:700; font-size: 15px; color: var(--gold); }
+  .pkg-opt ul{ list-style:none; margin-top:6px; }
+  .pkg-opt li{ font-size: 12px; color: var(--ink-soft); padding-left: 14px; position: relative; line-height: 1.6; }
+  .pkg-opt li::before{ content:"—"; position:absolute; left:0; color: var(--gold); }
+
+  .addon-label{ font-size: 11px; text-transform:uppercase; letter-spacing:.6px; color: var(--ink-soft); margin: 4px 0 2px; }
+  .addon-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .addon-opt{
+    display:flex; align-items:center; gap:8px;
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px;
+    cursor:pointer; transition: border-color .15s, background .15s;
+  }
+  .addon-opt.selected{ border-color: var(--gold); background: #FBF5E7; }
+  .addon-opt .box{ width:16px; height:16px; border-radius:4px; border: 1.5px solid #C9C2AC; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .addon-opt.selected .box{ background: var(--gold); border-color: var(--gold); }
+  .addon-opt .box svg{ display:none; width:10px; height:10px; }
+  .addon-opt.selected .box svg{ display:block; }
+  .addon-opt .atext{ font-size: 11.5px; line-height:1.3; }
+  .addon-opt .atext b{ display:block; font-size:12.5px; color:var(--navy); font-weight:600; }
+
+  .info-card{
+    max-width: 560px; margin: 0 auto; padding: 0 20px;
+  }
+  .info-card .card{ margin-top: 4px; }
+  .payment-table{ width:100%; border-collapse: collapse; margin-top:8px; }
+  .payment-table th, .payment-table td{ font-size: 12px; padding: 8px 6px; text-align:left; border-bottom: 1px solid var(--line); }
+  .payment-table th{ color: var(--ink-soft); font-weight:500; text-transform:uppercase; letter-spacing:.4px; font-size:10.5px; }
+  .payment-table td.amt{ color: var(--navy); font-weight:600; }
+
+  .terms-list{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .terms-list li{ font-size: 12px; color: var(--ink-soft); line-height:1.6; padding-left:14px; position:relative; }
+  .terms-list li::before{ content:"—"; position:absolute; left:0; color: var(--gold); }
+
+  .ticket{
+    position: fixed; left:0; right:0; bottom:0; z-index: 50;
+    background: var(--navy); color:#fff;
+    border-top: 2px dashed var(--gold);
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  }
+  .ticket-top{ display:flex; justify-content:space-between; align-items:flex-end; max-width: 560px; margin: 0 auto 10px; }
+  .ticket-top .lbl{ font-size:10.5px; letter-spacing:.6px; text-transform:uppercase; color: rgba(255,255,255,.55); }
+  .ticket-top .amt{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size: 26px; color: var(--gold-soft); }
+  .ticket-top .amt.masked{ font-family:'Poppins',sans-serif; font-weight:500; font-size: 13px; letter-spacing:.2px; color: rgba(230,211,161,.85); }
+  .ticket-top .count{ font-size: 11.5px; color: rgba(255,255,255,.7); }
+  .send-btn{
+    max-width: 560px; margin: 0 auto; display:flex; align-items:center; justify-content:center; gap:8px;
+    background: var(--gold); color: var(--navy); font-weight:600; font-size: 14.5px;
+    border:none; border-radius: 10px; padding: 13px; width: 100%; cursor:pointer; font-family:'Poppins';
+  }
+  .send-btn:active{ transform: scale(.98); }
+  .send-btn:disabled{ opacity:.45; }
+  .pdf-btn{
+    max-width: 560px; margin: 8px auto 0; display:flex; align-items:center; justify-content:center; gap:8px;
+    background: transparent; color: var(--gold-soft); font-weight:500; font-size: 13px;
+    border:1px solid rgba(230,211,161,.5); border-radius: 10px; padding: 11px; width: 100%; cursor:pointer; font-family:'Poppins';
+  }
+  .pdf-btn:active{ transform: scale(.98); }
+  .pdf-btn:disabled{ opacity:.35; }
+
+  .foot-note{ max-width:560px; margin: 26px auto 10px; padding: 0 20px; font-size: 11px; color: var(--ink-soft); text-align:center; }
+
+  .gate-link{ display:block; text-align:center; font-size:12px; color:#5B6072; margin-top:10px; cursor:pointer; }
+  .gate-resend{ display:block; text-align:center; font-size:12px; color:#C6A15B; margin-top:12px; cursor:pointer; font-weight:600; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="brand" onclick="goHome()">SHUTTER STORIES</div>
-  <div class="nav-links" id="topNavLinks">
-    <span onclick="goHome()">Portfolio</span>
-    <span onclick="openQuoteModal()" style="color:var(--gold); font-weight:600;">Get Quote</span>
-    <span onclick="goAdmin()">Studio Login</span>
-  </div>
-</div>
+  <div id="gate" style="position:fixed; inset:0; z-index:200; background:linear-gradient(180deg, #0A1B33 0%, #122A4D 100%); display:flex; align-items:center; justify-content:center; padding:24px;">
+    <div style="max-width:380px; width:100%; background:#FFFFFF; border-radius:16px; padding:28px 24px; box-shadow:0 20px 50px rgba(0,0,0,.35);">
+      <div style="text-align:center; margin-bottom:18px;">
+        <div style="letter-spacing:5px; font-size:10.5px; color:#C6A15B; text-transform:uppercase; font-weight:500;">Shutter Stories</div>
+        <div id="gate-title" style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:26px; color:#0A1B33; margin-top:6px;">Access Required</div>
+        <div id="gate-subtitle" style="font-size:12.5px; color:#5B6072; margin-top:6px;">Please enter your name and WhatsApp number to access your quotation form</div>
+      </div>
 
-<!-- ============ FULLSCREEN PHOTO VIEWER (works from any page) ============ -->
-<div id="lightboxOverlay" class="lightbox-overlay" onclick="closeLightbox()" style="display:none;">
-  <img id="lightboxImg" class="lightbox-img" src="" onclick="event.stopPropagation()">
-  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
-  <div class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); showPrevPhoto()">‹</div>
-  <div class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); showNextPhoto()">›</div>
-</div>
-
-<!-- ============ CONFIG BANNER (shows until you set WEBAPP_URL) ============ -->
-<div id="configWarning" class="center-msg" style="display:none; background:#fff3e0; color:#8a5a1a; padding:14px; font-size:12px;">
-  ⚠️ Backend not connected yet — paste your Apps Script Web App URL into the WEBAPP_URL variable near the top of this file's &lt;script&gt; section.
-</div>
-
-<!-- ============ PUBLIC HOMEPAGE ============ -->
-<div class="page active" id="homePage">
-  <div class="home-hero">
-    <div class="avatar">SS</div>
-    <h1>Shutter Stories</h1>
-    <div class="tagline">Wedding &amp; Event Photography</div>
-    <div class="scroll-hint">Scroll to the bottom for our contact details.</div>
-  </div>
-  <div class="dot-strip"></div>
-  <div class="cat-filter" id="homeCatFilter">
-    <button class="active" data-cat="all">All</button>
-  </div>
-  <div class="collections-grid" id="homeGrid">
-    <div class="center-msg">Loading collections…</div>
-  </div>
-
-  <!-- ============ CONTACT SECTION (last section of the public portfolio) ============ -->
-  <div class="contact-section">
-    <div class="contact-eyebrow">Get In Touch</div>
-    <h2>Contact us to discuss your requirements and receive a personalized quotation.</h2>
-    <div class="contact-grid">
-      <div class="contact-details">
-        <div class="contact-row">
-          <div class="c-icon">📞</div>
-          <div>
-            <span class="c-label">Call / WhatsApp</span>
-            <a href="tel:+919964052479">+91 99640 52479</a>
-          </div>
+      <!-- STEP 0: Access Code -->
+      <div id="gate-step-code">
+        <div style="margin-bottom:16px;">
+          <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">Access Code</label>
+          <input id="gate-code" type="text" placeholder="Enter the code shared with you" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA; text-transform:uppercase;">
         </div>
-        <div class="contact-row">
-          <div class="c-icon">✉️</div>
-          <div>
-            <span class="c-label">Email</span>
-            <a href="mailto:shutterstories@gmail.com">shutterstories@gmail.com</a>
-          </div>
+        <div id="gate-code-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
+        <button id="gate-code-submit" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Continue</button>
+        <div style="font-size:11px; color:#5B6072; text-align:center; margin-top:12px;">Don't have a code? Message us on WhatsApp to request a personalized quotation link.</div>
+      </div>
+
+      <!-- STEP 1: Name + Phone -->
+      <div id="gate-step-details" style="display:none;">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">Your Name</label>
+          <input id="gate-name" type="text" placeholder="Full name" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA;">
         </div>
-        <div class="contact-row">
-          <div class="c-icon">📷</div>
-          <div>
-            <span class="c-label">Instagram</span>
-            <a href="https://instagram.com/shutter_stories__" target="_blank">@shutter_stories__</a>
-          </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">WhatsApp Number</label>
+          <input id="gate-phone" type="tel" placeholder="10-digit mobile number" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA;">
         </div>
+        <div id="gate-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
+        <button id="gate-submit" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Send OTP</button>
       </div>
-      <div class="qr-block">
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaCAIAAAC5ZBI0AAAIYElEQVR4nO3dwW4bORBAwfUi///L3useAiLBhOmep6prEGsk2Q88NMmv7+/vfwDe79/pBwD4M+QMiJAzIELOgAg5AyLkDIiQMyBCzoAIOQMi5AyIkDMgQs6ACDkDIuQMiJAzIELOgAg5AyLkDIiQMyBCzoAIOQMi5AyIkDMgQs6ACDkDIuQMiJAzIELOgAg5AyLkDIiQMyBCzoAIOQMi5AyIkDMgQs6ACDkDIuQMiJAzIOLH1At/fX1NvfQl39/fh3/1fv+O81M9cX5HT17303437rE6AyLkDIiQMyBCzoAIOQMi5AyIkDMgQs6ACDkDIsZ2BZxNTRWf7Zx0v/dU976FJ+9o5/z9vWf2t/DrrM6ACDkDIuQMiJAzIELOgAg5AyLkDIiQMyBCzoCIpbsCzj5tDv7exPk99+b+d+7NmPLGv4V7rM6ACDkDIuQMiJAzIELOgAg5AyLkDIiQMyBCzoCIV+4KeKMn09v3Tsfv3UJwz9Q3yK+zOgMi5AyIkDMgQs6ACDkDIuQMiJAzIELOgAg5AyLsCvhL7s3ff9rZ+fc+yXv3G/B3WJ0BEXIGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERr9wV0JvAvveOpm4DOJt63Sd27hno/S08YXUGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERcgZELN0V8Map8bMnU+M7/+/ZzmfeOdl/1vtbuMfqDIiQMyBCzoAIOQMi5AyIkDMgQs6ACDkDIuQMiBjbFeCM8/+bmr+/543z95/2uj1WZ0CEnAERcgZEyBkQIWdAhJwBEXIGRMgZECFnQMTYroCpM+zv/eQnr/vE+Zl3zt+fTX2/UzsZdv7ke9/CPVZnQIScARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAxNiugLOpieSdU/JnU/sczqbm0af+7z1TewbOdv6lWJ0BEXIGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERS3cFPJkan5pHP5s6h35K7/3u/N2Yuldh5zdodQZEyBkQIWdAhJwBEXIGRMgZECFnQIScARFyBkQs3RUwdT761DTz1F6FqZ987/1OfYNTv1c7b4qYYnUGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERcgZEfO08l33K1MnrT3zaqfxTe0J2foP3XveNrM6ACDkDIuQMiJAzIELOgAg5AyLkDIiQMyBCzoCI4F0BUyfNT+0o2Dn3v/OU+t4Oip2/sVOszoAIOQMi5AyIkDMgQs6ACDkDIuQMiJAzIELOgIiluwLeOMs+dYb9PVOT/ffe7713dG8fi7n/X2d1BkTIGRAhZ0CEnAERcgZEyBkQIWdAhJwBEXIGRIztCnjjvPLO6fx7T7Vzn8PUXoWp+yt27hjZyeoMiJAzIELOgAg5AyLkDIiQMyBCzoAIOQMi5AyI+No5VXxv8vve9PbOPQNnOz+Nqbn/s51n9u+8o2CK1RkQIWdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAxtitg58T5zll28+i/buf7PZu6hWDn39ETVmdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAhZ0DEj+kH+Lmd0/lT09s7J7DPps773znpvnPu/403Y5xZnQERcgZEyBkQIWdAhJwBEXIGRMgZECFnQIScARFjdwWcvfHE9yc+7Z6BJ3qf1dnOGwzO3BUA8IicARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAxNiugHunp0/No9975p1z8Pe88f1+2j0DO1mdARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAhJwBET+mH+Dn7s2FP3ndqbn/3n6DqWn1e7P7O9/vvafaeeeG1RkQIWdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAxdlfAE70Z+ifeuN/gjXdBvNHOPSH3WJ0BEXIGRMgZECFnQIScARFyBkTIGRAhZ0CEnAER7gr4DVOzzudPY+ep7fe88f1O3STwxr0ZT1idARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAhJwBEWN3BdybOZ66DWBqxnrnDoon3vjtv9HU38I9VmdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAhZ0DE2K6AT/PGk9fP7s3Qv/EM+6mneuPs/j1WZ0CEnAERcgZEyBkQIWdAhJwBEXIGRMgZECFnQMSPqRfuncs+dcL9k598dn7dnTPlb7wr4N63v/M7usfqDIiQMyBCzoAIOQMi5AyIkDMgQs6ACDkDIuQMiBjbFXC2c5r506bG703Y7zzRf4qbBP4UqzMgQs6ACDkDIuQMiJAzIELOgAg5AyLkDIiQMyDia+d89tSZ7lOT7p/2aez8JJ/85J12/ubcY3UGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERcgZELL0roGfn2flnU8/8xvn7s507Rqb2DNxjdQZEyBkQIWdAhJwBEXIGRMgZECFnQIScARFyBkTYFfDR3niW/M47Cs6mJux3fhr3WJ0BEXIGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERr9wV8MZ55Xvz91OT/W88S37nlPyTT/LJM0/tzbjH6gyIkDMgQs6ACDkDIuQMiJAzIELOgAg5AyLkDIhYuivgjRPnZ/dOuD97Mp/9xpsEzt54z8C9b2FqR8E9VmdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAhZ0DE187pXoDfZXUGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAhJwBEXIGRMgZECFnQIScARFyBkTIGRAhZ0CEnAERcgZEyBkQIWdAhJwBEXIGRMgZECFnQMR/EMEAWg6Yld0AAAAASUVORK5CYII=" alt="Scan to follow Shutter Stories on Instagram">
-        <div class="qr-caption">Scan to Follow Us</div>
-      </div>
-    </div>
-    <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:40px;">
-      <button class="contact-cta-btn" style="border:none; cursor:pointer;" onclick="openQuoteModal()">Get a Quote</button>
-      <a class="contact-cta-btn" style="background:transparent; color:var(--gold-soft);" href="https://wa.me/919964052479" target="_blank">WhatsApp Us</a>
-    </div>
-    <div class="contact-footer-note">© Shutter Stories — Wedding &amp; Event Photography, Mangalore</div>
-  </div>
-</div>
 
-<!-- ============ ADMIN LOGIN ============ -->
-<div class="page" id="adminLoginPage">
-  <div class="admin-lock">
-    <h2>Studio Access</h2>
-    <p>Enter your password to manage collections</p>
-    <input type="password" id="adminPassInput" placeholder="Password">
-    <button onclick="tryLogin()">Unlock Dashboard</button>
-    <div class="err" id="loginErr"></div>
-  </div>
-</div>
-
-<!-- ============ ADMIN DASHBOARD ============ -->
-<div class="page" id="adminDashPage">
-  <div class="admin-wrap">
-    <div class="admin-head">
-      <h2>Manage Collections</h2>
-      <button class="btn" onclick="logout()">Log out</button>
-    </div>
-
-    <div class="card">
-      <h3>Create New Collection</h3>
-      <div class="form-row">
-        <div>
-          <label>CLIENT NAME</label>
-          <input id="newClientName" placeholder="e.g. Pushkar x Tanisha">
+      <!-- STEP 2: OTP -->
+      <div id="gate-step-otp" style="display:none;">
+        <div style="margin-bottom:16px;">
+          <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">Enter OTP</label>
+          <input id="gate-otp" type="tel" inputmode="numeric" maxlength="6" placeholder="6-digit code" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA; letter-spacing:3px;">
         </div>
-        <div>
-          <label>EVENT DATE</label>
-          <input id="newEventDate" type="date">
-        </div>
+        <div id="gate-otp-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
+        <button id="gate-verify" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Verify &amp; Continue</button>
+        <span id="gate-resend" class="gate-resend">Resend OTP</span>
+        <span id="gate-back" class="gate-link">← Change number</span>
       </div>
-      <div class="form-row">
-        <div>
-          <label>CATEGORY</label>
-          <input id="newCategory" placeholder="e.g. Wedding, Corporate, Anniversary...">
-        </div>
-        <div style="display:flex; align-items:flex-end;">
-          <button class="btn primary" onclick="createCollection()" style="width:100%; justify-content:center;">+ Create Collection</button>
-        </div>
-      </div>
-      <div class="form-row full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" id="newIsPublic" style="width:auto;">
-          <span>Show this collection on my public portfolio homepage</span>
-        </label>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>All Collections</h3>
-      <div id="adminCollectionList"><div class="center-msg">Loading…</div></div>
-    </div>
-
-    <!-- Collection manager (upload / photos) -->
-    <div class="card" id="collectionManager" style="display:none;">
-      <h3 id="cmTitle">Manage Collection</h3>
-      <div class="link-box" style="margin-bottom:16px;">
-        <span id="cmLink">—</span>
-        <button class="btn" onclick="copyClientLink()">Copy Link</button>
-      </div>
-      <div class="center-msg" style="font-size:11px; margin-bottom:16px; text-align:left;">
-        📎 This link automatically shows the cover photo and client name when shared on WhatsApp — make sure you've set a cover photo (★ icon on a photo below) first.
-      </div>
-
-      <div class="event-pill-row" id="eventPillRow"></div>
-      <div style="margin-bottom:14px;">
-        <input type="text" id="newEventTypeInput" placeholder="New event name e.g. Sangeet" style="max-width:240px; display:inline-block;">
-        <button class="btn" onclick="addEventType()">+ Add Event</button>
-      </div>
-
-      <div class="card" style="background:var(--paper);">
-        <h3 style="font-size:16px;">Highlight Videos (optional)</h3>
-        <div id="videoStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">No videos added yet.</div>
-        <div id="videoListWrap" style="margin-bottom:16px;"></div>
-
-        <label style="display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">TITLE FOR THIS VIDEO (e.g. "Teaser", "Full Film")</label>
-        <input type="text" id="videoLabelInput" placeholder="e.g. Teaser" style="margin-bottom:14px;">
-
-        <div style="font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">OPTION A — SMALL VIDEOS (under ~50MB): upload directly</div>
-        <input type="file" id="videoFileInput" accept="video/*" onchange="handleVideoUpload(this.files[0])">
-        <div class="progress-text" id="videoProgressText"></div>
-
-        <div style="font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin:16px 0 6px;">OPTION B — LARGE VIDEOS: upload to Google Drive yourself, then paste the share link here</div>
-        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:8px; line-height:1.5;">
-          1. Upload the video file into your "Client Galleries" Drive folder (drag & drop on drive.google.com — no size limit there)<br>
-          2. Right-click the file → Share → "Anyone with the link" → Copy link<br>
-          3. Paste that link below
-        </div>
-        <input type="text" id="videoLinkInput" placeholder="Paste Google Drive share link here" style="margin-bottom:8px;">
-        <button class="btn" onclick="linkVideoFromDrive()">Link This Video</button>
-        <div class="progress-text" id="videoLinkStatus"></div>
-      </div>
-
-      <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
-        <div>📤 Click or drag photos here to upload</div>
-        <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
-      </div>
-      <div class="center-msg" id="noEventMsg" style="display:none;">↑ Type an event name above and click "+ Add Event" before uploading.</div>
-      <div class="progress-text" id="progressText"></div>
-
-      <div class="selection-bar" id="selectionBar" style="display:none;">
-        <span id="selectionCount">0 selected</span>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <button class="btn" onclick="moveSelectedToStart()">⇤ Move to Start</button>
-          <button class="btn" onclick="moveSelectedToEnd()">Move to End ⇥</button>
-          <select id="moveToEventSelect" style="width:auto; padding:8px 10px; font-size:11px;"></select>
-          <button class="btn" onclick="moveSelectedToFolder()">Move to Folder</button>
-          <button class="btn" style="border-color:#B23B3B; color:#B23B3B;" onclick="deleteSelectedPhotos()">🗑 Delete Selected</button>
-          <button class="btn" onclick="clearSelection()">Clear Selection</button>
-        </div>
-      </div>
-      <div class="admin-photo-grid" id="adminPhotoGrid"></div>
-      <div class="center-msg" style="font-size:11px; padding-top:10px;">Tap the ○ on photos to select several, then use "Move to Start" or "Move to End" above to reposition them together. (Dragging also works on some devices, but the buttons are more reliable on trackpads.)</div>
     </div>
   </div>
-</div>
 
-<!-- ============ CLIENT GALLERY (public, shared link) ============ -->
-<div class="page" id="clientGalleryPage">
-  <div class="g-cover" id="galleryCover">
-    <div class="gal-brand">
-      <div class="gal-back-btn" onclick="goBackFromGallery()" title="Back">←</div>
-      <div class="gal-avatar">SS</div>
-      <div class="gal-handle">SHUTTER_STORIES__</div>
-    </div>
-    <a class="gal-insta-link" href="https://www.instagram.com/shutter_stories__?igsh=MXFqYmZqYjVodndmeg%3D%3D&utm_source=qr" target="_blank" rel="noopener" title="Follow us on Instagram">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="20" height="20" rx="5" stroke="white" stroke-width="1.8"/>
-        <circle cx="12" cy="12" r="4.2" stroke="white" stroke-width="1.8"/>
-        <circle cx="17.3" cy="6.7" r="1.1" fill="white"/>
-      </svg>
-    </a>
-    <div class="g-cover-content">
-      <div class="eyebrow" id="galEyebrow">COLLECTION</div>
-      <h1 id="galName">Loading…</h1>
-      <div class="date" id="galDate"></div>
-      <div class="view-gallery-btn" onclick="document.getElementById('galScrollTarget').scrollIntoView({behavior:'smooth'})">View Gallery ↓</div>
-    </div>
+  <div class="hero">
+    <div class="mark">Shutter Stories</div>
+    <h1>Build Your Quotation</h1>
+    <p>Select your events below — your total updates live</p>
   </div>
-  <div id="galScrollTarget"></div>
-  <div class="g-meta">
-    <div>
-      <h2 id="galClientName">—</h2>
-      <div class="meta" id="galSub" style="font-size:11px; letter-spacing:2px; color:var(--ink-soft);">PRIVATE GALLERY</div>
-    </div>
-    <button class="btn primary" id="galDownloadAllBtn" style="font-size:10px; padding:7px 12px;" onclick="downloadEntireGallery()">⬇ Download All Folders</button>
-  </div>
-  <div class="event-tabs" id="galEventTabs"></div>
-  <div class="photo-grid" id="galPhotoGrid"></div>
-  <div class="download-bar" id="galDownloadBar">
-    <div class="dl-note">Web-resolution images</div>
-    <button class="dl-mini-btn" onclick="downloadAllCurrentTab(event)">⬇ Download</button>
-  </div>
-</div>
 
-<!-- ============ FULLSCREEN VIDEO VIEWER (opens only when the video tab is tapped) ============ -->
-<div id="videoLightboxOverlay" style="display:none; position:fixed; inset:0; background:#000; z-index:250; align-items:center; justify-content:center;">
-  <div class="lightbox-close" style="z-index:2;" onclick="closeVideoLightbox()">✕</div>
-  <iframe id="videoLightboxFrame" src="" width="100%" height="100%" style="border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>
-</div>
+  <div id="qr-holder" style="display:none;"></div>
 
-<!-- ============ VIDEO PICKER (shown only when a collection has more than one video) ============ -->
-<div id="videoPickerOverlay" style="display:none; position:fixed; inset:0; background:rgba(10,27,51,0.92); z-index:260; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeVideoPicker()">
-  <div style="background:var(--paper-2); max-width:340px; width:100%; border-radius:6px; padding:26px; position:relative;">
-    <div onclick="closeVideoPicker()" style="position:absolute; top:14px; right:16px; cursor:pointer; font-size:18px; color:var(--ink-soft);">✕</div>
-    <h3 style="font-family:'Cormorant Garamond'; font-size:20px; color:var(--navy); margin-bottom:16px;">Choose a video</h3>
-    <div id="videoPickerList"></div>
-  </div>
-</div>
+  <div class="section-label"><span>Wedding Functions</span><div class="rule"></div></div>
+  <div class="events" id="events-wedding"></div>
 
-<!-- ============ GET QUOTE MODAL ============ -->
-<div id="quoteModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(10,27,51,0.75); z-index:300; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeQuoteModal()">
-  <div style="background:var(--paper-2); max-width:420px; width:100%; border-radius:6px; padding:32px 28px; position:relative; max-height:90vh; overflow-y:auto;">
-    <div onclick="closeQuoteModal()" style="position:absolute; top:16px; right:18px; cursor:pointer; font-size:20px; color:var(--ink-soft);">✕</div>
-    <div id="quoteFormView">
-      <h2 style="font-family:'Cormorant Garamond'; font-size:26px; color:var(--navy); margin-bottom:6px;">Get a Personalized Quote</h2>
-      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:22px; letter-spacing:.3px;">Tell us a bit about your event and we'll get back to you with a tailored quotation.</p>
+  <div class="section-label"><span>Other Occasions</span><div class="rule"></div></div>
+  <div class="events" id="events-other"></div>
 
-      <label style="display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">YOUR NAME</label>
-      <input id="qName" placeholder="e.g. Pushkar Rao" style="width:100%; padding:11px 13px; border:1px solid var(--line); margin-bottom:14px; font-family:'Poppins'; font-size:13px;">
-
-      <label style="display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">PHONE / WHATSAPP NUMBER</label>
-      <input id="qPhone" placeholder="e.g. 98765 43210" style="width:100%; padding:11px 13px; border:1px solid var(--line); margin-bottom:14px; font-family:'Poppins'; font-size:13px;">
-
-      <label style="display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">EVENT TYPE</label>
-      <select id="qEventType" style="width:100%; padding:11px 13px; border:1px solid var(--line); margin-bottom:14px; font-family:'Poppins'; font-size:13px; background:var(--paper);">
-        <option value="">Select event type</option>
-        <option>Wedding</option>
-        <option>Engagement</option>
-        <option>Pre-Wedding Shoot</option>
-        <option>Maternity Shoot</option>
-        <option>Birthday</option>
-        <option>Baby Shower</option>
-        <option>Other</option>
-      </select>
-
-      <label style="display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">EVENT DATE</label>
-      <input id="qEventDate" type="date" style="width:100%; padding:11px 13px; border:1px solid var(--line); margin-bottom:14px; font-family:'Poppins'; font-size:13px;">
-
-      <label style="display:block; font-size:11px; letter-spacing:1px; color:var(--ink-soft); margin-bottom:6px;">ANYTHING ELSE WE SHOULD KNOW? (OPTIONAL)</label>
-      <input id="qMessage" placeholder="e.g. Venue, guest count, specific requirements" style="width:100%; padding:11px 13px; border:1px solid var(--line); margin-bottom:18px; font-family:'Poppins'; font-size:13px;">
-
-      <button onclick="submitQuoteForm()" id="qSubmitBtn" style="width:100%; padding:13px; background:var(--navy); color:var(--paper-2); border:none; letter-spacing:1px; font-size:13px; border-radius:3px; cursor:pointer;">Submit Enquiry</button>
-      <div id="qFormErr" style="color:#B23B3B; font-size:11px; margin-top:8px; text-align:center;"></div>
-    </div>
-
-    <div id="quoteThanksView" style="display:none; text-align:center; padding:20px 0;">
-      <div style="font-size:40px; margin-bottom:12px;">🎉</div>
-      <h2 style="font-family:'Cormorant Garamond'; font-size:24px; color:var(--navy); margin-bottom:8px;">Thank You!</h2>
-      <p style="font-size:13px; color:var(--ink-soft); line-height:1.6;">We've received your details and will reach out shortly with a personalized quotation.</p>
+  <div class="section-label"><span>Deliverables</span><div class="rule"></div></div>
+  <div class="info-card">
+    <div class="card expanded">
+      <div class="card-body" style="display:flex; padding-top:14px;">
+        <ul class="terms-list" id="deliverables-list"></ul>
+      </div>
     </div>
   </div>
-</div>
+
+  <div class="section-label"><span>Payment Schedule</span><div class="rule"></div></div>
+  <div class="info-card">
+    <div class="card expanded">
+      <div class="card-body" style="display:flex; padding-top:14px;">
+        <table class="payment-table">
+          <tr><th>Stage</th><th>%</th><th>Amount</th><th>Due</th></tr>
+          <tr><td>Booking Advance</td><td>35%</td><td class="amt" id="pay-1">₹0</td><td>To confirm booking</td></tr>
+          <tr><td>Second Instalment</td><td>60%</td><td class="amt" id="pay-2">₹0</td><td>15 days before event</td></tr>
+          <tr><td>Final Payment</td><td>5%</td><td class="amt" id="pay-3">₹0</td><td>Before delivery of final files/album</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label"><span>Terms & Conditions</span><div class="rule"></div></div>
+  <div class="info-card">
+    <div class="card" id="terms-card">
+      <div class="card-head" id="terms-toggle"><div class="name" style="font-size:15px;">Tap to view full terms</div><div class="chevron"></div></div>
+      <div class="card-body">
+        <ul class="terms-list">
+          <li>Confirmation: the booking date is reserved only after the booking advance is received.</li>
+          <li>Album design includes up to 2 revision rounds; additional revisions incur extra charges.</li>
+          <li>Video editing includes up to 2 revision rounds; additional revisions incur extra charges.</li>
+          <li>Delivery timeline — edited photos: 10–15 working days; full gallery: 15–20 working days; photo album: 30 working days after final photo selection.</li>
+          <li>Delivery timeline — extended video: 30 working days; cinematic film: 40–60 working days.</li>
+          <li>Outstation assignments incur additional travel and stay charges, payable by the client.</li>
+          <li>The studio may use selected images for portfolio/promotional purposes unless the client requests otherwise.</li>
+          <li>Cinematic output includes highlights only, not full coverage. Extended videos are available at an additional cost if requested before the event.</li>
+          <li>Raw project/master files are not included or shared. Delivery includes the final exported video only.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-note">Prices are indicative. Final quotation will be confirmed by Shutter Stories.</div>
+
+  <div class="ticket">
+    <div class="ticket-top">
+      <div><div class="lbl">Your Total</div><div class="amt" id="total-amt">₹0</div></div>
+      <div class="count" id="item-count">0 items selected</div>
+    </div>
+    <button class="send-btn" id="send-btn" disabled>Send Quotation to Shutter Stories (WhatsApp)</button>
+    <button class="pdf-btn" id="pdf-btn" disabled>Download PDF Quotation</button>
+  </div>
+
+<!-- ===================== MSG91 OTP WIDGET CONFIG ===================== -->
+<script type="text/javascript">
+var msg91Configuration = {
+  widgetId: "366769724c4e343630323032",
+  tokenAuth: "549080TNkkzdil6a4ffaeaP1",
+  exposeMethods: true, // gives us sendOtp / verifyOtp / retryOtp so we can build our own UI (above) instead of MSG91's popup
+  success: (data) => {
+    console.log('MSG91 success', data);
+  },
+  failure: (error) => {
+    console.log('MSG91 failure', error);
+  },
+};
+</script>
+<script type="text/javascript">
+(function loadOtpScript(urls) {
+    let i = 0;
+    function attempt() {
+        const s = document.createElement('script');
+        s.src = urls[i];
+        s.async = true;
+        s.onload = () => {
+            if (typeof window.initSendOTP === 'function') {
+                window.initSendOTP(msg91Configuration);
+            }
+        };
+        s.onerror = () => {
+            i++;
+            if (i < urls.length) {
+                attempt();
+            }
+        };
+        document.head.appendChild(s);
+    }
+    attempt();
+})([
+    'https://verify.msg91.com/otp-provider.js',
+    'https://verify.phone91.com/otp-provider.js'
+]);
+</script>
+<!-- ===================== END MSG91 OTP WIDGET CONFIG ===================== -->
 
 <script>
-/* ================= CONFIG ================= */
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwcMZyt7BR45r-3Afm2RX66U0LswESWDyLYT2k3zq2G0zIEVeN72ukn2GQnMhHJJ8zdhA/exec";
-// Direct link to the live site (GitHub Pages) — used for client-facing links so they open
-// as a normal webpage on any phone/app, instead of routing through script.google.com.
-const SITE_URL = "https://shutterstories.github.io/Client-Gallery/";
-const ENQUIRY_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwcMZyt7BR45r-3Afm2RX66U0LswESWDyLYT2k3zq2G0zIEVeN72ukn2GQnMhHJJ8zdhA/exec";
-/* =========================================== */
+const STUDIO_WHATSAPP = "919964052479";
 
-function openQuoteModal(){
-  document.getElementById('quoteModalOverlay').style.display = 'flex';
-  document.getElementById('quoteFormView').style.display = 'block';
-  document.getElementById('quoteThanksView').style.display = 'none';
-  document.getElementById('qFormErr').textContent = '';
+// Paste your Google Apps Script Web App URL here once deployed (ends in /exec)
+const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbw8i6lGWFelx7wfqHPCHyxegaiBe4sTYsTL2-y_CCvBJ4q2cs7Z-XdNu7dl7vXHamJc/exec";
+
+function logToSheet(payload){
+  if(!SHEET_WEBHOOK_URL) return Promise.resolve();
+  return fetch(SHEET_WEBHOOK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).catch(()=>{ /* fail silently, never block the client's flow */ });
 }
 
-function closeQuoteModal(){
-  document.getElementById('quoteModalOverlay').style.display = 'none';
+const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12L9 17L20 6" stroke="#0A1B33" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+let clientName = '';
+let clientPhone = '';       // 10-digit, no country code — used for display / sheet
+let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
+let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
+let lastSubmittedSignature = null;  // snapshot of the selection that was last submitted via Get Quote / WhatsApp
+
+// Access codes are now checked live against your Google Sheet (see SHEET_WEBHOOK_URL above).
+
+function gateShowStep(step){
+  document.getElementById('gate-step-code').style.display = step==='code' ? 'block' : 'none';
+  document.getElementById('gate-step-details').style.display = step==='details' ? 'block' : 'none';
+  document.getElementById('gate-step-otp').style.display = step==='otp' ? 'block' : 'none';
+  const subtitleEl = document.getElementById('gate-subtitle');
+  const titleEl = document.getElementById('gate-title');
+  if(step==='code'){
+    titleEl.textContent = 'Access Required';
+    subtitleEl.textContent = 'Please enter the access code shared with you to view your quotation form';
+  } else if(step==='details'){
+    titleEl.textContent = 'Enter Your Details';
+    subtitleEl.textContent = 'Please enter your name and WhatsApp number to access your quotation form';
+  } else {
+    titleEl.textContent = 'Enter Your Details';
+    subtitleEl.textContent = `We've sent a 6-digit code to +91 ${clientPhone}`;
+  }
 }
 
-function submitQuoteForm(){
-  const name = document.getElementById('qName').value.trim();
-  const phone = document.getElementById('qPhone').value.trim();
-  const eventType = document.getElementById('qEventType').value;
-  const eventDate = document.getElementById('qEventDate').value;
-  const message = document.getElementById('qMessage').value.trim();
-  const errBox = document.getElementById('qFormErr');
+// STEP 0: check access code against the Google Sheet (via Apps Script)
+document.getElementById('gate-code-submit').addEventListener('click', ()=>{
+  const codeVal = document.getElementById('gate-code').value.trim().toUpperCase();
+  const errEl = document.getElementById('gate-code-error');
+  const btn = document.getElementById('gate-code-submit');
 
-  if(!name || !phone || !eventType){
-    errBox.textContent = 'Please fill in your name, phone number, and event type.';
+  if(!codeVal){
+    errEl.textContent = 'Please enter your access code.';
+    errEl.style.display = 'block';
     return;
   }
-
-  if(ENQUIRY_WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
-    errBox.textContent = 'Enquiry backend not connected yet — contact the studio directly for now.';
-    return;
-  }
-
-  const btn = document.getElementById('qSubmitBtn');
-  btn.textContent = 'Submitting…';
+  errEl.style.display = 'none';
+  btn.textContent = 'Checking…';
   btn.disabled = true;
 
-  fetch(ENQUIRY_WEBAPP_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action:'submitEnquiry', name, phone, eventType, eventDate, message })
-  }).then(r => r.json()).then(res => {
-    btn.textContent = 'Submit Enquiry';
-    btn.disabled = false;
-    if(res.success){
-      document.getElementById('quoteFormView').style.display = 'none';
-      document.getElementById('quoteThanksView').style.display = 'block';
-      document.getElementById('qName').value = '';
-      document.getElementById('qPhone').value = '';
-      document.getElementById('qEventType').value = '';
-      document.getElementById('qEventDate').value = '';
-      document.getElementById('qMessage').value = '';
-    } else {
-      errBox.textContent = 'Something went wrong. Please try again or WhatsApp us directly.';
+  fetch(`${SHEET_WEBHOOK_URL}?action=checkCode&code=${encodeURIComponent(codeVal)}`)
+    .then(res => res.json())
+    .then(data => {
+      btn.textContent = 'Continue';
+      btn.disabled = false;
+      if(data.valid){
+        usedAccessCode = codeVal;
+        logToSheet({ stage: 'access-code-entered', clientName: data.clientName || '' });
+        gateShowStep('details');
+      } else if(data.reason === 'expired'){
+        errEl.textContent = 'This code has expired. Please contact us for a new link.';
+        errEl.style.display = 'block';
+      } else if(data.reason === 'used'){
+        errEl.textContent = 'This code has already been used. Please contact us for a new one.';
+        errEl.style.display = 'block';
+      } else {
+        errEl.textContent = 'Invalid code. Please check the code shared with you and try again.';
+        errEl.style.display = 'block';
+      }
+    })
+    .catch(()=>{
+      btn.textContent = 'Continue';
+      btn.disabled = false;
+      errEl.textContent = 'Could not verify code right now. Please check your connection and try again.';
+      errEl.style.display = 'block';
+    });
+});
+
+// STEP 1: collect name + phone, send OTP
+document.getElementById('gate-submit').addEventListener('click', ()=>{
+  const nameVal = document.getElementById('gate-name').value.trim();
+  const phoneVal = document.getElementById('gate-phone').value.trim().replace(/\s+/g,'');
+  const errEl = document.getElementById('gate-error');
+  const digitsOnly = phoneVal.replace(/\D/g,'');
+
+  if(!nameVal){
+    errEl.textContent = 'Please enter your name.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(digitsOnly.length !== 10){
+    errEl.textContent = 'Please enter a valid 10-digit mobile number.';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  clientName = nameVal;
+  clientPhone = digitsOnly;
+  clientPhoneIntl = '91' + digitsOnly;
+
+  const btn = document.getElementById('gate-submit');
+
+  if(typeof window.sendOtp !== 'function'){
+    errEl.textContent = 'OTP service is still loading — please wait a couple of seconds and tap Send OTP again.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = 'Sending OTP…';
+  btn.disabled = true;
+
+  window.sendOtp(
+    clientPhoneIntl,
+    (data) => {
+      btn.textContent = 'Send OTP';
+      btn.disabled = false;
+      logToSheet({ stage: 'otp-sent', clientName, clientPhone });
+      gateShowStep('otp');
+    },
+    (error) => {
+      btn.textContent = 'Send OTP';
+      btn.disabled = false;
+      errEl.textContent = 'Could not send OTP. Please check the number and try again.';
+      errEl.style.display = 'block';
     }
-  }).catch(()=>{
-    btn.textContent = 'Submit Enquiry';
+  );
+});
+
+// STEP 2: verify OTP
+document.getElementById('gate-verify').addEventListener('click', ()=>{
+  const otpVal = document.getElementById('gate-otp').value.trim();
+  const errEl2 = document.getElementById('gate-otp-error');
+
+  if(otpVal.length < 4){
+    errEl2.textContent = 'Please enter the OTP sent to your number.';
+    errEl2.style.display = 'block';
+    return;
+  }
+  errEl2.style.display = 'none';
+
+  const btn = document.getElementById('gate-verify');
+  btn.textContent = 'Verifying…';
+  btn.disabled = true;
+
+  if(typeof window.verifyOtp !== 'function'){
+    errEl2.textContent = 'OTP service is still loading — please wait and try again.';
+    errEl2.style.display = 'block';
+    btn.textContent = 'Verify & Continue';
     btn.disabled = false;
-    errBox.textContent = 'Network error. Please try again or WhatsApp us directly.';
-  });
-}
-
-let adminPassword = sessionStorage.getItem('ss_admin_pass') || '';
-let currentManagedFolderId = null;
-let currentManagedEvents = [];
-let currentManagedEventType = null;
-let currentGalleryFolderId = null;
-let currentGalleryEvents = [];
-let currentGalleryEventType = null;
-let currentGalleryFolderUrl = null;
-
-function api(payload){
-  return fetch(WEBAPP_URL, { method:'POST', body: JSON.stringify(payload) })
-    .then(r => r.json());
-}
-
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function goHome(){
-  history.pushState({}, '', location.pathname);
-  showPage('homePage');
-  loadHomeCollections();
-}
-
-function goBackFromGallery(){
-  // If this tab has actual browsing history (e.g. they came from the
-  // portfolio page within the site), just go back there normally.
-  // Otherwise (e.g. they opened this link directly from WhatsApp/a QR
-  // code, with nothing to go back to), send them to the portfolio home.
-  if(document.referrer && document.referrer.indexOf(location.origin) === 0 && history.length > 1){
-    history.back();
-  } else {
-    location.href = SITE_URL;
+    return;
   }
-}
 
-function goAdmin(){
-  if(adminPassword){ showPage('adminDashPage'); loadAdminCollections(); }
-  else showPage('adminLoginPage');
-}
+  window.verifyOtp(
+    otpVal,
+    (data) => {
+      btn.textContent = 'Verify & Continue';
+      btn.disabled = false;
+      onOtpVerified();
+    },
+    (error) => {
+      btn.textContent = 'Verify & Continue';
+      btn.disabled = false;
+      errEl2.textContent = 'Incorrect OTP. Please try again.';
+      errEl2.style.display = 'block';
+    }
+  );
+});
 
-/* ---------- INIT: check for ?gallery=ID in URL ---------- */
-window.addEventListener('DOMContentLoaded', () => {
-  if(WEBAPP_URL.indexOf('PASTE_YOUR') === 0){
-    document.getElementById('configWarning').style.display='block';
-  }
-  const params = new URLSearchParams(location.search);
-  const galleryId = params.get('gallery');
-  const isShowcaseView = params.get('view') === 'portfolio';
-  const eventScope = params.get('event');
-  const videoScope = params.get('video');
-  if(galleryId){
-    document.querySelector('.topbar').style.display = 'none';
-    openClientGallery(galleryId, isShowcaseView, eventScope, videoScope);
-  } else {
-    loadHomeCollections();
+// Resend OTP
+document.getElementById('gate-resend').addEventListener('click', ()=>{
+  if(typeof window.retryOtp === 'function'){
+    window.retryOtp(
+      '11', // SMS retry channel
+      () => { alert('OTP resent to your number.'); },
+      () => { alert('Could not resend OTP right now. Please try again shortly.'); }
+    );
   }
 });
 
-/* ================= PUBLIC HOMEPAGE ================= */
-function loadHomeCollections(){
-  const grid = document.getElementById('homeGrid');
-  api({action:'listCollections'}).then(res=>{
-    if(!res.success){ grid.innerHTML = '<div class="center-msg">Could not load collections.</div>'; return; }
-    const cards = buildPortfolioCards(res.collections);
-    buildHomeCatFilter(cards);
-    renderHomeGrid(cards, 'all');
-  }).catch(()=>{ grid.innerHTML = '<div class="center-msg">Backend not connected yet.</div>'; });
+// Back to details step
+document.getElementById('gate-back').addEventListener('click', ()=>{
+  gateShowStep('details');
+});
+
+function onOtpVerified(){
+  logToSheet({ stage: 'verified-entry', clientName, clientPhone });
+  document.getElementById('gate').style.display = 'none';
+  document.body.style.overflow = 'auto';
 }
 
-// Turns raw collections into the flat list of cards actually shown on the
-// portfolio homepage — one card per whole public collection, PLUS one card
-// per individually-published event inside any collection (e.g. just its
-// "Pre-Wedding" folder). Event-level cards always link with an event scope
-// so they open showing only that one event, and are always excluded from "All".
-function buildPortfolioCards(collections){
-  const cards = [];
-  collections.forEach(c=>{
-    if(c.isPublic){
-      cards.push({
-        clientName: c.clientName, eventDate: c.eventDate, coverFileId: c.coverFileId,
-        category: c.category, galleryId: c.id, eventScope: null,
-        excludeFromAll: (c.category||'').toLowerCase() === 'videos'
-      });
-    }
-    Object.keys(c.publicEvents || {}).forEach(eventName=>{
-      const ev = c.publicEvents[eventName];
-      cards.push({
-        clientName: c.clientName, eventDate: c.eventDate, coverFileId: ev.coverFileId,
-        category: eventName, galleryId: c.id, eventScope: eventName, videoScope: null,
-        excludeFromAll: true
-      });
-    });
-    Object.keys(c.publicVideos || {}).forEach(videoId=>{
-      const vid = c.publicVideos[videoId];
-      cards.push({
-        clientName: c.clientName + (vid.label ? ' — ' + vid.label : ''), eventDate: c.eventDate,
-        coverFileId: vid.coverFileId || videoId,
-        category: 'Videos', galleryId: c.id, eventScope: null, videoScope: videoId,
-        excludeFromAll: true
-      });
-    });
-  });
-  return cards;
+function baseAddons(cinePrice, photographerPrice, sameDayEditPrice, reelsPrice){
+  return [
+    {name:'Photographer', price: photographerPrice || 15000},
+    {name:'Videographer', price:15000},
+    {name:'Cinematographer', price:cinePrice},
+    {name:'Drone', price:15000},
+    {name:'LED', price:15000},
+    {name:'YouTube Live', price:15000},
+    {name:'Same-Day Edit', price: sameDayEditPrice || 5000},
+    {name:'Reels', price: reelsPrice || 3000},
+  ];
 }
 
-function buildHomeCatFilter(cards){
-  const bar = document.getElementById('homeCatFilter');
-  const cats = [...new Set(cards.map(c=>c.category).filter(Boolean))];
-  bar.innerHTML = '<button class="active" data-cat="all">All</button>' +
-    cats.map(cat => `<button data-cat="${cat}">${cat}</button>`).join('');
+const weddingEvents = [
+  {
+    id:'wedding', name:'Wedding', type:'package',
+    options:[
+      {name:'Classic', price:90000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Photo Album (250 photos, client-selected)']},
+      {name:'Premium', price:120000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','1 Photo Album (80 pages album, 250 photos to be selected by client)']},
+      {name:'Elite', price:140000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','2 Photo Albums (80 pages album, 250 photos to be selected by client)']},
+    ],
+    addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}]
+  },
+  { id:'haldi1', name:'Haldi 1', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'haldi2', name:'Haldi 2', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'muhurtha', name:'Muhurtha', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'mehendi1', name:'Mehendi 1', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'mehendi2', name:'Mehendi 2', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'reception', name:'Reception', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'engagement', name:'Engagement', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000) },
+];
+
+const otherEvents = [
+  { id:'birthday', name:'Birthday', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000},{name:'Album',price:15000}], addons: baseAddons(20000, 10000) },
+  { id:'babyshower', name:'Babyshower', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000) },
+  {
+    id:'maternity', name:'Maternity', type:'package',
+    options:[
+      {name:'Option 1 — Single Session (1 Wear)', price:20000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 2 — One Day (3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+    ],
+    addons: baseAddons(20000)
+  },
+  {
+    id:'prewedding', name:'Pre-Wedding Shoot', type:'package',
+    options:[
+      {name:'Option 1 — Single Session (1 Wear)', price:20000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 2 — One Day (3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+    ],
+    addons: baseAddons(20000)
+  },
+];
+
+const allEvents = [...weddingEvents, ...otherEvents];
+
+// selection state
+const state = {};        // roles: Set(roleNames) | package: index or null
+const addonState = {};   // eventId -> Set(addonNames)
+const timeState = {};    // eventId -> time string
+const dateState = {};    // eventId -> date string
+const locationState = {}; // eventId -> venue string
+const expanded = new Set();
+
+function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
+
+function eventSubtotal(ev){
+  let sum = 0;
+  if(ev.type==='roles'){
+    const set = state[ev.id] || new Set();
+    ev.roles.forEach(r=>{ if(set.has(r.name)) sum += r.price; });
+  } else {
+    const idx = state[ev.id];
+    if(idx !== null && idx !== undefined) sum += ev.options[idx].price;
+  }
+  const aset = addonState[ev.id] || new Set();
+  ev.addons.forEach(a=>{ if(aset.has(a.name)) sum += a.price; });
+  return sum;
 }
 
-function renderHomeGrid(cards, filter){
-  const grid = document.getElementById('homeGrid');
-  const filtered = filter==='all'
-    ? cards.filter(c => !c.excludeFromAll)
-    : cards.filter(c => c.category===filter);
-  if(filtered.length===0){ grid.innerHTML = '<div class="center-msg">No portfolio pieces published yet.</div>'; return; }
-  grid.innerHTML = filtered.map(c => {
-    const href = c.eventScope
-      ? `?gallery=${c.galleryId}&view=portfolio&event=${encodeURIComponent(c.eventScope)}`
-      : c.videoScope
-        ? `?gallery=${c.galleryId}&view=portfolio&video=${encodeURIComponent(c.videoScope)}`
-        : `?gallery=${c.galleryId}&view=portfolio`;
-    return `
-    <div class="collection-card" onclick="location.href='${href}'">
-      <div class="collection-cover" style="${c.coverFileId ? `background-image:url('https://drive.google.com/thumbnail?id=${c.coverFileId}&sz=w1000')` : ''}">
-        <div class="collection-caption">
-          <h3>${c.clientName}</h3>
-          <p>${c.eventDate}</p>
-        </div>
-      </div>
+function renderAddonsRows(ev){
+  if(!addonState[ev.id]) addonState[ev.id] = new Set();
+  const aset = addonState[ev.id];
+  const rows = ev.addons.map(a=>{
+    const isSel = aset.has(a.name);
+    return `<div class="addon-opt ${isSel?'selected':''}" data-event="${ev.id}" data-addon="${a.name}">
+      <div class="box">${CHECK_SVG}</div>
+      <div class="atext"><b>${a.name}</b>${fmt(a.price)}${a.note?`<br><span style="color:var(--ink-soft); font-size:10.5px;">${a.note}</span>`:''}</div>
     </div>`;
   }).join('');
+  return `<div class="addon-label">Add-ons (optional)</div><div class="addon-grid">${rows}</div>`;
 }
 
-document.getElementById('homeCatFilter').addEventListener('click', e=>{
-  if(e.target.tagName!=='BUTTON') return;
-  document.querySelectorAll('#homeCatFilter button').forEach(b=>b.classList.remove('active'));
-  e.target.classList.add('active');
-  api({action:'listCollections'}).then(res=>{
-    if(res.success) renderHomeGrid(buildPortfolioCards(res.collections), e.target.dataset.cat);
-  });
-});
-
-/* ================= ADMIN LOGIN ================= */
-function tryLogin(){
-  const pass = document.getElementById('adminPassInput').value;
-  api({action:'auth', password:pass}).then(res=>{
-    if(res.success){
-      adminPassword = pass;
-      sessionStorage.setItem('ss_admin_pass', pass);
-      showPage('adminDashPage');
-      loadAdminCollections();
-    } else {
-      document.getElementById('loginErr').textContent = 'Incorrect password.';
-    }
-  });
-}
-
-function logout(){
-  adminPassword = '';
-  sessionStorage.removeItem('ss_admin_pass');
-  showPage('homePage');
-  loadHomeCollections();
-}
-
-/* ================= ADMIN DASHBOARD ================= */
-function loadAdminCollections(){
-  const list = document.getElementById('adminCollectionList');
-  list.innerHTML = '<div class="center-msg">Loading…</div>';
-  api({action:'listCollections'}).then(res=>{
-    if(!res.success){ list.innerHTML = '<div class="center-msg">Could not load.</div>'; return; }
-    if(res.collections.length===0){ list.innerHTML = '<div class="center-msg">No collections yet — create one above.</div>'; return; }
-    currentCollectionsOrder = res.collections.map(c=>c.id);
-    list.innerHTML = res.collections.map((c,i) => `
-      <div class="collection-list-row">
-        <div style="display:flex; align-items:center; gap:14px;">
-          <div style="display:flex; flex-direction:column; gap:2px;">
-            <span onclick="moveCollectionOrder(${i},-1)" style="cursor:pointer; opacity:${i===0?0.25:0.7};" title="Move up">▲</span>
-            <span onclick="moveCollectionOrder(${i},1)" style="cursor:pointer; opacity:${i===res.collections.length-1?0.25:0.7};" title="Move down">▼</span>
-          </div>
-          <div style="width:52px; height:52px; border-radius:4px; overflow:hidden; flex-shrink:0; background:var(--line);">
-            ${c.coverFileId ? `<img src="https://drive.google.com/thumbnail?id=${c.coverFileId}&sz=w200" style="width:100%; height:100%; object-fit:cover; display:block;">` : ''}
-          </div>
-          <div>
-            <div class="name">${c.clientName} ${c.isPublic ? '<span style="font-size:10px; color:var(--gold); letter-spacing:1px;">● PORTFOLIO</span>' : ''}</div>
-            <div class="meta">${c.category} · ${c.eventDate}</div>
-          </div>
-        </div>
-        <div class="row-actions">
-          <button class="btn" onclick="togglePortfolio('${c.id}', ${!c.isPublic})">${c.isPublic ? 'Remove from Portfolio' : 'Add to Portfolio'}</button>
-          <button class="btn" onclick="openManager('${c.id}','${c.clientName.replace(/'/g,"\\'")}','${c.eventDate}')">Manage</button>
-          <button class="btn" style="border-color:#B23B3B; color:#B23B3B;" onclick="deleteCollection('${c.id}','${c.clientName.replace(/'/g,"\\'")}')">Delete</button>
-        </div>
-      </div>`).join('');
-  });
-}
-
-let currentCollectionsOrder = [];
-
-function moveCollectionOrder(index, direction){
-  const newIndex = index + direction;
-  if(newIndex < 0 || newIndex >= currentCollectionsOrder.length) return;
-  const temp = currentCollectionsOrder[index];
-  currentCollectionsOrder[index] = currentCollectionsOrder[newIndex];
-  currentCollectionsOrder[newIndex] = temp;
-  api({action:'reorderCollections', password:adminPassword, orderedIds:currentCollectionsOrder}).then(()=> loadAdminCollections());
-}
-
-function togglePortfolio(folderId, makePublic){
-  api({action:'setVisibility', password:adminPassword, folderId, isPublic:makePublic}).then(res=>{
-    if(res.success) loadAdminCollections();
-    else alert('Error updating portfolio visibility.');
-  });
-}
-
-function deleteCollection(folderId, clientName){
-  if(!confirm(`Delete the entire "${clientName}" collection? This removes ALL its photos, events, and videos from your site (moved to Drive's trash, recoverable there for a while). This cannot be undone from here.`)) return;
-  const typed = prompt(`To confirm, type the client name exactly: ${clientName}`);
-  if(typed !== clientName){ alert('Name did not match — nothing was deleted.'); return; }
-  api({action:'deleteCollection', password:adminPassword, folderId}).then(res=>{
-    if(res.success){
-      document.getElementById('collectionManager').style.display = 'none';
-      loadAdminCollections();
-    } else {
-      alert('Error: ' + (res.error||'could not delete collection'));
-    }
-  });
-}
-
-function createCollection(){
-  const clientName = document.getElementById('newClientName').value.trim();
-  const eventDate = document.getElementById('newEventDate').value;
-  const category = document.getElementById('newCategory').value;
-  const isPublic = document.getElementById('newIsPublic').checked;
-  if(!clientName || !eventDate){ alert('Please enter client name and date.'); return; }
-  api({action:'createCollection', password:adminPassword, clientName, eventDate, category, isPublic}).then(res=>{
-    if(res.success){
-      document.getElementById('newClientName').value='';
-      document.getElementById('newEventDate').value='';
-      document.getElementById('newIsPublic').checked=false;
-      loadAdminCollections();
-    } else {
-      alert('Error: ' + (res.error||'could not create'));
-    }
-  });
-}
-
-function openManager(folderId, clientName, eventDate){
-  currentManagedFolderId = folderId;
-  document.getElementById('collectionManager').style.display='block';
-  document.getElementById('cmTitle').textContent = 'Manage: ' + clientName;
-  const link = SITE_URL + '?gallery=' + folderId;
-  document.getElementById('cmLink').textContent = link;
-  document.getElementById('collectionManager').dataset.link = link;
-
-  api({action:'getCollectionMeta', folderId}).then(res=>{
-    currentManagedEvents = res.events.map(e=>e.name);
-    currentManagedEventType = currentManagedEvents[0] || null;
-    currentManagedPublicEvents = new Set(Object.keys(res.publicEvents || {}));
-    currentManagedPublicVideos = new Set(Object.keys(res.publicVideos || {}));
-    renderEventPills();
-    loadAdminPhotos();
-    renderVideoList(res.videos || []);
-  });
-}
-
-let currentManagedPublicVideos = new Set();
-let currentManagedVideoLabels = {};
-let currentManagedAllVideos = [];
-
-function renderVideoList(videos){
-  const wrap = document.getElementById('videoListWrap');
-  const status = document.getElementById('videoStatus');
-  currentManagedVideoLabels = {};
-  currentManagedAllVideos = videos;
-  videos.forEach(v => currentManagedVideoLabels[v.id] = v.label || 'Video');
-  status.textContent = videos.length > 0
-    ? `${videos.length} video${videos.length>1?'s':''} added`
-    : 'No videos added yet.';
-  wrap.innerHTML = videos.map((v,i) => `
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--paper-2); border:1px solid var(--line); border-radius:3px; margin-bottom:6px; font-size:12px;">
-      <span>${i+1}. ${v.label || 'Video'}</span>
-      <span style="display:flex; align-items:center; gap:10px;">
-        <span onclick="toggleVideoPortfolio('${v.id}', '${(v.label||'Video').replace(/'/g,"\\'")}')" style="cursor:pointer; color:${currentManagedPublicVideos.has(v.id)?'var(--gold)':'inherit'};" title="${currentManagedPublicVideos.has(v.id) ? 'Shown on portfolio under its own tab \u2014 tap to hide' : 'Show this video on portfolio under its own tab'}">${currentManagedPublicVideos.has(v.id) ? '●' : '○'}</span>
-        <span onclick="deleteVideo('${v.id}')" style="cursor:pointer; color:#B23B3B;" title="Remove this video">✕</span>
-      </span>
-    </div>`).join('');
-
-  // Catch any leftover portfolio entries from videos that were deleted before
-  // this cleanup existed — these have no matching row above, so they'd
-  // otherwise be stuck showing broken on the portfolio with no way to fix them.
-  const orphanedIds = Array.from(currentManagedPublicVideos).filter(id => !videos.some(v => v.id === id));
-  if(orphanedIds.length > 0){
-    wrap.innerHTML += orphanedIds.map(id => `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#fff3e0; border:1px solid #e0b070; border-radius:3px; margin-bottom:6px; font-size:12px;">
-        <span>⚠️ Leftover portfolio entry (video already deleted)</span>
-        <span onclick="clearOrphanedVideo('${id}')" style="cursor:pointer; color:#B23B3B;" title="Remove this leftover entry">✕ Clear</span>
-      </div>`).join('');
-  }
-
-  renderAdminPhotoGrid();
-}
-
-function clearOrphanedVideo(videoFileId){
-  api({action:'setVideoVisibility', password:adminPassword, folderId:currentManagedFolderId, videoFileId, isPublic:false}).then(res=>{
-    if(res.success){
-      currentManagedPublicVideos.delete(videoFileId);
-      renderVideoList(currentManagedAllVideos);
-    } else {
-      alert('Error: ' + (res.error||'could not clear this entry'));
-    }
-  });
-}
-
-function toggleVideoPortfolio(videoFileId, label){
-  const makePublic = !currentManagedPublicVideos.has(videoFileId);
-  api({action:'setVideoVisibility', password:adminPassword, folderId:currentManagedFolderId, videoFileId, isPublic:makePublic, label}).then(res=>{
-    if(res.success){
-      if(makePublic) currentManagedPublicVideos.add(videoFileId);
-      else currentManagedPublicVideos.delete(videoFileId);
-      api({action:'getCollectionMeta', folderId:currentManagedFolderId}).then(res2=> renderVideoList(res2.videos || []));
-    } else {
-      alert('Error updating portfolio visibility for this video: ' + (res.error||'unknown'));
-    }
-  });
-}
-
-function deleteVideo(videoFileId){
-  if(!confirm('Remove this video from the gallery?')) return;
-  api({action:'deleteVideo', password:adminPassword, folderId:currentManagedFolderId, videoFileId}).then(res=>{
-    if(res.success){
-      api({action:'getCollectionMeta', folderId:currentManagedFolderId}).then(res2=> renderVideoList(res2.videos || []));
-    } else {
-      alert('Error removing video: ' + (res.error||'unknown'));
-    }
-  });
-}
-
-function handleVideoUpload(file){
-  if(!file) return;
-  const label = document.getElementById('videoLabelInput').value.trim() || 'Video';
-  const progress = document.getElementById('videoProgressText');
-  progress.textContent = `Uploading video… (${(file.size/1024/1024).toFixed(1)} MB — large videos can take a few minutes)`;
-  fileToBase64(file).then(base64Data=>{
-    const uploadCall = api({action:'uploadVideo', password:adminPassword, folderId:currentManagedFolderId, fileName:file.name, mimeType:file.type, base64Data, label}).then(res=>{
-      if(res.success){
-        progress.textContent = 'Video uploaded!';
-        document.getElementById('videoLabelInput').value = '';
-        api({action:'getCollectionMeta', folderId:currentManagedFolderId}).then(res2=> renderVideoList(res2.videos || []));
-      } else {
-        progress.textContent = 'Error: ' + (res.error||'upload failed');
-      }
-    });
-
-    // Safety net: Apps Script itself cuts off any single execution at 6 minutes,
-    // so if we haven't heard back by 5 minutes, it's not coming back — show an
-    // error instead of leaving "Uploading video…" on screen forever.
-    const uploadTimeout = new Promise((_, reject)=>{
-      setTimeout(()=> reject(new Error('No response after 5 minutes — the file may be too large, or your connection dropped. Try a smaller/compressed video, or a more stable connection.')), 300000);
-    });
-
-    return Promise.race([uploadCall, uploadTimeout]);
-  }).catch(err=>{
-    progress.textContent = 'Error: ' + err.message;
-  });
-}
-
-function extractDriveFileId(input){
-  input = input.trim();
-  // Handles formats like:
-  //   https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-  //   https://drive.google.com/open?id=FILE_ID
-  //   or just a bare FILE_ID pasted directly
-  const patterns = [
-    /\/file\/d\/([a-zA-Z0-9_-]+)/,
-    /[?&]id=([a-zA-Z0-9_-]+)/
-  ];
-  for(const re of patterns){
-    const m = input.match(re);
-    if(m) return m[1];
-  }
-  // No URL pattern matched — assume they pasted the raw file ID itself
-  if(/^[a-zA-Z0-9_-]{10,}$/.test(input)) return input;
-  return null;
-}
-
-function linkVideoFromDrive(){
-  const raw = document.getElementById('videoLinkInput').value;
-  const label = document.getElementById('videoLabelInput').value.trim() || 'Video';
-  const status = document.getElementById('videoLinkStatus');
-  const fileId = extractDriveFileId(raw);
-  if(!fileId){
-    status.textContent = 'Could not find a valid Drive link/ID in that text — please check and try again.';
-    return;
-  }
-  status.textContent = 'Linking video…';
-  api({action:'setVideoId', password:adminPassword, folderId:currentManagedFolderId, videoFileId:fileId, label}).then(res=>{
-    if(res.success){
-      status.textContent = 'Video linked!';
-      document.getElementById('videoLinkInput').value = '';
-      document.getElementById('videoLabelInput').value = '';
-      api({action:'getCollectionMeta', folderId:currentManagedFolderId}).then(res2=> renderVideoList(res2.videos || []));
-    } else {
-      status.textContent = 'Error: ' + (res.error || 'could not link video');
-    }
-  }).catch(err=>{
-    status.textContent = 'Network error: ' + err.message;
-  });
-}
-
-function copyClientLink(){
-  const link = document.getElementById('collectionManager').dataset.link;
-  navigator.clipboard.writeText(link).then(()=> alert('Link copied!'));
-}
-
-function updateUploadBoxVisibility(){
-  const box = document.getElementById('uploadBox');
-  const msg = document.getElementById('noEventMsg');
-  box.style.display = currentManagedEventType ? 'block' : 'none';
-  msg.style.display = currentManagedEventType ? 'none' : 'block';
-}
-
-function renderEventPills(){
-  const row = document.getElementById('eventPillRow');
-  row.innerHTML = currentManagedEvents.map((ev,i) => `
-    <div class="event-pill ${ev===currentManagedEventType?'active':''}">
-      ${i>0 ? `<span onclick="moveEventPill(${i},-1)" style="opacity:.6; cursor:pointer; margin-right:6px;" title="Move left">◀</span>` : ''}
-      <span onclick="selectManagedEvent('${ev.replace(/'/g,"\\'")}')">${ev}</span>
-      ${i<currentManagedEvents.length-1 ? `<span onclick="moveEventPill(${i},1)" style="opacity:.6; cursor:pointer; margin-left:6px;" title="Move right">▶</span>` : ''}
-      <span onclick="toggleEventPortfolio('${ev.replace(/'/g,"\\'")}', event)" style="margin-left:8px; cursor:pointer; color:${currentManagedPublicEvents.has(ev)?'var(--gold)':'inherit'};" title="${currentManagedPublicEvents.has(ev) ? 'Shown on portfolio under its own \u0027'+ev+'\u0027 tab \u2014 tap to hide' : 'Show this event on portfolio under its own tab'}">${currentManagedPublicEvents.has(ev) ? '●' : '○'}</span>
-      <span onclick="deleteEventType('${ev.replace(/'/g,"\\'")}')" style="margin-left:8px; opacity:.6; cursor:pointer;" title="Delete this event">✕</span>
-    </div>
-  `).join('');
-  updateUploadBoxVisibility();
-}
-
-let currentManagedPublicEvents = new Set();
-
-function toggleEventPortfolio(eventName, evt){
-  evt.stopPropagation();
-  const makePublic = !currentManagedPublicEvents.has(eventName);
-  api({action:'setEventVisibility', password:adminPassword, folderId:currentManagedFolderId, eventType:eventName, isPublic:makePublic}).then(res=>{
-    if(res.success){
-      if(makePublic) currentManagedPublicEvents.add(eventName);
-      else currentManagedPublicEvents.delete(eventName);
-      renderEventPills();
-    } else {
-      alert('Error updating portfolio visibility for this event: ' + (res.error||'unknown'));
-    }
-  });
-}
-
-function moveEventPill(index, direction){
-  const newIndex = index + direction;
-  if(newIndex < 0 || newIndex >= currentManagedEvents.length) return;
-  const temp = currentManagedEvents[index];
-  currentManagedEvents[index] = currentManagedEvents[newIndex];
-  currentManagedEvents[newIndex] = temp;
-  renderEventPills();
-  api({action:'reorderEvents', password:adminPassword, folderId:currentManagedFolderId, orderedEventNames:currentManagedEvents});
-}
-
-function deleteEventType(ev){
-  if(!confirm(`Delete "${ev}" and all its photos? This cannot be undone.`)) return;
-  api({action:'deleteEvent', password:adminPassword, folderId:currentManagedFolderId, eventType:ev}).then(res=>{
-    currentManagedEvents = currentManagedEvents.filter(e=>e!==ev);
-    if(currentManagedEventType===ev) currentManagedEventType = currentManagedEvents[0] || null;
-    renderEventPills();
-    loadAdminPhotos();
-  });
-}
-
-function selectManagedEvent(ev){
-  currentManagedEventType = ev;
-  renderEventPills();
-  loadAdminPhotos();
-}
-
-function addEventType(){
-  const val = document.getElementById('newEventTypeInput').value.trim();
-  if(!val) return;
-  if(!currentManagedEvents.includes(val)) currentManagedEvents.push(val);
-  currentManagedEventType = val;
-  document.getElementById('newEventTypeInput').value='';
-  renderEventPills();
-  loadAdminPhotos();
-}
-
-let currentAdminPhotos = [];
-let selectedPhotoIds = new Set();
-
-function loadAdminPhotos(){
-  const grid = document.getElementById('adminPhotoGrid');
-  if(!currentManagedEventType){ grid.innerHTML = '<div class="center-msg">Add an event name above to start uploading.</div>'; return; }
-  grid.innerHTML = '<div class="center-msg">Loading photos…</div>';
-  api({action:'listPhotos', folderId:currentManagedFolderId, eventType:currentManagedEventType, resolution:'compressed'}).then(res=>{
-    if(!res.success){ grid.innerHTML = `<div class="center-msg">Could not load photos: ${res.error||'unknown error'}</div>`; return; }
-    currentAdminPhotos = res.photos;
-    selectedPhotoIds = new Set();
-    renderAdminPhotoGrid();
-  }).catch(err=>{
-    grid.innerHTML = `<div class="center-msg">Network error loading photos: ${err.message}</div>`;
-  });
-}
-
-function toggleSelect(id, event){
-  event.stopPropagation();
-  if(selectedPhotoIds.has(id)) selectedPhotoIds.delete(id);
-  else selectedPhotoIds.add(id);
-  renderAdminPhotoGrid();
-}
-
-function clearSelection(){
-  selectedPhotoIds = new Set();
-  renderAdminPhotoGrid();
-}
-
-function saveNewOrder(){
-  const orderedNames = currentAdminPhotos.map(p=>p.name);
-  api({action:'reorderPhotos', password:adminPassword, folderId:currentManagedFolderId, eventType:currentManagedEventType, orderedNames});
-}
-
-function moveSelectedToFolder(){
-  if(selectedPhotoIds.size===0) return;
-  const targetEvent = document.getElementById('moveToEventSelect').value;
-  if(!targetEvent){ alert('No other folder to move to. Add another event first.'); return; }
-  const fileNames = currentAdminPhotos.filter(p=>selectedPhotoIds.has(p.id)).map(p=>p.name);
-  api({action:'movePhotosToEvent', password:adminPassword, folderId:currentManagedFolderId, fromEventType:currentManagedEventType, toEventType:targetEvent, fileNames}).then(res=>{
-    if(res.success){
-      alert(`Moved ${fileNames.length} photo(s) to "${targetEvent}".`);
-      selectedPhotoIds = new Set();
-      loadAdminPhotos();
-    } else {
-      alert('Error moving photos: ' + (res.error||'unknown'));
-    }
-  });
-}
-
-function moveSelectedToStart(){
-  if(selectedPhotoIds.size===0) return;
-  const moving = currentAdminPhotos.filter(p => selectedPhotoIds.has(p.id));
-  const staying = currentAdminPhotos.filter(p => !selectedPhotoIds.has(p.id));
-  currentAdminPhotos = [...moving, ...staying];
-  renderAdminPhotoGrid();
-  saveNewOrder();
-}
-
-function moveSelectedToEnd(){
-  if(selectedPhotoIds.size===0) return;
-  const moving = currentAdminPhotos.filter(p => selectedPhotoIds.has(p.id));
-  const staying = currentAdminPhotos.filter(p => !selectedPhotoIds.has(p.id));
-  currentAdminPhotos = [...staying, ...moving];
-  renderAdminPhotoGrid();
-  saveNewOrder();
-}
-
-function renderAdminPhotoGrid(){
-  const grid = document.getElementById('adminPhotoGrid');
-  const bar = document.getElementById('selectionBar');
-  if(selectedPhotoIds.size > 0){
-    bar.style.display = 'flex';
-    document.getElementById('selectionCount').textContent = selectedPhotoIds.size + ' selected';
-    const select = document.getElementById('moveToEventSelect');
-    select.innerHTML = currentManagedEvents.filter(ev=>ev!==currentManagedEventType).map(ev=>`<option value="${ev}">${ev}</option>`).join('');
+function renderCard(ev){
+  if(ev.type==='roles'){
+    if(!state[ev.id]) state[ev.id] = new Set();
   } else {
-    bar.style.display = 'none';
+    if(!(ev.id in state)) state[ev.id] = null;
   }
-
-  const pendingHtml = pendingUploadTiles.map(t => `
-    <div class="admin-photo-tile pending">
-      <img src="${t.localUrl}">
-      <div class="pending-overlay"><div class="pending-spinner"></div></div>
-    </div>`).join('');
-
-  grid.innerHTML = pendingHtml + currentAdminPhotos.map((p,i) => `
-    <div class="admin-photo-tile ${selectedPhotoIds.has(p.id)?'selected':''}"
-         draggable="true"
-         data-index="${i}"
-         onclick="toggleSelect('${p.id}', event)"
-         ondragstart="onDragStart(event, ${i})"
-         ondragover="onDragOver(event, ${i})"
-         ondragleave="onDragLeave(event)"
-         ondrop="onDrop(event, ${i})"
-         ondragend="onDragEnd(event)">
-      <div class="select-checkbox">${selectedPhotoIds.has(p.id)?'✓':''}</div>
-      <img src="${p.viewUrl}" loading="lazy">
-      <div class="tile-actions">
-        <div class="mini-icon" title="View full size" onclick="event.stopPropagation(); openLightbox('${p.viewUrl.replace(/'/g,"")}')">👁</div>
-        <div class="mini-icon" title="Set as collection cover" onclick="event.stopPropagation(); setCover('${p.id}')">★</div>
-        ${currentManagedPublicEvents.has(currentManagedEventType) ? `<div class="mini-icon" title="Set as this event's portfolio card cover" onclick="event.stopPropagation(); setEventCover('${p.id}')">🖼</div>` : ''}
-        ${currentManagedPublicVideos.size > 0 ? `<div class="mini-icon" title="Set as a video's portfolio card cover" onclick="event.stopPropagation(); assignPhotoAsVideoCover('${p.id}')">🎬</div>` : ''}
-        <div class="mini-icon" title="Delete" onclick="event.stopPropagation(); deletePhoto('${p.id}')">✕</div>
-      </div>
-    </div>`).join('');
-}
-
-function onDragStart(event, index){
-  const draggedId = currentAdminPhotos[index].id;
-  if(!selectedPhotoIds.has(draggedId)){
-    selectedPhotoIds = new Set([draggedId]);
-    renderAdminPhotoGrid();
-  }
-  event.dataTransfer.setData('text/plain', String(index));
-  event.dataTransfer.effectAllowed = 'move';
-}
-
-function onDragOver(event, index){
-  event.preventDefault();
-  event.currentTarget.classList.add('drag-over');
-}
-
-function onDragLeave(event){
-  event.currentTarget.classList.remove('drag-over');
-}
-
-function onDragEnd(event){
-  document.querySelectorAll('.admin-photo-tile').forEach(t=>t.classList.remove('drag-over'));
-}
-
-function onDrop(event, targetIndex){
-  event.preventDefault();
-  event.currentTarget.classList.remove('drag-over');
-
-  const movingIds = selectedPhotoIds;
-  const moving = currentAdminPhotos.filter(p => movingIds.has(p.id));
-  const staying = currentAdminPhotos.filter(p => !movingIds.has(p.id));
-
-  const targetPhoto = currentAdminPhotos[targetIndex];
-  let insertAt = staying.findIndex(p => p.id === targetPhoto.id);
-  if(insertAt === -1) insertAt = staying.length;
-  else if(movingIds.has(targetPhoto.id)) {
-    // dropped on a selected photo itself; insert at its original position among staying items
-    insertAt = staying.length;
-  }
-
-  const reordered = [...staying.slice(0, insertAt), ...moving, ...staying.slice(insertAt)];
-  currentAdminPhotos = reordered;
-  renderAdminPhotoGrid();
-
-  const orderedNames = currentAdminPhotos.map(p=>p.name);
-  api({action:'reorderPhotos', password:adminPassword, folderId:currentManagedFolderId, eventType:currentManagedEventType, orderedNames});
-}
-
-function setCover(fileId){
-  api({action:'setCover', password:adminPassword, folderId:currentManagedFolderId, fileId}).then(res=>{
-    if(res.success){
-      alert('Cover photo updated.');
-    } else {
-      alert('Error setting cover.');
-    }
-  });
-}
-
-function setEventCover(fileId){
-  api({action:'setEventCover', password:adminPassword, folderId:currentManagedFolderId, eventType:currentManagedEventType, fileId}).then(res=>{
-    if(res.success){
-      alert(`Cover updated for the "${currentManagedEventType}" portfolio card.`);
-    } else {
-      alert('Error: ' + (res.error||'could not set cover'));
-    }
-  });
-}
-
-function assignPhotoAsVideoCover(fileId){
-  const publicVideoIds = Array.from(currentManagedPublicVideos);
-  let targetVideoId;
-
-  if(publicVideoIds.length === 1){
-    targetVideoId = publicVideoIds[0];
-  } else {
-    // Numbers match the same order shown in the video list above (not just
-    // among public videos) — works even when two videos share the exact
-    // same title, and stays consistent with what the studio sees on screen.
-    const optionsList = currentManagedAllVideos
-      .map((v,i) => publicVideoIds.includes(v.id) ? `${i+1}. ${v.label || 'Video'}` : null)
-      .filter(Boolean).join('\n');
-    const typed = prompt(`Which video should use this photo as its cover? Type the number (matching the list above):\n${optionsList}`);
-    if(!typed) return;
-    const index = parseInt(typed.trim(), 10) - 1;
-    if(isNaN(index) || index < 0 || index >= currentManagedAllVideos.length || !publicVideoIds.includes(currentManagedAllVideos[index].id)){
-      alert('Please enter a valid number from the list.'); return;
-    }
-    targetVideoId = currentManagedAllVideos[index].id;
-  }
-
-  api({action:'setVideoCover', password:adminPassword, folderId:currentManagedFolderId, videoFileId:targetVideoId, fileId}).then(res=>{
-    if(res.success){
-      alert(`Cover updated for the "${currentManagedVideoLabels[targetVideoId]}" video card.`);
-    } else {
-      alert('Error: ' + (res.error||'could not set cover'));
-    }
-  });
-}
-
-function deletePhoto(fileId){
-  if(!confirm('Delete this photo? This also removes it from the client view.')) return;
-  api({action:'deletePhoto', password:adminPassword, fileId, folderId:currentManagedFolderId}).then(()=> loadAdminPhotos());
-}
-
-function deleteSelectedPhotos(){
-  const count = selectedPhotoIds.size;
-  if(count === 0) return;
-  if(!confirm(`Delete ${count} selected photo(s)? This also removes them from the client view. This cannot be undone.`)) return;
-
-  const progress = document.getElementById('progressText');
-  progress.textContent = `Deleting 0 of ${count}…`;
-  let done = 0;
-
-  const idsToDelete = Array.from(selectedPhotoIds);
-  Promise.all(idsToDelete.map(fileId =>
-    api({action:'deletePhoto', password:adminPassword, fileId, folderId:currentManagedFolderId}).then(()=>{
-      done++;
-      progress.textContent = `Deleting ${done} of ${count}…`;
-    }).catch(()=>{
-      done++;
-    })
-  )).then(()=>{
-    progress.textContent = `Deleted ${count} photo(s).`;
-    selectedPhotoIds = new Set();
-    loadAdminPhotos();
-  });
-}
-
-let uploadErrors = [];
-let pendingUploadTiles = [];
-const UPLOAD_CONCURRENCY = 2; // 2 photos in flight at once — keeps things faster than one-by-one without overloading the Apps Script backend
-
-function handleFiles(fileList){
-  if(!currentManagedEventType){
-    alert('Please add an event name first (type it above and click "+ Add Event") before uploading photos.');
-    return;
-  }
-  const files = Array.from(fileList);
-  if(files.length===0) return;
-  startUploadBatch(files);
-}
-
-function startUploadBatch(files){
-  uploadErrors = [];
-  const total = files.length;
-  let completed = 0;
-
-  // Show instant local thumbnails right away, before any network call finishes,
-  // so it feels immediate like Google Photos, and uploads happen in parallel in the background.
-  // allTiles is a stable, never-reassigned array so each file can always be found by its
-  // original index — pendingUploadTiles (used only for rendering) is a separate array that
-  // shrinks as photos finish, so it must never be used for index lookups.
-  const allTiles = files.map(file => ({
-    file,
-    localUrl: URL.createObjectURL(file),
-    done:false
-  }));
-  pendingUploadTiles = allTiles.slice();
-  renderAdminPhotoGrid();
-
-  const progress = document.getElementById('progressText');
-  progress.textContent = `Uploading 0 of ${total}…`;
-
-  let nextIndex = 0;
-  function launchNext(){
-    if(nextIndex >= files.length) return;
-    const i = nextIndex++;
-    const file = files[i];
-    const tile = allTiles[i];
-
-    uploadSingleFile(file).catch(err=>{
-      uploadErrors.push(file.name + ': ' + err.message);
-    }).then(()=>{
-      completed++;
-      tile.done = true;
-      URL.revokeObjectURL(tile.localUrl);
-      pendingUploadTiles = pendingUploadTiles.filter(t=>!t.done);
-      progress.textContent = `Uploading ${completed} of ${total}…`;
-      renderAdminPhotoGrid();
-
-      if(completed === total){
-        if(uploadErrors.length===0){
-          progress.textContent = 'Upload complete!';
-        } else {
-          progress.textContent = `Upload finished with ${uploadErrors.length} error(s): ${uploadErrors.join('; ')}`;
-        }
-        loadAdminPhotos();
-      } else {
-        launchNext();
-      }
-    });
-  }
-
-  const startCount = Math.min(UPLOAD_CONCURRENCY, files.length);
-  for(let c=0; c<startCount; c++) launchNext();
-}
-
-function uploadSingleFile(file){
-  return compressImage(file, 2048, 0.9).then(webB64 => {
-    const uploadCall = api({
-      action:'uploadPhoto', password:adminPassword, folderId:currentManagedFolderId,
-      eventType:currentManagedEventType, resolution:'compressed',
-      fileName:file.name, mimeType:'image/jpeg', base64Data:webB64
-    }).then(res=>{
-      if(!res.success) throw new Error('upload failed: ' + (res.error||'unknown'));
-    });
-
-    // Safety net: if the server never responds (network stall, backend hang),
-    // give up after 45s instead of blocking the rest of the batch forever.
-    const uploadTimeout = new Promise((_, reject)=>{
-      setTimeout(()=> reject(new Error('Upload timed out after 45s — server did not respond, skipped')), 45000);
-    });
-
-    return Promise.race([uploadCall, uploadTimeout]);
-  });
-}
-
-function fileToBase64(file){
-  return new Promise((resolve,reject)=>{
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function compressImage(file, maxDim, quality){
-  const decode = new Promise((resolve,reject)=>{
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = e => { img.src = e.target.result; };
-    reader.onerror = () => reject(new Error('Could not read file (possibly corrupted)'));
-    img.onload = () => {
-      let { width, height } = img;
-      if(width > height && width > maxDim){ height *= maxDim/width; width = maxDim; }
-      else if(height > maxDim){ width *= maxDim/height; height = maxDim; }
-      const canvas = document.createElement('canvas');
-      canvas.width = width; canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1]);
-    };
-    img.onerror = () => reject(new Error('Could not decode image (file may be corrupted or an unsupported format like HEIC)'));
-    reader.readAsDataURL(file);
-  });
-
-  // Safety net: if a photo neither loads nor errors within 25s (some corrupted
-  // files trigger neither event and would otherwise hang the queue forever),
-  // give up on it so the rest of the batch can continue.
-  const timeout = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Timed out decoding this photo after 25s (likely a corrupted file) — skipped')), 25000);
-  });
-
-  return Promise.race([decode, timeout]);
-}
-
-/* drag and drop */
-const uploadBox = document.getElementById('uploadBox');
-['dragover','dragleave','drop'].forEach(evt=>{
-  uploadBox.addEventListener(evt, e=>{ e.preventDefault(); });
-});
-uploadBox.addEventListener('drop', e=>{
-  handleFiles(e.dataTransfer.files);
-});
-
-/* ================= CLIENT GALLERY (public link) ================= */
-let currentGalleryIsPublic = false;
-
-let downloadBarObserver = null;
-
-function setupDownloadBarReveal(){
-  const target = document.getElementById('galScrollTarget');
-  const bar = document.getElementById('galDownloadBar');
-  if(!target || !bar) return;
-
-  if(downloadBarObserver) downloadBarObserver.disconnect();
-  bar.classList.remove('visible');
-
-  downloadBarObserver = new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      bar.classList.toggle('visible', entry.isIntersecting || entry.boundingClientRect.top < 0);
-    });
-  }, { threshold: 0 });
-  downloadBarObserver.observe(target);
-}
-
-function openClientGallery(folderId, isShowcaseView, eventScope, videoScope){
-  currentGalleryFolderId = folderId;
-  showPage('clientGalleryPage');
-  api({action:'getCollectionMeta', folderId}).then(res=>{
-    if(!res.success) return;
-    document.getElementById('galEyebrow').textContent = (res.category||'').toUpperCase() + ' COLLECTION';
-    document.getElementById('galName').textContent = res.clientName;
-    document.getElementById('galDate').textContent = (res.eventDate||'').toUpperCase();
-    document.getElementById('galClientName').textContent = res.clientName;
-    if(res.coverFileId){
-      document.getElementById('galleryCover').style.backgroundImage =
-        `url('https://drive.google.com/thumbnail?id=${res.coverFileId}&sz=w1000')`;
-    }
-    currentGalleryFolderUrl = res.folderUrl;
-    currentGalleryIsPublic = !!isShowcaseView;
-    document.getElementById('galDownloadAllBtn').style.display = currentGalleryIsPublic ? 'none' : 'inline-flex';
-    document.getElementById('galDownloadBar').style.display = currentGalleryIsPublic ? 'none' : 'flex';
-    setupDownloadBarReveal();
-
-    let events = res.events.map(e=>e.name);
-    let videos = res.videos || [];
-
-    // A portfolio card can link to just ONE specific event (e.g. "Pre-Wedding")
-    // or just ONE specific video — when that's the case, hide everything else
-    // so only that one thing is shown.
-    if(eventScope && events.includes(eventScope)){
-      events = [eventScope];
-      videos = [];
-    } else if(videoScope){
-      events = [];
-      videos = videos.filter(v => v.id === videoScope);
-    }
-
-    currentGalleryVideos = videos;
-    currentGalleryEvents = events;
-    currentGalleryEventType = currentGalleryEvents[0] || null;
-    renderGalleryTabs();
-    loadGalleryPhotos();
-  });
-}
-
-let currentGalleryVideos = [];
-
-function openVideoTab(){
-  if(currentGalleryVideos.length === 0) return;
-  if(currentGalleryVideos.length === 1){
-    playVideo(currentGalleryVideos[0].id);
-    return;
-  }
-  const picker = document.getElementById('videoPickerOverlay');
-  document.getElementById('videoPickerList').innerHTML = currentGalleryVideos.map(v => `
-    <div class="video-picker-item" onclick="closeVideoPicker(); playVideo('${v.id}')">${v.label || 'Video'}</div>
-  `).join('');
-  picker.style.display = 'flex';
-}
-
-function closeVideoPicker(){
-  document.getElementById('videoPickerOverlay').style.display = 'none';
-}
-
-function playVideo(videoFileId){
-  const overlay = document.getElementById('videoLightboxOverlay');
-  const frame = document.getElementById('videoLightboxFrame');
-  frame.src = `https://drive.google.com/file/d/${videoFileId}/preview`;
-  overlay.style.display = 'flex';
-
-  // Use the browser's real fullscreen mode (not just CSS sizing) so rotation
-  // and scaling behave like a native video player instead of leaving black bars.
-  const requestFs = overlay.requestFullscreen || overlay.webkitRequestFullscreen || overlay.webkitEnterFullscreen;
-  if(requestFs){
-    try { requestFs.call(overlay); } catch(e){ /* fullscreen not available — overlay still works, just without OS-level rotation handling */ }
-  }
-}
-
-function closeVideoLightbox(){
-  const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
-  if((document.fullscreenElement || document.webkitFullscreenElement) && exitFs){
-    try { exitFs.call(document); } catch(e){}
-  }
-  document.getElementById('videoLightboxOverlay').style.display = 'none';
-  document.getElementById('videoLightboxFrame').src = ''; // stop playback when closed
-}
-
-// If the person exits fullscreen using their phone's own back gesture/button
-// (rather than our ✕), close the overlay too instead of leaving a black screen.
-['fullscreenchange','webkitfullscreenchange'].forEach(evt=>{
-  document.addEventListener(evt, ()=>{
-    const stillFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-    const overlay = document.getElementById('videoLightboxOverlay');
-    if(!stillFullscreen && overlay.style.display === 'flex'){
-      overlay.style.display = 'none';
-      document.getElementById('videoLightboxFrame').src = '';
-    }
-  });
-});
-
-function renderGalleryTabs(){
-  const tabs = document.getElementById('galEventTabs');
-  const videoTabHtml = currentGalleryVideos.length > 0
-    ? `<button onclick="openVideoTab()">Video${currentGalleryVideos.length>1?'s':''}</button>`
-    : '';
-  tabs.innerHTML = videoTabHtml + currentGalleryEvents.map(ev => `
-    <button class="${ev===currentGalleryEventType?'active':''}" onclick="selectGalleryEvent('${ev.replace(/'/g,"\\'")}')">${ev}</button>
-  `).join('');
-}
-
-function selectGalleryEvent(ev){
-  currentGalleryEventType = ev;
-  renderGalleryTabs();
-  loadGalleryPhotos();
-}
-
-let currentDisplayedPhotos = [];
-let currentLightboxIndex = -1;
-
-function showLightboxPhoto(){
-  if(currentLightboxIndex < 0 || !currentDisplayedPhotos[currentLightboxIndex]) return;
-  const url = currentDisplayedPhotos[currentLightboxIndex].viewUrl.replace(/sz=w\d+/, 'sz=w2048');
-  document.getElementById('lightboxImg').src = url;
-  const multi = currentDisplayedPhotos.length > 1;
-  document.querySelector('.lightbox-prev').style.display = multi ? 'flex' : 'none';
-  document.querySelector('.lightbox-next').style.display = multi ? 'flex' : 'none';
-}
-
-function showNextPhoto(){
-  if(currentDisplayedPhotos.length===0) return;
-  currentLightboxIndex = (currentLightboxIndex + 1) % currentDisplayedPhotos.length;
-  showLightboxPhoto();
-}
-
-function showPrevPhoto(){
-  if(currentDisplayedPhotos.length===0) return;
-  currentLightboxIndex = (currentLightboxIndex - 1 + currentDisplayedPhotos.length) % currentDisplayedPhotos.length;
-  showLightboxPhoto();
-}
-
-function openLightbox(indexOrUrl){
-  if(typeof indexOrUrl === 'number'){
-    currentLightboxIndex = indexOrUrl;
-    showLightboxPhoto();
-  } else {
-    // Legacy direct-URL call (used by the admin panel's own photo grid)
-    currentDisplayedPhotos = [];
-    currentLightboxIndex = -1;
-    const largerUrl = indexOrUrl.replace(/sz=w\d+/, 'sz=w2048');
-    document.getElementById('lightboxImg').src = largerUrl;
-    document.querySelector('.lightbox-prev').style.display = 'none';
-    document.querySelector('.lightbox-next').style.display = 'none';
-  }
-  document.getElementById('lightboxOverlay').style.display = 'flex';
-}
-
-function closeLightbox(){
-  document.getElementById('lightboxOverlay').style.display = 'none';
-}
-
-document.addEventListener('keydown', e=>{
-  if(document.getElementById('lightboxOverlay').style.display !== 'flex') return;
-  if(e.key === 'ArrowRight') showNextPhoto();
-  else if(e.key === 'ArrowLeft') showPrevPhoto();
-  else if(e.key === 'Escape') closeLightbox();
-});
-
-(function(){
-  let touchStartX = null;
-  const overlay = document.getElementById('lightboxOverlay');
-  overlay.addEventListener('touchstart', e=>{ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
-  overlay.addEventListener('touchend', e=>{
-    if(touchStartX === null) return;
-    const deltaX = e.changedTouches[0].clientX - touchStartX;
-    if(Math.abs(deltaX) > 40){
-      if(deltaX < 0) showNextPhoto();
-      else showPrevPhoto();
-    }
-    touchStartX = null;
-  }, {passive:true});
-})();
-
-function loadGalleryPhotos(){
-  const grid = document.getElementById('galPhotoGrid');
-
-  if(currentGalleryEvents.length === 0){
-    grid.innerHTML = currentGalleryVideos.length > 0
-      ? '<div class="center-msg">↑ Tap "Video" above to watch.</div>'
-      : '<div class="center-msg">No photos yet.</div>';
-    return;
-  }
-
-  grid.innerHTML = '<div class="center-msg">Loading photos…</div>';
-  if(!currentGalleryEventType){ grid.innerHTML = '<div class="center-msg">No photos yet.</div>'; return; }
-
-  api({action:'listPhotos', folderId:currentGalleryFolderId, eventType:currentGalleryEventType, resolution:'compressed'}).then(res=>{
-    if(!res.success || res.photos.length===0){ grid.innerHTML = '<div class="center-msg">No photos yet.</div>'; return; }
-    renderPhotoGridDisplay(res.photos);
-  });
-}
-
-function renderPhotoGridDisplay(photos){
-  const grid = document.getElementById('galPhotoGrid');
-  currentDisplayedPhotos = photos;
-
-  grid.innerHTML = photos.map((p,i) => {
-    const downloadIcon = currentGalleryIsPublic
-      ? ''
-      : `<a class="icon-btn" href="${p.downloadUrl}" target="_blank" title="Download this photo (web resolution)" onclick="event.stopPropagation()">⬇</a>`;
-    return `
-      <div class="photo-tile">
-        <img src="${p.viewUrl}" loading="lazy" onclick="openLightbox(${i})"
-             onload="if(this.naturalWidth > this.naturalHeight){ this.closest('.photo-tile').classList.add('wide'); }">
-        <div class="hover-actions">
-          ${downloadIcon}
-        </div>
+  const isExpanded = expanded.has(ev.id);
+  const sub = eventSubtotal(ev);
+
+  let mainRows = '';
+  if(ev.type==='roles'){
+    const sel = state[ev.id];
+    mainRows = ev.roles.map(r=>{
+      const isSel = sel.has(r.name);
+      return `<div class="role-opt ${isSel?'selected':''}" data-event="${ev.id}" data-role="${r.name}">
+        <div class="left"><div class="box">${CHECK_SVG}</div><div class="rname">${r.name}</div></div>
+        <div class="rprice">${fmt(r.price)}</div>
       </div>`;
-  }).join('');
+    }).join('');
+  } else {
+    const sel = state[ev.id];
+    mainRows = ev.options.map((o,i)=>{
+      const isSel = sel === i;
+      const li = o.includes.map(x=>`<li>${x}</li>`).join('');
+      return `<div class="pkg-opt ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}">
+        <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
+        <ul>${li}</ul>
+      </div>`;
+    }).join('');
+  }
+
+  return `<div class="card ${isExpanded?'expanded':''}" id="card-${ev.id}">
+    <div class="card-head" data-toggle="${ev.id}">
+      <div class="name">${ev.name}</div>
+      <div class="right">
+        ${sub>0?`<div class="sub">${fmt(sub)}</div>`:`<div class="hint">${ev.type==='roles'?'choose any':'choose one'}</div>`}
+        <div class="chevron"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      ${mainRows}
+      ${renderAddonsRows(ev)}
+      <div class="addon-label" style="margin-top:6px;">Event Date, Time & Location (optional)</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input type="date" class="ev-date" data-event="${ev.id}" value="${dateState[ev.id]||''}" style="flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="time" class="ev-time" data-event="${ev.id}" value="${timeState[ev.id]||''}" style="flex:1 1 100px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="text" class="ev-loc" data-event="${ev.id}" placeholder="Venue / Location" value="${locationState[ev.id]||''}" style="flex:2 1 160px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+      </div>
+    </div>
+  </div>`;
 }
 
-function runZipDownload(btn, payload){
-  if(!btn) return;
-  const originalLabel = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Preparing zip…';
+function renderAll(){
+  document.getElementById('events-wedding').innerHTML = weddingEvents.map(renderCard).join('');
+  document.getElementById('events-other').innerHTML = otherEvents.map(renderCard).join('');
+  attachHandlers();
+  updateTotal();
+}
 
-  api(payload).then(res=>{
-    if(res.success && res.downloadUrl){
-      window.location.href = res.downloadUrl;
-    } else {
-      alert(res.error || 'Could not prepare the zip. Please try again in a moment.');
+function attachHandlers(){
+  document.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.onclick = () => {
+      const id = el.dataset.toggle;
+      if(expanded.has(id)) expanded.delete(id); else expanded.add(id);
+      renderAll();
+    };
+  });
+  document.querySelectorAll('.role-opt').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const evId = el.dataset.event, role = el.dataset.role;
+      const set = state[evId];
+      if(set.has(role)) set.delete(role); else set.add(role);
+      renderAll();
+    };
+  });
+  document.querySelectorAll('.pkg-opt').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const evId = el.dataset.event, idx = parseInt(el.dataset.idx);
+      state[evId] = (state[evId] === idx) ? null : idx;
+      renderAll();
+    };
+  });
+  document.querySelectorAll('.addon-opt').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const evId = el.dataset.event, name = el.dataset.addon;
+      const aset = addonState[evId];
+      if(aset.has(name)) aset.delete(name); else aset.add(name);
+      renderAll();
+    };
+  });
+  const tt = document.getElementById('terms-toggle');
+  if(tt){
+    tt.onclick = () => {
+      document.getElementById('terms-card').classList.toggle('expanded');
+    };
+  }
+  document.querySelectorAll('.ev-date').forEach(el=>{
+    el.oninput = () => { dateState[el.dataset.event] = el.value; };
+  });
+  document.querySelectorAll('.ev-time').forEach(el=>{
+    el.oninput = () => { timeState[el.dataset.event] = el.value; };
+  });
+  document.querySelectorAll('.ev-loc').forEach(el=>{
+    el.oninput = () => { locationState[el.dataset.event] = el.value; };
+  });
+}
+
+function isEventActive(ev){
+  const mainActive = ev.type==='roles' ? (state[ev.id] && state[ev.id].size>0) : (state[ev.id]!==null && state[ev.id]!==undefined);
+  const aset = addonState[ev.id] || new Set();
+  return mainActive || aset.size>0;
+}
+
+function collectSchedule(){
+  return allEvents.filter(ev=>isEventActive(ev)).map(ev=>{
+    let dt = dateState[ev.id] ? new Date(dateState[ev.id]+'T00:00:00').toLocaleDateString('en-GB') : '-';
+    if(timeState[ev.id]) dt += dt!=='-' ? ` ${timeState[ev.id]}` : timeState[ev.id];
+    return { name: ev.name, date: dt, location: locationState[ev.id] || '-', team: getEventTeam(ev) };
+  });
+}
+
+function getEventTeam(ev){
+  const team = [];
+  if(ev.type==='roles'){
+    const set = state[ev.id] || new Set();
+    ev.roles.forEach(r=>{
+      if(r.name==='Album') return;
+      if(set.has(r.name)) team.push(`1 ${r.name}`);
+    });
+  } else {
+    const idx = state[ev.id];
+    if(idx!==null && idx!==undefined){
+      ev.options[idx].includes.forEach(inc=>{
+        if(!/photo album/i.test(inc)) team.push(inc);
+      });
     }
-  }).catch(()=>{
-    alert('Something went wrong preparing the zip. Please try again.');
-  }).finally(()=>{
-    btn.disabled = false;
-    btn.innerHTML = originalLabel;
+  }
+  const aset = addonState[ev.id] || new Set();
+  const personnelRoles = ['Photographer','Videographer','Cinematographer'];
+  ev.addons.forEach(a=>{
+    if(!aset.has(a.name)) return;
+    team.push(personnelRoles.includes(a.name) ? `1 Additional ${a.name}` : a.name);
   });
+  return team;
 }
 
-function downloadEntireGallery(){
-  if(!currentGalleryFolderId) return;
-  runZipDownload(document.getElementById('galDownloadAllBtn'), {
-    action:'downloadZip', folderId:currentGalleryFolderId, eventType:'ALL', resolution:'compressed'
-  });
+function hasCineForEvent(ev){
+  if(ev.type==='roles'){
+    const set = state[ev.id] || new Set();
+    if(set.has('Cinematographer')) return true;
+  } else {
+    const idx = state[ev.id];
+    if(idx!==null && idx!==undefined && ev.options[idx].includes.some(x=>/cinematographer/i.test(x))) return true;
+  }
+  const aset = addonState[ev.id] || new Set();
+  return aset.has('Cinematographer');
 }
 
-function downloadAllCurrentTab(event){
-  if(!currentGalleryEventType) return;
-  runZipDownload(event ? event.currentTarget : document.querySelector('#galDownloadBar .dl-mini-btn'), {
-    action:'downloadZip', folderId:currentGalleryFolderId, eventType:currentGalleryEventType, resolution:'compressed'
-  });
+function hasVideoForEvent(ev){
+  if(ev.type==='package'){
+    const idx = state[ev.id];
+    if(idx!==null && idx!==undefined && ev.options[idx].includes.some(x=>/videographer/i.test(x))) return true;
+  }
+  const aset = addonState[ev.id] || new Set();
+  return aset.has('Videographer');
 }
+
+function getAlbumLine(ev){
+  if(ev.type==='package'){
+    const idx = state[ev.id];
+    if(idx!==null && idx!==undefined){
+      const opt = ev.options[idx];
+      const albumInc = opt.includes.find(x=>/photo album/i.test(x));
+      if(albumInc){
+        const albumCountMatch = albumInc.match(/^(\d+)\s*Photo Albums?/i);
+        const albumCount = albumCountMatch ? parseInt(albumCountMatch[1],10) : 1;
+        const photoCountMatch = albumInc.match(/(\d+)\s*photos/i);
+        const photoCount = photoCountMatch ? photoCountMatch[1] : '250';
+        return albumCount > 1
+          ? `${albumCount} ${opt.name} Photo Albums (${photoCount} Client-Selected Photographs each)`
+          : `${opt.name} Photo Album (${photoCount} Client-Selected Photographs)`;
+      }
+    }
+    return null;
+  } else {
+    const set = state[ev.id] || new Set();
+    if(set.has('Album')) return `${ev.name} Photo Album (Client-Selected Photographs)`;
+    return null;
+  }
+}
+
+function buildDeliverables(){
+  const lines = [
+    'Edited Photographs',
+    'The complete photo gallery will be delivered via Google Drive. The download link will be valid for 30 days'
+  ];
+  allEvents.forEach(ev=>{
+    if(!isEventActive(ev)) return;
+    const al = getAlbumLine(ev);
+    if(al) lines.push(al);
+  });
+  allEvents.forEach(ev=>{
+    if(!isEventActive(ev)) return;
+    if(ev.id==='reception'){
+      lines.push(`${ev.name} Cinematic Film`);
+      lines.push(`${ev.name} Extended Video`);
+      return;
+    }
+    const cine = hasCineForEvent(ev);
+    const vid = hasVideoForEvent(ev);
+    if(cine) lines.push(`${ev.name} Cinematic Film`);
+    if(vid) lines.push(`${ev.name} Extended Video`);
+  });
+  allEvents.forEach(ev=>{
+    if(!isEventActive(ev)) return;
+    const aset = addonState[ev.id] || new Set();
+    if(aset.has('Same-Day Edit')) lines.push(`${ev.name} Same-Day Edit`);
+    if(aset.has('Reels')) lines.push(`${ev.name} Reel`);
+  });
+  lines.push('All photographs will be delivered to a HDD provided by the client.');
+  return lines;
+}
+
+function collectSelections(){
+  const lines = [];
+  let total = 0;
+  allEvents.forEach(ev=>{
+    if(ev.type==='roles'){
+      const set = state[ev.id] || new Set();
+      ev.roles.forEach(r=>{ if(set.has(r.name)){ lines.push({label:`${ev.name} — ${r.name}`, price:r.price}); total+=r.price; } });
+    } else {
+      const idx = state[ev.id];
+      if(idx !== null && idx !== undefined){
+        const o = ev.options[idx];
+        lines.push({label:`${ev.name} — ${o.name}`, price:o.price});
+        total += o.price;
+      }
+    }
+    const aset = addonState[ev.id] || new Set();
+    ev.addons.forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${ev.name} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
+  });
+  return {lines, total};
+}
+
+function renderDeliverablesList(){
+  const el = document.getElementById('deliverables-list');
+  if(!el) return;
+  const deliverables = buildDeliverables();
+  el.innerHTML = deliverables.map(d=>`<li>${d}</li>`).join('');
+}
+
+function selectionSignature(lines, total){
+  return total + '|' + lines.map(l=>`${l.label}:${l.price}`).sort().join(',');
+}
+
+function updateTotal(){
+  const {lines, total} = collectSelections();
+  const totalAmtEl = document.getElementById('total-amt');
+  document.getElementById('item-count').textContent = `${lines.length} item${lines.length===1?'':'s'} selected`;
+  document.getElementById('send-btn').disabled = lines.length===0;
+  document.getElementById('pdf-btn').disabled = lines.length===0;
+
+  const isRevealed = lastSubmittedSignature !== null && selectionSignature(lines, total) === lastSubmittedSignature;
+
+  if(isRevealed){
+    totalAmtEl.classList.remove('masked');
+    totalAmtEl.textContent = fmt(total);
+    document.getElementById('pay-1').textContent = fmt(Math.round(total*0.35));
+    document.getElementById('pay-2').textContent = fmt(Math.round(total*0.60));
+    document.getElementById('pay-3').textContent = fmt(Math.round(total*0.05));
+  } else {
+    totalAmtEl.classList.add('masked');
+    totalAmtEl.textContent = lines.length===0 ? 'Select events to begin' : 'Tap Get Quote to reveal';
+    document.getElementById('pay-1').textContent = '—';
+    document.getElementById('pay-2').textContent = '—';
+    document.getElementById('pay-3').textContent = '—';
+  }
+
+  renderDeliverablesList();
+}
+
+function getInstagramQRDataURL(){
+  try{
+    const holder = document.getElementById('qr-holder');
+    holder.innerHTML = '';
+    new QRCode(holder, {
+      text: 'https://www.instagram.com/shutter_stories__?igsh=MXFqYmZqYjVodndmeg%3D%3D&utm_source=qr',
+      width: 240, height: 240,
+      colorDark: '#0A1B33', colorLight: '#F7F3EA',
+    });
+    const canvas = holder.querySelector('canvas');
+    return canvas ? canvas.toDataURL('image/png') : null;
+  }catch(e){ return null; }
+}
+
+function fmtPDF(n){ return 'Rs. ' + n.toLocaleString('en-IN'); }
+
+async function fetchFontBase64(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('font fetch failed');
+  const buf = await res.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const chunk = 0x8000;
+  for(let i=0; i<bytes.length; i+=chunk){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  }
+  return btoa(binary);
+}
+
+let customFontsState = null; // null = not attempted, false = failed, object = loaded base64 map
+
+async function loadCustomFonts(){
+  if(customFontsState !== null) return customFontsState;
+  try{
+    const base = 'https://raw.githubusercontent.com/google/fonts/main/ofl/';
+    const [cormorantBold, poppinsRegular, poppinsSemiBold, cormorantItalic] = await Promise.all([
+      fetchFontBase64(base + 'cormorantgaramond/CormorantGaramond-Bold.ttf'),
+      fetchFontBase64(base + 'poppins/Poppins-Regular.ttf'),
+      fetchFontBase64(base + 'poppins/Poppins-SemiBold.ttf'),
+      fetchFontBase64(base + 'cormorantgaramond/CormorantGaramond-Italic.ttf'),
+    ]);
+    customFontsState = { cormorantBold, poppinsRegular, poppinsSemiBold, cormorantItalic };
+  }catch(e){
+    customFontsState = false;
+  }
+  return customFontsState;
+}
+
+function registerCustomFonts(doc, fonts){
+  if(!fonts) return false;
+  doc.addFileToVFS('CormorantGaramond-Bold.ttf', fonts.cormorantBold);
+  doc.addFont('CormorantGaramond-Bold.ttf', 'Cormorant', 'bold');
+  doc.addFileToVFS('CormorantGaramond-Italic.ttf', fonts.cormorantItalic);
+  doc.addFont('CormorantGaramond-Italic.ttf', 'Cormorant', 'italic');
+  doc.addFileToVFS('Poppins-Regular.ttf', fonts.poppinsRegular);
+  doc.addFont('Poppins-Regular.ttf', 'Poppins', 'normal');
+  doc.addFileToVFS('Poppins-SemiBold.ttf', fonts.poppinsSemiBold);
+  doc.addFont('Poppins-SemiBold.ttf', 'Poppins', 'bold');
+  return true;
+}
+
+async function buildQuotationDoc(){
+  const {total} = collectSelections();
+  const todayStr = new Date().toLocaleDateString('en-GB');
+
+  const fonts = await loadCustomFonts();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const hasCustomFonts = registerCustomFonts(doc, fonts);
+  const HEAD = hasCustomFonts ? 'Cormorant' : 'times';
+  const BODY = hasCustomFonts ? 'Poppins' : 'helvetica';
+
+  const navy = [10,27,51];
+  const gold = [198,161,91];
+  const beige = [247,243,234];
+  const inkSoft = [91,96,114];
+  const ink = [30,34,51];
+  const lineGrey = [228,220,200];
+  const pageW = 210;
+  const pageH = 297;
+  let y = 0;
+
+  function pageBorder(){
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.3);
+    doc.rect(4, 4, pageW-8, pageH-8, 'S');
+  }
+  pageBorder();
+
+  const R = 1.6;
+
+  function bar(label, h=7){
+    doc.setFillColor(...navy);
+    doc.roundedRect(8, y, pageW-16, h, R, R, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont(HEAD,'bold');
+    doc.setFontSize(10.5);
+    if(doc.setCharSpace) doc.setCharSpace(0.4);
+    doc.text(label, 12, y + h/2 + 1.1, {baseline:'middle'});
+    if(doc.setCharSpace) doc.setCharSpace(0);
+    y += h;
+  }
+
+  function boxAround(startY, endY){
+    doc.setDrawColor(...lineGrey);
+    doc.setLineWidth(0.35);
+    doc.roundedRect(8, startY, pageW-16, endY-startY, R, R, 'S');
+  }
+
+  function checkPageBreak(minSpace){
+    if(y + minSpace > pageH-14){
+      doc.addPage();
+      pageBorder();
+      y = 14;
+    }
+  }
+
+  // Header
+  doc.setFillColor(...navy);
+  doc.roundedRect(4, 4, pageW-8, 34, 1.5, 1.5, 'F');
+  doc.setTextColor(...gold);
+  doc.setFont(HEAD,'bold');
+  doc.setFontSize(26);
+  doc.text('Shutter Stories', 11, 19);
+  doc.setTextColor(225,225,225);
+  doc.setFont(BODY,'normal');
+  doc.setFontSize(9.5);
+  doc.text('Phone: +91 99640 52479', 11, 26);
+  doc.setFontSize(9);
+  doc.setTextColor(...gold);
+  if(doc.setCharSpace) doc.setCharSpace(0.6);
+  doc.text('PHOTOGRAPHY QUOTATION', 11, 32.5);
+  if(doc.setCharSpace) doc.setCharSpace(0);
+
+  const qrData = getInstagramQRDataURL();
+  if(qrData){
+    doc.setFillColor(...beige);
+    doc.roundedRect(pageW-36, 8, 25, 25, 2, 2, 'F');
+    doc.addImage(qrData, 'PNG', pageW-34, 9.5, 21, 21);
+  }
+  pageBorder();
+  y = 44;
+
+  doc.setTextColor(...inkSoft);
+  doc.setFont(BODY,'normal');
+  doc.setFontSize(9);
+  doc.text(`Date: ${todayStr}`, 10, y);
+  y += 7;
+
+  // Client details
+  let secStart = y;
+  bar('CLIENT DETAILS');
+  doc.autoTable({
+    startY: y,
+    theme: 'plain',
+    styles:{ font:BODY, fontSize:9.5, textColor:ink, cellPadding:2, fillColor:[255,255,255] },
+    body: [
+      ['Client Name', clientName || '-'],
+      ['Contact Number', clientPhone ? ('+91 ' + clientPhone) : '-'],
+    ],
+    columnStyles: { 0:{fontStyle:'bold', font:BODY, cellWidth:40} },
+    margin:{left:8, right:8},
+  });
+  y = doc.lastAutoTable.finalY + 2;
+  boxAround(secStart, y);
+  y += 6;
+
+  // Event schedule with team allocation
+  const schedule = collectSchedule();
+  if(schedule.length>0){
+    secStart = y;
+    bar('EVENT SCHEDULE');
+    doc.autoTable({
+      startY: y,
+      head: [['Event','Date','Location','Allocated Team']],
+      body: schedule.map(s=>[s.name, s.date, s.location, s.team.length? s.team.join('\n') : '-']),
+      theme: 'grid',
+      headStyles:{ font:HEAD, fontStyle:'bold', fillColor: navy, textColor: 255, fontSize:9, halign:'left', lineColor: lineGrey, lineWidth:0.15 },
+      alternateRowStyles:{ fillColor: beige },
+      styles:{ font:BODY, fontSize:8.3, textColor:ink, cellPadding:{top:2.2,bottom:2.2,left:2.2,right:2.2}, valign:'top', overflow:'linebreak', lineColor: lineGrey, lineWidth:0.15 },
+      columnStyles:{
+        0:{cellWidth:22, fontStyle:'bold', font:BODY},
+        1:{cellWidth:20},
+        2:{cellWidth:32},
+        3:{cellWidth:'auto'},
+      },
+      margin:{left:8, right:8},
+    });
+    y = doc.lastAutoTable.finalY + 2;
+    boxAround(secStart, y);
+    y += 6;
+  }
+
+  // Total
+  checkPageBreak(20);
+  doc.setFillColor(...beige);
+  doc.rect(8, y, pageW-16, 12, 'F');
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(0.5);
+  doc.rect(8, y, pageW-16, 12, 'S');
+  doc.setTextColor(...navy);
+  doc.setFont(HEAD,'bold');
+  doc.setFontSize(14);
+  const totalLabel = 'TOTAL QUOTE :';
+  doc.text(totalLabel, 13, y + 8);
+  const labelWidth = doc.getTextWidth(totalLabel);
+  doc.setTextColor(...gold);
+  doc.setFont(BODY,'bold');
+  doc.setFontSize(15);
+  doc.text(fmtPDF(total), 13 + labelWidth + 5, y + 8);
+  y += 18;
+
+  // Deliverables
+  checkPageBreak(20);
+  secStart = y;
+  bar('DELIVERABLES');
+  const deliverables = buildDeliverables();
+  doc.setTextColor(...ink);
+  doc.setFont(BODY,'normal');
+  doc.setFontSize(9);
+  y += 4;
+  deliverables.forEach(t=>{
+    const split = doc.splitTextToSize(t, pageW-28);
+    if(y + split.length*4 > pageH-16){
+      boxAround(secStart, y+2);
+      doc.addPage(); pageBorder(); y = 14; secStart = y;
+    }
+    doc.setTextColor(...gold);
+    doc.text('•', 12, y);
+    doc.setTextColor(...ink);
+    doc.text(split, 17, y);
+    y += split.length*4 + 1.2;
+  });
+  y += 2;
+  boxAround(secStart, y);
+  y += 6;
+
+  // Payment terms
+  checkPageBreak(30);
+  secStart = y;
+  bar('PAYMENT TERMS');
+  doc.autoTable({
+    startY: y,
+    head: [['Stage','%','Amount','Due']],
+    body: [
+      ['Booking Advance','35%', fmtPDF(Math.round(total*0.35)), 'To confirm booking'],
+      ['Second Instalment','60%', fmtPDF(Math.round(total*0.60)), '15 days before event'],
+      ['Final Payment','5%', fmtPDF(Math.round(total*0.05)), 'Before delivery of final files/album'],
+    ],
+    theme:'grid',
+    headStyles:{ font:HEAD, fontStyle:'bold', fillColor: navy, textColor:255, fontSize:9, lineColor: lineGrey, lineWidth:0.15 },
+    alternateRowStyles:{ fillColor: beige },
+    styles:{ font:BODY, fontSize:8.5, textColor:ink, cellPadding:2, lineColor: lineGrey, lineWidth:0.15 },
+    margin:{left:8, right:8},
+  });
+  y = doc.lastAutoTable.finalY + 2;
+  boxAround(secStart, y);
+  y += 6;
+
+  // Terms & conditions
+  checkPageBreak(30);
+  secStart = y;
+  bar('TERMS & CONDITIONS');
+  const terms = [
+    'Confirmation: the booking date is reserved only after the booking advance is received.',
+    'Album design includes up to 2 revision rounds; additional revisions incur extra charges.',
+    'Video editing includes up to 2 revision rounds; additional revisions incur extra charges.',
+    'Delivery timeline - edited photos: 10-15 working days; full gallery: 15-20 working days; photo album: 30 working days after final photo selection.',
+    'Delivery timeline - extended video: 30 working days; cinematic film: 40-60 working days.',
+    'Outstation assignments incur additional travel and stay charges, payable by the client.',
+    'The studio may use selected images for portfolio/promotional purposes unless the client requests otherwise.',
+    'Cinematic output includes highlights only, not full coverage. Extended videos available at additional cost if requested before the event.',
+    'Raw project/master files are not included or shared. Delivery includes the final exported video only.',
+  ];
+  doc.setTextColor(...ink);
+  doc.setFont(BODY,'normal');
+  doc.setFontSize(8.3);
+  y += 4;
+  terms.forEach(t=>{
+    const split = doc.splitTextToSize(t, pageW-28);
+    if(y + split.length*3.6 > pageH-16){
+      doc.addPage(); pageBorder(); y = 14; secStart = y;
+    }
+    doc.setTextColor(...gold);
+    doc.text('-', 12, y);
+    doc.setTextColor(...ink);
+    doc.text(split, 16, y);
+    y += split.length*3.6 + 1;
+  });
+  y += 8;
+
+  // Signature block
+  checkPageBreak(28);
+  const colW = (pageW-16-10)/2;
+  const sigLineY = y + 14;
+  doc.setDrawColor(...inkSoft);
+  doc.setLineWidth(0.25);
+  doc.line(8, sigLineY, 8+colW, sigLineY);
+  doc.line(8+colW+10, sigLineY, 8+colW+10+colW, sigLineY);
+  doc.setFont(BODY,'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...inkSoft);
+  doc.text('Client Signature', 8, sigLineY+4.5);
+  doc.text('Studio Representative', 8+colW+10, sigLineY+4.5);
+  doc.setFontSize(8);
+  doc.text('Name: _______________________   Date: ______________', 8, sigLineY+10);
+  doc.text('Date: ______________', 8+colW+10, sigLineY+10);
+  y = sigLineY + 16;
+
+  // Footer note
+  checkPageBreak(10);
+  doc.setFont(HEAD,'italic');
+  doc.setFontSize(10);
+  doc.setTextColor(...gold);
+  doc.text('Thank you for choosing Shutter Stories!', pageW/2, y, {align:'center'});
+
+  return doc;
+}
+
+async function shareOrDownloadPDF(triggerWhatsApp){
+  const {lines, total} = collectSelections();
+  if(lines.length===0) return;
+  const btn = triggerWhatsApp ? document.getElementById('send-btn') : document.getElementById('pdf-btn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Preparing PDF…';
+  btn.disabled = true;
+
+  const doc = await buildQuotationDoc();
+  const blob = doc.output('blob');
+  const filename = `ShutterStories_Quotation_${(clientName||'Client').replace(/\s+/g,'_')}.pdf`;
+  const file = new File([blob], filename, {type:'application/pdf'});
+
+  if(SHEET_WEBHOOK_URL){
+    btn.textContent = 'Saving details…';
+    const schedule = collectSchedule();
+    const pdfDataUri = doc.output('datauristring');
+    const pdfBase64 = pdfDataUri.split(',')[1];
+    await logToSheet({
+      stage: 'submission',
+      clientName,
+      clientPhone,
+      accessCode: usedAccessCode,
+      events: lines.map(l=>l.label).join(', '),
+      eventDates: schedule.map(s=>`${s.name}: ${s.date}`).join(', '),
+      total: fmt(total),
+      pdfBase64
+    });
+  }
+
+  lastSubmittedSignature = selectionSignature(lines, total);
+  updateTotal();
+
+  btn.textContent = originalLabel;
+  btn.disabled = false;
+
+  if(triggerWhatsApp && navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({ files:[file] });
+      return;
+    }catch(e){ /* user cancelled or unsupported, fall through to download */ }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  if(triggerWhatsApp){
+    alert('Your quotation PDF has been downloaded. Please open WhatsApp and attach it manually to send to Shutter Stories — direct file-attach isn\'t supported on this browser/device.');
+  }
+}
+
+document.getElementById('send-btn').addEventListener('click', ()=> shareOrDownloadPDF(true));
+document.getElementById('pdf-btn').addEventListener('click', ()=> shareOrDownloadPDF(false));
+
+gateShowStep('code');
+renderAll();
 </script>
 
 </body>
