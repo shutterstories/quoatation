@@ -612,7 +612,16 @@ function eventSubtotal(ev){
 function renderAddonsRows(ev){
   if(!addonState[ev.id]) addonState[ev.id] = new Set();
   const aset = addonState[ev.id];
-  const rows = ev.addons.map(a=>{
+  const cineSelected = hasCineForEvent(ev);
+  const visibleAddons = ev.addons.filter(a=>{
+    if(a.name==='Same-Day Edit' || a.name==='Reels') return cineSelected;
+    return true;
+  });
+  if(!cineSelected){
+    aset.delete('Same-Day Edit');
+    aset.delete('Reels');
+  }
+  const rows = visibleAddons.map(a=>{
     const isSel = aset.has(a.name);
     return `<div class="addon-opt ${isSel?'selected':''}" data-event="${ev.id}" data-addon="${a.name}">
       <div class="box">${CHECK_SVG}</div>
