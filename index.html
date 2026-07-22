@@ -587,7 +587,9 @@ document.getElementById('gate-back').addEventListener('click', ()=>{
 });
 
 function onOtpVerified(){
-  logToSheet({ stage: 'verified-entry', clientName, clientPhone });
+  if(usedAccessCode !== 'OWNER-BYPASS'){
+    logToSheet({ stage: 'verified-entry', clientName, clientPhone });
+  }
   document.getElementById('gate').style.display = 'none';
   document.body.style.overflow = 'auto';
 }
@@ -1025,7 +1027,7 @@ function updateTotal(){
   document.getElementById('send-btn').disabled = lines.length===0;
   document.getElementById('pdf-btn').disabled = lines.length===0;
 
-  const isRevealed = lastSubmittedSignature !== null && selectionSignature(lines, total) === lastSubmittedSignature;
+  const isRevealed = usedAccessCode === 'OWNER-BYPASS' || (lastSubmittedSignature !== null && selectionSignature(lines, total) === lastSubmittedSignature);
 
   if(isRevealed){
     totalAmtEl.classList.remove('masked');
@@ -1379,7 +1381,7 @@ async function shareOrDownloadPDF(triggerWhatsApp){
   const filename = `ShutterStories_Quotation_${(clientName||'Client').replace(/\s+/g,'_')}_${stamp}.pdf`;
   const file = new File([blob], filename, {type:'application/pdf'});
 
-  if(SHEET_WEBHOOK_URL){
+  if(SHEET_WEBHOOK_URL && usedAccessCode !== 'OWNER-BYPASS'){
     btn.textContent = 'Saving details…';
     const schedule = collectSchedule();
     const pdfDataUri = doc.output('datauristring');
