@@ -31,7 +31,7 @@
     background: var(--paper);
     color: var(--ink);
     font-family: 'Poppins', sans-serif;
-    padding-bottom: 150px;
+    padding-bottom: 200px;
     -webkit-font-smoothing: antialiased;
   }
   .hero{
@@ -101,9 +101,12 @@
   .role-opt .rname{ font-size: 14px; font-weight:500; }
   .role-opt .rprice{ font-size: 13.5px; color: var(--navy); font-weight:600; }
 
-  .pkg-opt{ border: 1.5px solid var(--line); border-radius: 10px; padding: 13px 14px; transition: border-color .15s, background .15s; }
+  .pkg-opt{ border: 1.5px solid var(--line); border-radius: 10px; padding: 13px 14px; transition: border-color .15s, background .15s; position:relative; }
   .pkg-opt.selected{ border-color: var(--gold); background: #FBF5E7; }
-  .pkg-opt .pkg-top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .pkg-opt .pkg-check{ display:none; position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:50%; background:var(--gold); align-items:center; justify-content:center; }
+  .pkg-opt.selected .pkg-check{ display:flex; }
+  .pkg-opt .pkg-check svg{ width:11px; height:11px; }
+  .pkg-opt .pkg-top{ display:flex; justify-content:space-between; align-items:baseline; padding-right:22px; }
   .pkg-opt .pname{ font-weight:600; font-size: 14.5px; color: var(--navy); }
   .pkg-opt .pprice{ font-weight:700; font-size: 15px; color: var(--gold); }
   .pkg-opt ul{ list-style:none; margin-top:6px; }
@@ -150,14 +153,14 @@
   .ticket-top .amt.masked{ font-family:'Poppins',sans-serif; font-weight:500; font-size: 13px; letter-spacing:.2px; color: rgba(230,211,161,.85); }
   .ticket-top .count{ font-size: 11.5px; color: rgba(255,255,255,.7); }
   .send-btn{
-    max-width: 560px; margin: 0 auto; display:flex; align-items:center; justify-content:center; gap:8px;
+    max-width: 560px; margin: 8px auto 0; display:flex; align-items:center; justify-content:center; gap:8px;
     background: var(--gold); color: var(--navy); font-weight:600; font-size: 14.5px;
     border:none; border-radius: 10px; padding: 13px; width: 100%; cursor:pointer; font-family:'Poppins';
   }
   .send-btn:active{ transform: scale(.98); }
   .send-btn:disabled{ opacity:.45; }
   .pdf-btn{
-    max-width: 560px; margin: 8px auto 0; display:flex; align-items:center; justify-content:center; gap:8px;
+    max-width: 560px; margin: 0 auto; display:flex; align-items:center; justify-content:center; gap:8px;
     background: transparent; color: var(--gold-soft); font-weight:500; font-size: 13px;
     border:1px solid rgba(230,211,161,.5); border-radius: 10px; padding: 11px; width: 100%; cursor:pointer; font-family:'Poppins';
   }
@@ -188,7 +191,14 @@
         </div>
         <div id="gate-code-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
         <button id="gate-code-submit" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Continue</button>
-        <div style="font-size:11px; color:#5B6072; text-align:center; margin-top:12px;">Don't have a code? Message us on WhatsApp to request a personalized quotation link.</div>
+        <div style="font-size:11px; color:#5B6072; text-align:center; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;">
+          <span>Don't have access code? Request your quotation on WhatsApp</span>
+          <a href="https://wa.me/919964052479?text=Hi%2C%20I%27d%20like%20to%20request%20a%20personalized%20quotation%20link." target="_blank" rel="noopener" style="flex-shrink:0; width:24px; height:24px; border-radius:50%; background:#25D366; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.82 12.04 21.82C17.5 21.82 21.95 17.37 21.95 11.91C21.95 9.27 20.92 6.79 19.05 4.92C17.18 3.05 14.68 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.29 9.71 20.28 11.91C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 13.99C16.31 13.87 15.11 13.27 14.89 13.19C14.67 13.11 14.5 13.07 14.34 13.32C14.17 13.57 13.7 14.13 13.55 14.3C13.41 14.46 13.26 14.48 13.01 14.36C12.76 14.23 11.97 13.97 11.03 13.13C10.3 12.48 9.81 11.67 9.67 11.42C9.53 11.17 9.65 11.04 9.78 10.91C9.89 10.8 10.03 10.62 10.16 10.48C10.29 10.34 10.33 10.23 10.42 10.07C10.5 9.9 10.46 9.76 10.4 9.64C10.33 9.51 9.84 8.32 9.64 7.83C9.44 7.35 9.24 7.42 9.09 7.41C8.95 7.4 8.79 7.4 8.62 7.4C8.46 7.4 8.19 7.46 7.97 7.71C7.75 7.96 7.13 8.53 7.13 9.72C7.13 10.91 7.99 12.06 8.11 12.22C8.24 12.38 9.83 14.85 12.28 15.9C12.86 16.15 13.32 16.3 13.68 16.41C14.26 16.6 14.79 16.57 15.21 16.51C15.68 16.44 16.65 15.92 16.85 15.35C17.05 14.78 17.05 14.29 16.99 14.19C16.93 14.09 16.76 14.03 16.56 13.99Z"/>
+            </svg>
+          </a>
+        </div>
       </div>
 
       <!-- STEP 1: Name + Phone -->
@@ -256,35 +266,48 @@
     </div>
   </div>
 
-  <div class="section-label"><span>Terms & Conditions</span><div class="rule"></div></div>
+  <div class="section-label"><span>Booking Terms</span><div class="rule"></div></div>
   <div class="info-card">
     <div class="card" id="terms-card">
-      <div class="card-head" id="terms-toggle"><div class="name" style="font-size:15px;">Tap to view full terms</div><div class="chevron"></div></div>
+      <div class="card-head" id="terms-toggle"><div class="name" style="font-size:15px;">View Terms & Conditions</div><div class="chevron"></div></div>
       <div class="card-body">
         <ul class="terms-list">
-          <li>Confirmation: the booking date is reserved only after the booking advance is received.</li>
-          <li>Album design includes up to 2 revision rounds; additional revisions incur extra charges.</li>
-          <li>Video editing includes up to 2 revision rounds; additional revisions incur extra charges.</li>
-          <li>Delivery timeline — edited photos: 10–15 working days; full gallery: 15–20 working days; photo album: 30 working days after final photo selection.</li>
-          <li>Delivery timeline — extended video: 30 working days; cinematic film: 40–60 working days.</li>
-          <li>Outstation assignments incur additional travel and stay charges, payable by the client.</li>
-          <li>The studio may use selected images for portfolio/promotional purposes unless the client requests otherwise.</li>
-          <li>Cinematic output includes highlights only, not full coverage. Extended videos are available at an additional cost if requested before the event.</li>
-          <li>Raw project/master files are not included or shared. Delivery includes the final exported video only.</li>
+          <li>Booking Confirmation: Your event date is confirmed only upon receipt of the booking advance.</li>
+          <li>The booking advance is non-refundable, as the event date is reserved exclusively for you.</li>
+          <li>Album Revisions: Up to two design revisions are included. Additional revisions will be charged.</li>
+          <li>Video Revisions: Up to two editing revisions are included. Additional revisions will be charged.</li>
+          <li>Photo Delivery: Edited photographs will be delivered within 10–15 working days. The complete gallery will be shared within 15–20 working days. The photo album will be delivered within 30 working days after the final photo selection.</li>
+          <li>Video Delivery: The extended film will be delivered within 30 working days, and the cinematic film within 40–60 working days.</li>
+          <li>Travel & Accommodation: For outstation events, travel and accommodation expenses are to be borne by the client.</li>
+          <li>Portfolio Usage: Shutter Stories may use selected photographs and videos for portfolio and promotional purposes unless otherwise requested by the client.</li>
+          <li>Cinematic Film: The cinematic film is a highlight edit and does not include complete event coverage. Extended videos can be added at an additional cost if requested before the event.</li>
+          <li>Raw Files: RAW photographs, project files, and master video files are not included. Only the final edited photographs and exported videos will be delivered.</li>
         </ul>
       </div>
     </div>
   </div>
 
-  <div class="foot-note">Prices are indicative. Final quotation will be confirmed by Shutter Stories.</div>
+  <div class="foot-note">Quoted prices apply to the current scope only. Any changes to the requirements may affect the final price.</div>
+
+  <div class="foot-note" style="margin-top:14px; display:flex; align-items:center; justify-content:center; gap:8px;">
+    <span>For any clarification or if you require a customised quotation, please feel free to contact</span>
+    <a href="tel:+919964052479" style="flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--navy); display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="var(--gold-soft)"/>
+      </svg>
+    </a>
+  </div>
+
+  <div id="restore-note" class="foot-note" style="display:none; margin-top:10px; color:var(--gold); font-weight:500;">Your previous selections were restored.</div>
+  <div class="foot-note" style="margin-top:6px;"><span id="clear-selections-link" style="text-decoration:underline; cursor:pointer;">Clear my selections</span></div>
 
   <div class="ticket">
     <div class="ticket-top">
       <div><div class="lbl">Your Total</div><div class="amt" id="total-amt">₹0</div></div>
       <div class="count" id="item-count">0 items selected</div>
     </div>
+    <button class="pdf-btn" id="pdf-btn" disabled>Get Your Quote</button>
     <button class="send-btn" id="send-btn" disabled>Send Quotation to Shutter Stories (WhatsApp)</button>
-    <button class="pdf-btn" id="pdf-btn" disabled>Download PDF Quotation</button>
   </div>
 
 <!-- ===================== MSG91 OTP WIDGET CONFIG ===================== -->
@@ -457,6 +480,7 @@ document.getElementById('gate-submit').addEventListener('click', ()=>{
       btn.disabled = false;
       logToSheet({ stage: 'otp-sent', clientName, clientPhone });
       gateShowStep('otp');
+      startResendCooldown(30);
     },
     (error) => {
       btn.textContent = 'Send OTP';
@@ -508,11 +532,32 @@ document.getElementById('gate-verify').addEventListener('click', ()=>{
 });
 
 // Resend OTP
+let resendCooldownTimer = null;
+function startResendCooldown(seconds){
+  const el = document.getElementById('gate-resend');
+  if(!el) return;
+  let remaining = seconds;
+  el.style.pointerEvents = 'none';
+  el.style.opacity = '.55';
+  el.textContent = `Resend OTP (${remaining}s)`;
+  if(resendCooldownTimer) clearInterval(resendCooldownTimer);
+  resendCooldownTimer = setInterval(()=>{
+    remaining -= 1;
+    if(remaining <= 0){
+      clearInterval(resendCooldownTimer);
+      el.style.pointerEvents = 'auto';
+      el.style.opacity = '1';
+      el.textContent = 'Resend OTP';
+    } else {
+      el.textContent = `Resend OTP (${remaining}s)`;
+    }
+  }, 1000);
+}
 document.getElementById('gate-resend').addEventListener('click', ()=>{
   if(typeof window.retryOtp === 'function'){
     window.retryOtp(
       '11', // SMS retry channel
-      () => { alert('OTP resent to your number.'); },
+      () => { alert('OTP resent to your number.'); startResendCooldown(30); },
       () => { alert('Could not resend OTP right now. Please try again shortly.'); }
     );
   }
@@ -552,11 +597,12 @@ const weddingEvents = [
     ],
     addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}]
   },
-  { id:'haldi1', name:'Haldi 1', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'haldi2', name:'Haldi 2', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'muhurtha', name:'Muhurtha', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'mehendi1', name:'Mehendi 1', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'mehendi2', name:'Mehendi 2', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'haldi1', name:'Haldi (Bride)', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'haldi2', name:'Haldi (Groom)', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'muhurtha', name:'Muhurtha (Bride)', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: baseAddons(20000) },
+  { id:'muhurtha2', name:'Muhurtha (Groom)', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: baseAddons(20000) },
+  { id:'mehendi1', name:'Mehendi (Bride)', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'mehendi2', name:'Mehendi (Groom)', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
   { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
   { id:'reception', name:'Reception', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
   { id:'engagement', name:'Engagement', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000) },
@@ -592,6 +638,67 @@ const timeState = {};    // eventId -> time string
 const dateState = {};    // eventId -> date string
 const locationState = {}; // eventId -> venue string
 const expanded = new Set();
+
+// ===================== LOCAL SAVE (per-device, so a closed tab doesn't lose progress) =====================
+const SELECTIONS_STORAGE_KEY = 'ss_quote_selections_v1';
+
+function saveSelectionsLocally(){
+  try{
+    const serializedState = {};
+    allEvents.forEach(ev=>{
+      const v = state[ev.id];
+      serializedState[ev.id] = (v instanceof Set) ? { __set: Array.from(v) } : v;
+    });
+    const serializedAddons = {};
+    allEvents.forEach(ev=>{
+      const v = addonState[ev.id];
+      serializedAddons[ev.id] = v ? Array.from(v) : [];
+    });
+    const payload = {
+      state: serializedState,
+      addonState: serializedAddons,
+      dateState, timeState, locationState,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify(payload));
+  }catch(e){ /* storage unavailable — fail silently, non-critical */ }
+}
+
+function loadSelectionsLocally(){
+  try{
+    const raw = localStorage.getItem(SELECTIONS_STORAGE_KEY);
+    if(!raw) return;
+    const payload = JSON.parse(raw);
+    if(!payload) return;
+    Object.keys(payload.state||{}).forEach(id=>{
+      const v = payload.state[id];
+      if(v && typeof v === 'object' && Array.isArray(v.__set)) state[id] = new Set(v.__set);
+      else if(v !== undefined) state[id] = v;
+    });
+    Object.keys(payload.addonState||{}).forEach(id=>{
+      addonState[id] = new Set(payload.addonState[id]||[]);
+    });
+    Object.assign(dateState, payload.dateState||{});
+    Object.assign(timeState, payload.timeState||{});
+    Object.assign(locationState, payload.locationState||{});
+  }catch(e){ /* corrupted/unavailable storage — start fresh, non-critical */ }
+}
+
+function clearSavedSelections(){
+  try{ localStorage.removeItem(SELECTIONS_STORAGE_KEY); }catch(e){}
+  allEvents.forEach(ev=>{
+    delete state[ev.id];
+    delete addonState[ev.id];
+    delete dateState[ev.id];
+    delete timeState[ev.id];
+    delete locationState[ev.id];
+  });
+  expanded.clear();
+  lastSubmittedSignature = null;
+  renderAll();
+}
+// ===================== END LOCAL SAVE =====================
+
 
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
 
@@ -656,6 +763,7 @@ function renderCard(ev){
       const isSel = sel === i;
       const li = o.includes.map(x=>`<li>${x}</li>`).join('');
       return `<div class="pkg-opt ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}">
+        <div class="pkg-check">${CHECK_SVG}</div>
         <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
         <ul>${li}</ul>
       </div>`;
@@ -704,6 +812,7 @@ function attachHandlers(){
       const evId = el.dataset.event, role = el.dataset.role;
       const set = state[evId];
       if(set.has(role)) set.delete(role); else set.add(role);
+      saveSelectionsLocally();
       renderAll();
     };
   });
@@ -712,6 +821,7 @@ function attachHandlers(){
       e.stopPropagation();
       const evId = el.dataset.event, idx = parseInt(el.dataset.idx);
       state[evId] = (state[evId] === idx) ? null : idx;
+      saveSelectionsLocally();
       renderAll();
     };
   });
@@ -721,6 +831,7 @@ function attachHandlers(){
       const evId = el.dataset.event, name = el.dataset.addon;
       const aset = addonState[evId];
       if(aset.has(name)) aset.delete(name); else aset.add(name);
+      saveSelectionsLocally();
       renderAll();
     };
   });
@@ -731,13 +842,13 @@ function attachHandlers(){
     };
   }
   document.querySelectorAll('.ev-date').forEach(el=>{
-    el.oninput = () => { dateState[el.dataset.event] = el.value; };
+    el.oninput = () => { dateState[el.dataset.event] = el.value; saveSelectionsLocally(); };
   });
   document.querySelectorAll('.ev-time').forEach(el=>{
-    el.oninput = () => { timeState[el.dataset.event] = el.value; };
+    el.oninput = () => { timeState[el.dataset.event] = el.value; saveSelectionsLocally(); };
   });
   document.querySelectorAll('.ev-loc').forEach(el=>{
-    el.oninput = () => { locationState[el.dataset.event] = el.value; };
+    el.oninput = () => { locationState[el.dataset.event] = el.value; saveSelectionsLocally(); };
   });
 }
 
@@ -827,8 +938,8 @@ function getAlbumLine(ev){
 
 function buildDeliverables(){
   const lines = [
-    'Edited Photographs',
-    'The complete photo gallery will be delivered via Google Drive. The download link will be valid for 30 days'
+    'Edited High Resolution Photographs',
+    'Complete Photo Gallery (Google Drive link valid for 30 days)'
   ];
   allEvents.forEach(ev=>{
     if(!isEventActive(ev)) return;
@@ -838,14 +949,14 @@ function buildDeliverables(){
   allEvents.forEach(ev=>{
     if(!isEventActive(ev)) return;
     if(ev.id==='reception'){
-      lines.push(`${ev.name} Cinematic Film`);
-      lines.push(`${ev.name} Extended Video`);
+      lines.push(`Cinematic ${ev.name} Film`);
+      lines.push(`Extended ${ev.name} Film`);
       return;
     }
     const cine = hasCineForEvent(ev);
     const vid = hasVideoForEvent(ev);
-    if(cine) lines.push(`${ev.name} Cinematic Film`);
-    if(vid) lines.push(`${ev.name} Extended Video`);
+    if(cine) lines.push(`Cinematic ${ev.name} Film`);
+    if(vid) lines.push(`Extended ${ev.name} Film`);
   });
   allEvents.forEach(ev=>{
     if(!isEventActive(ev)) return;
@@ -853,7 +964,7 @@ function buildDeliverables(){
     if(aset.has('Same-Day Edit')) lines.push(`${ev.name} Same-Day Edit`);
     if(aset.has('Reels')) lines.push(`${ev.name} Reel`);
   });
-  lines.push('All photographs will be delivered to a HDD provided by the client.');
+  lines.push('On request, the final photographs can be delivered on a client-provided hard drive (HDD).');
   return lines;
 }
 
@@ -1177,17 +1288,18 @@ async function buildQuotationDoc(){
   // Terms & conditions
   checkPageBreak(30);
   secStart = y;
-  bar('TERMS & CONDITIONS');
+  bar('BOOKING TERMS');
   const terms = [
-    'Confirmation: the booking date is reserved only after the booking advance is received.',
-    'Album design includes up to 2 revision rounds; additional revisions incur extra charges.',
-    'Video editing includes up to 2 revision rounds; additional revisions incur extra charges.',
-    'Delivery timeline - edited photos: 10-15 working days; full gallery: 15-20 working days; photo album: 30 working days after final photo selection.',
-    'Delivery timeline - extended video: 30 working days; cinematic film: 40-60 working days.',
-    'Outstation assignments incur additional travel and stay charges, payable by the client.',
-    'The studio may use selected images for portfolio/promotional purposes unless the client requests otherwise.',
-    'Cinematic output includes highlights only, not full coverage. Extended videos available at additional cost if requested before the event.',
-    'Raw project/master files are not included or shared. Delivery includes the final exported video only.',
+    'Booking Confirmation: Your event date is confirmed only upon receipt of the booking advance.',
+    'The booking advance is non-refundable, as the event date is reserved exclusively for you.',
+    'Album Revisions: Up to two design revisions are included. Additional revisions will be charged.',
+    'Video Revisions: Up to two editing revisions are included. Additional revisions will be charged.',
+    'Photo Delivery: Edited photographs will be delivered within 10-15 working days. The complete gallery will be shared within 15-20 working days. The photo album will be delivered within 30 working days after the final photo selection.',
+    'Video Delivery: The extended film will be delivered within 30 working days, and the cinematic film within 40-60 working days.',
+    'Travel & Accommodation: For outstation events, travel and accommodation expenses are to be borne by the client.',
+    'Portfolio Usage: Shutter Stories may use selected photographs and videos for portfolio and promotional purposes unless otherwise requested by the client.',
+    'Cinematic Film: The cinematic film is a highlight edit and does not include complete event coverage. Extended videos can be added at an additional cost if requested before the event.',
+    'Raw Files: RAW photographs, project files, and master video files are not included. Only the final edited photographs and exported videos will be delivered.',
   ];
   doc.setTextColor(...ink);
   doc.setFont(BODY,'normal');
@@ -1244,7 +1356,9 @@ async function shareOrDownloadPDF(triggerWhatsApp){
 
   const doc = await buildQuotationDoc();
   const blob = doc.output('blob');
-  const filename = `ShutterStories_Quotation_${(clientName||'Client').replace(/\s+/g,'_')}.pdf`;
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const filename = `ShutterStories_Quotation_${(clientName||'Client').replace(/\s+/g,'_')}_${stamp}.pdf`;
   const file = new File([blob], filename, {type:'application/pdf'});
 
   if(SHEET_WEBHOOK_URL){
@@ -1292,7 +1406,22 @@ document.getElementById('send-btn').addEventListener('click', ()=> shareOrDownlo
 document.getElementById('pdf-btn').addEventListener('click', ()=> shareOrDownloadPDF(false));
 
 gateShowStep('code');
+let hadSavedSelections = false;
+try{ hadSavedSelections = !!localStorage.getItem(SELECTIONS_STORAGE_KEY); }catch(e){}
+loadSelectionsLocally();
 renderAll();
+if(hadSavedSelections){
+  const note = document.getElementById('restore-note');
+  if(note){ note.style.display = 'block'; setTimeout(()=>{ note.style.display = 'none'; }, 6000); }
+}
+const clearLink = document.getElementById('clear-selections-link');
+if(clearLink){
+  clearLink.onclick = () => {
+    if(confirm('Clear all your selected events, add-ons, dates and locations? This cannot be undone.')){
+      clearSavedSelections();
+    }
+  };
+}
 </script>
 
 </body>
