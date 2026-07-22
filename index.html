@@ -361,6 +361,7 @@ var msg91Configuration = {
 
 <script>
 const STUDIO_WHATSAPP = "919964052479";
+const OWNER_BYPASS_CODE = "harinA5-147"; // secret keyword — type this in the Access Code box to skip OTP entirely (owner-only). Change this anytime.
 
 // Paste your Google Apps Script Web App URL here once deployed (ends in /exec)
 const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbw8i6lGWFelx7wfqHPCHyxegaiBe4sTYsTL2-y_CCvBJ4q2cs7Z-XdNu7dl7vXHamJc/exec";
@@ -415,6 +416,16 @@ document.getElementById('gate-code-submit').addEventListener('click', ()=>{
     return;
   }
   errEl.style.display = 'none';
+
+  // Owner bypass — skip Sheet check, phone entry, and OTP entirely
+  if(codeVal === OWNER_BYPASS_CODE.toUpperCase()){
+    usedAccessCode = 'OWNER-BYPASS';
+    clientName = 'Shutter Stories (Owner)';
+    clientPhone = '';
+    onOtpVerified();
+    return;
+  }
+
   btn.textContent = 'Checking…';
   btn.disabled = true;
 
@@ -1413,6 +1424,19 @@ document.getElementById('send-btn').addEventListener('click', ()=> shareOrDownlo
 document.getElementById('pdf-btn').addEventListener('click', ()=> shareOrDownloadPDF(false));
 
 gateShowStep('code');
+
+// Owner bypass via URL — bookmark a link like yoursite/?owner=harinA5-147 to skip the gate entirely
+try{
+  const urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('owner') === OWNER_BYPASS_CODE){
+    usedAccessCode = 'OWNER-BYPASS';
+    clientName = 'Shutter Stories (Owner)';
+    clientPhone = '';
+    document.getElementById('gate').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+}catch(e){}
+
 let hadSavedSelections = false;
 try{ hadSavedSelections = !!localStorage.getItem(SELECTIONS_STORAGE_KEY); }catch(e){}
 loadSelectionsLocally();
