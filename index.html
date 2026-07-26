@@ -635,18 +635,34 @@ const otherEvents = [
   { id:'birthday', name:'Birthday', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000},{name:'Album',price:15000}], addons: baseAddons(20000, 10000) },
   { id:'babyshower', name:'Babyshower', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000) },
   {
-    id:'maternity', name:'Maternity', type:'package',
+    id:'maternity_photo', name:'Photography', fullName:'Maternity Photography', type:'package',
     options:[
-      {name:'Option 1 — Single Session (1 Wear)', price:20000, includes:['1 Photographer','1 Cinematographer']},
-      {name:'Option 2 — One Day (3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
     ],
     addons: baseAddons(20000)
   },
   {
-    id:'prewedding', name:'Pre-Wedding Shoot', type:'package',
+    id:'maternity_photocine', name:'Photography & Cinematography', fullName:'Maternity Photography & Cinematography', type:'package',
     options:[
-      {name:'Option 1 — Single Session (1 Wear)', price:20000, includes:['1 Photographer','1 Cinematographer']},
-      {name:'Option 2 — One Day (3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+    ],
+    addons: baseAddons(20000)
+  },
+  {
+    id:'prewedding_photo', name:'Photography', fullName:'Pre-Wedding Photography', type:'package',
+    options:[
+      {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
+    ],
+    addons: baseAddons(20000)
+  },
+  {
+    id:'prewedding_photocine', name:'Photography & Cinematography', fullName:'Pre-Wedding Photography & Cinematography', type:'package',
+    options:[
+      {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
     ],
     addons: baseAddons(20000)
   },
@@ -657,19 +673,19 @@ const allEvents = [...weddingEvents, ...otherEvents];
 // Grouping used only for rendering — pairs of Bride/Groom sub-events collapse into a single parent card.
 const weddingCardGroups = [
   { id:'wedding', label:'Wedding', members:['wedding'] },
-  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'] },
-  { id:'muhurtha', label:'Muhurtha', members:['muhurtha','muhurtha2'] },
-  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'] },
+  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'], hint:'choose bride / groom' },
+  { id:'muhurtha', label:'Muhurtha', members:['muhurtha','muhurtha2'], hint:'choose bride / groom' },
+  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'], hint:'choose bride / groom' },
   { id:'sangeet', label:'Sangeet', members:['sangeet'] },
-  { id:'roce', label:'Roce', members:['roce1','roce2'] },
+  { id:'roce', label:'Roce', members:['roce1','roce2'], hint:'choose bride / groom' },
   { id:'reception', label:'Reception', members:['reception'] },
   { id:'engagement', label:'Engagement', members:['engagement'] },
 ];
 const otherCardGroups = [
   { id:'birthday', label:'Birthday', members:['birthday'] },
   { id:'babyshower', label:'Babyshower', members:['babyshower'] },
-  { id:'maternity', label:'Maternity', members:['maternity'] },
-  { id:'prewedding', label:'Pre-Wedding Shoot', members:['prewedding'] },
+  { id:'maternity', label:'Maternity', members:['maternity_photo','maternity_photocine'], hint:'choose a category' },
+  { id:'prewedding', label:'Pre-Wedding', members:['prewedding_photo','prewedding_photocine'], hint:'choose a category' },
 ];
 
 function evLabel(ev){ return ev.fullName || ev.name; }
@@ -849,7 +865,7 @@ function renderGroupCard(group){
     <div class="card-head" data-group-toggle="${group.id}">
       <div class="name">${group.label}</div>
       <div class="right">
-        ${groupSub>0?`<div class="sub">${fmt(groupSub)}</div>`:`<div class="hint">choose bride / groom</div>`}
+        ${groupSub>0?`<div class="sub">${fmt(groupSub)}</div>`:`<div class="hint">${group.hint || 'view options'}</div>`}
         <div class="chevron"></div>
       </div>
     </div>
