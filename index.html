@@ -673,11 +673,11 @@ const allEvents = [...weddingEvents, ...otherEvents];
 // Grouping used only for rendering — pairs of Bride/Groom sub-events collapse into a single parent card.
 const weddingCardGroups = [
   { id:'wedding', label:'Wedding', members:['wedding'] },
-  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'] },
-  { id:'muhurtha', label:'Muhurtha', members:['muhurtha','muhurtha2'] },
-  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'] },
+  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'], hint:'choose one' },
+  { id:'muhurtha', label:'Muhurtha', members:['muhurtha','muhurtha2'], hint:'choose one' },
+  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'], hint:'choose one' },
   { id:'sangeet', label:'Sangeet', members:['sangeet'] },
-  { id:'roce', label:'Roce', members:['roce1','roce2'] },
+  { id:'roce', label:'Roce', members:['roce1','roce2'], hint:'choose one' },
   { id:'reception', label:'Reception', members:['reception'] },
   { id:'engagement', label:'Engagement', members:['engagement'] },
 ];
