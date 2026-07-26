@@ -82,9 +82,9 @@
   .card-head .sub{ font-size: 12.5px; color: var(--gold); font-weight:600; }
   .card-head .hint{ font-size: 11px; color: var(--ink-soft); }
   .chevron{ width:9px; height:9px; border-right:2px solid var(--ink-soft); border-bottom:2px solid var(--ink-soft); transform: rotate(45deg); transition: transform .2s; }
-  .card.expanded .chevron{ transform: rotate(-135deg); }
+  .card.expanded > .card-head .chevron{ transform: rotate(-135deg); }
   .card-body{ display:none; padding: 0 16px 16px; flex-direction:column; gap: 8px; }
-  .card.expanded .card-body{ display:flex; }
+  .card.expanded > .card-body{ display:flex; }
   .group-body .card{ background: var(--paper); }
 
   .role-opt, .pkg-opt{ cursor:pointer; }
@@ -673,11 +673,11 @@ const allEvents = [...weddingEvents, ...otherEvents];
 // Grouping used only for rendering — pairs of Bride/Groom sub-events collapse into a single parent card.
 const weddingCardGroups = [
   { id:'wedding', label:'Wedding', members:['wedding'] },
-  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'], hint:'choose bride / groom' },
-  { id:'muhurtha', label:'Muhurtha', members:['muhurtha','muhurtha2'], hint:'choose bride / groom' },
-  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'], hint:'choose bride / groom' },
+  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'] },
+  { id:'muhurtha', label:'Muhurtha', members:['muhurtha','muhurtha2'] },
+  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'] },
   { id:'sangeet', label:'Sangeet', members:['sangeet'] },
-  { id:'roce', label:'Roce', members:['roce1','roce2'], hint:'choose bride / groom' },
+  { id:'roce', label:'Roce', members:['roce1','roce2'] },
   { id:'reception', label:'Reception', members:['reception'] },
   { id:'engagement', label:'Engagement', members:['engagement'] },
 ];
@@ -865,7 +865,7 @@ function renderGroupCard(group){
     <div class="card-head" data-group-toggle="${group.id}">
       <div class="name">${group.label}</div>
       <div class="right">
-        ${groupSub>0?`<div class="sub">${fmt(groupSub)}</div>`:`<div class="hint">${group.hint || 'view options'}</div>`}
+        ${groupSub>0?`<div class="sub">${fmt(groupSub)}</div>`:(group.hint?`<div class="hint">${group.hint}</div>`:'')}
         <div class="chevron"></div>
       </div>
     </div>
