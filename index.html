@@ -608,6 +608,19 @@ function baseAddons(cinePrice, photographerPrice, sameDayEditPrice, reelsPrice){
   ];
 }
 
+// Used by Pre-Wedding & Maternity events only — Drone is the only add-on, and its
+// price depends on which package option (Single Session vs One Day) is selected.
+function droneOnlyAddons(ev){
+  const idx = state[ev.id];
+  const price = idx === 1 ? 15000 : 10000;
+  return [{name:'Drone', price}];
+}
+
+// Resolves an event's addons, whether defined as a static array or a function of the event.
+function getAddons(ev){
+  return typeof ev.addons === 'function' ? ev.addons(ev) : ev.addons;
+}
+
 const weddingEvents = [
   {
     id:'wedding', name:'Wedding', type:'package',
@@ -640,7 +653,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
     ],
-    addons: baseAddons(20000)
+    addons: droneOnlyAddons
   },
   {
     id:'maternity_photocine', name:'Photography & Cinematography', fullName:'Maternity Photography & Cinematography', type:'package',
@@ -648,7 +661,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
     ],
-    addons: baseAddons(20000)
+    addons: droneOnlyAddons
   },
   {
     id:'prewedding_photo', name:'Photography', fullName:'Pre-Wedding Photography', type:'package',
@@ -656,7 +669,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
     ],
-    addons: baseAddons(20000)
+    addons: droneOnlyAddons
   },
   {
     id:'prewedding_photocine', name:'Photography & Cinematography', fullName:'Pre-Wedding Photography & Cinematography', type:'package',
@@ -664,7 +677,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
     ],
-    addons: baseAddons(20000)
+    addons: droneOnlyAddons
   },
 ];
 
@@ -773,7 +786,7 @@ function eventSubtotal(ev){
     if(idx !== null && idx !== undefined) sum += ev.options[idx].price;
   }
   const aset = addonState[ev.id] || new Set();
-  ev.addons.forEach(a=>{ if(aset.has(a.name)) sum += a.price; });
+  getAddons(ev).forEach(a=>{ if(aset.has(a.name)) sum += a.price; });
   return sum;
 }
 
@@ -781,7 +794,7 @@ function renderAddonsRows(ev){
   if(!addonState[ev.id]) addonState[ev.id] = new Set();
   const aset = addonState[ev.id];
   const cineSelected = hasCineForEvent(ev);
-  const visibleAddons = ev.addons.filter(a=>{
+  const visibleAddons = getAddons(ev).filter(a=>{
     if(a.name==='Same-Day Edit' || a.name==='Reels') return cineSelected;
     return true;
   });
@@ -977,7 +990,7 @@ function getEventTeam(ev){
   }
   const aset = addonState[ev.id] || new Set();
   const personnelRoles = ['Photographer','Videographer','Cinematographer'];
-  ev.addons.forEach(a=>{
+  getAddons(ev).forEach(a=>{
     if(!aset.has(a.name)) return;
     team.push(personnelRoles.includes(a.name) ? `1 Additional ${a.name}` : a.name);
   });
@@ -1077,7 +1090,7 @@ function collectSelections(){
       }
     }
     const aset = addonState[ev.id] || new Set();
-    ev.addons.forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
+    getAddons(ev).forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
   });
   return {lines, total};
 }
