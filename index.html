@@ -1171,7 +1171,7 @@ function getInstagramQRDataURL(){
   }catch(e){ return null; }
 }
 
-function fmtPDF(n){ return '\u20B9' + n.toLocaleString('en-IN'); }
+function fmtPDF(n){ return 'Rs. ' + n.toLocaleString('en-IN'); }
 
 async function fetchFontBase64(url){
   const res = await fetch(url);
