@@ -587,12 +587,22 @@ document.getElementById('gate-back').addEventListener('click', ()=>{
   gateShowStep('details');
 });
 
+function unlockQuoteForm(){
+  document.getElementById('gate').style.display = 'none';
+  document.body.style.overflow = 'auto';
+  const restored = loadSelectionsLocally();
+  renderAll();
+  if(restored){
+    const note = document.getElementById('restore-note');
+    if(note){ note.style.display = 'block'; setTimeout(()=>{ note.style.display = 'none'; }, 6000); }
+  }
+}
+
 function onOtpVerified(){
   if(usedAccessCode !== 'OWNER-BYPASS'){
     logToSheet({ stage: 'verified-entry', clientName, clientPhone });
   }
-  document.getElementById('gate').style.display = 'none';
-  document.body.style.overflow = 'auto';
+  unlockQuoteForm();
 }
 
 function baseAddons(cinePrice, photographerPrice, sameDayEditPrice, reelsPrice){
@@ -715,6 +725,7 @@ function saveSelectionsLocally(){
       serializedAddons[ev.id] = v ? Array.from(v) : [];
     });
     const payload = {
+      accessCode: usedAccessCode,
       state: serializedState,
       addonState: serializedAddons,
       dateState, timeState, locationState,
@@ -724,12 +735,20 @@ function saveSelectionsLocally(){
   }catch(e){ /* storage unavailable — fail silently, non-critical */ }
 }
 
+// Only restores selections if they belong to the SAME access code that's currently logged in.
+// A different login (new client, new code) always starts with every section clear.
+// Returns true if selections were restored, false otherwise.
 function loadSelectionsLocally(){
   try{
     const raw = localStorage.getItem(SELECTIONS_STORAGE_KEY);
-    if(!raw) return;
+    if(!raw) return false;
     const payload = JSON.parse(raw);
-    if(!payload) return;
+    if(!payload) return false;
+    if(!payload.accessCode || payload.accessCode !== usedAccessCode){
+      // Belongs to a different login — discard it rather than let it leak into this session.
+      localStorage.removeItem(SELECTIONS_STORAGE_KEY);
+      return false;
+    }
     Object.keys(payload.state||{}).forEach(id=>{
       const v = payload.state[id];
       if(v && typeof v === 'object' && Array.isArray(v.__set)) state[id] = new Set(v.__set);
@@ -741,7 +760,8 @@ function loadSelectionsLocally(){
     Object.assign(dateState, payload.dateState||{});
     Object.assign(timeState, payload.timeState||{});
     Object.assign(locationState, payload.locationState||{});
-  }catch(e){ /* corrupted/unavailable storage — start fresh, non-critical */ }
+    return true;
+  }catch(e){ /* corrupted/unavailable storage — start fresh, non-critical */ return false; }
 }
 
 function clearSavedSelections(){
@@ -1507,19 +1527,11 @@ try{
     usedAccessCode = 'OWNER-BYPASS';
     clientName = 'Shutter Stories (Owner)';
     clientPhone = '';
-    document.getElementById('gate').style.display = 'none';
-    document.body.style.overflow = 'auto';
+    unlockQuoteForm();
   }
 }catch(e){}
 
-let hadSavedSelections = false;
-try{ hadSavedSelections = !!localStorage.getItem(SELECTIONS_STORAGE_KEY); }catch(e){}
-loadSelectionsLocally();
 renderAll();
-if(hadSavedSelections){
-  const note = document.getElementById('restore-note');
-  if(note){ note.style.display = 'block'; setTimeout(()=>{ note.style.display = 'none'; }, 6000); }
-}
 const clearLink = document.getElementById('clear-selections-link');
 if(clearLink){
   clearLink.onclick = () => {
