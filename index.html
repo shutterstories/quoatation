@@ -188,7 +188,15 @@
       <div id="gate-step-code">
         <div style="margin-bottom:16px;">
           <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">Access Code</label>
-          <input id="gate-code" type="text" placeholder="Enter the code shared with you" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA; text-transform:uppercase;">
+          <div style="position:relative;">
+            <input id="gate-code" type="password" placeholder="Enter the code shared with you" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" data-lpignore="true" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 40px 11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA; text-transform:uppercase;">
+            <button type="button" id="gate-code-toggle" aria-label="Show access code" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; padding:6px; cursor:pointer; color:#5B6072; display:flex; align-items:center;">
+              <svg id="gate-code-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+            </button>
+          </div>
         </div>
         <div id="gate-code-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
         <button id="gate-code-submit" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Continue</button>
@@ -206,7 +214,7 @@
       <div id="gate-step-details" style="display:none;">
         <div style="margin-bottom:12px;">
           <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">Your Name</label>
-          <input id="gate-name" type="text" placeholder="Full name" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA;">
+          <input id="gate-name" type="text" placeholder="Full name" autocomplete="off" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA;">
         </div>
         <div style="margin-bottom:16px;">
           <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">WhatsApp Number</label>
@@ -406,6 +414,16 @@ function gateShowStep(step){
 }
 
 // STEP 0: check access code against the Google Sheet (via Apps Script)
+const gateCodeToggle = document.getElementById('gate-code-toggle');
+if(gateCodeToggle){
+  gateCodeToggle.addEventListener('click', ()=>{
+    const input = document.getElementById('gate-code');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    gateCodeToggle.setAttribute('aria-label', isHidden ? 'Hide access code' : 'Show access code');
+  });
+}
+
 document.getElementById('gate-code-submit').addEventListener('click', ()=>{
   const codeVal = document.getElementById('gate-code').value.trim().toUpperCase();
   const errEl = document.getElementById('gate-code-error');
