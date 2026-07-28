@@ -188,7 +188,7 @@
       <div id="gate-step-code">
         <div style="margin-bottom:16px;">
           <label style="font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#5B6072; display:block; margin-bottom:4px;">Access Code</label>
-          <input id="gate-code" type="password" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Enter the code shared with you" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA; text-transform:uppercase;">
+          <input id="gate-code" type="text" placeholder="Enter the code shared with you" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:11px 12px; font-family:'Poppins'; font-size:13.5px; background:#F7F3EA; text-transform:uppercase;">
         </div>
         <div id="gate-code-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
         <button id="gate-code-submit" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Continue</button>
@@ -274,7 +274,7 @@
     </div>
   </div>
 
-  <div class="section-label"><span>Booking Terms</span><div class="rule"></div></div>
+  <div class="section-label"><span>Terms & Conditions</span><div class="rule"></div></div>
   <div class="info-card">
     <div class="card" id="terms-card">
       <div class="card-head" id="terms-toggle"><div class="name" style="font-size:15px;">View Terms & Conditions</div><div class="chevron"></div></div>
@@ -289,7 +289,7 @@
           <li>Travel & Accommodation: For outstation events, travel and accommodation expenses are to be borne by the client.</li>
           <li>Portfolio Usage: Shutter Stories may use selected photographs and videos for portfolio and promotional purposes unless otherwise requested by the client.</li>
           <li>Cinematic Film: The cinematic film is a highlight edit and does not include complete event coverage. Extended videos can be added at an additional cost if requested before the event.</li>
-          <li>Raw Files: RAW photographs, project files, and master video files are not included. Only the final edited photographs and exported videos will be delivered.</li>
+          <li>Raw Files: Project files and master video files are not included. Only the final exported videos will be delivered.</li>
         </ul>
       </div>
     </div>
@@ -608,19 +608,6 @@ function baseAddons(cinePrice, photographerPrice, sameDayEditPrice, reelsPrice){
   ];
 }
 
-// Used by Pre-Wedding & Maternity events only — Drone is the only add-on, and its
-// price depends on which package option (Single Session vs One Day) is selected.
-function droneOnlyAddons(ev){
-  const idx = state[ev.id];
-  const price = idx === 1 ? 15000 : 10000;
-  return [{name:'Drone', price}];
-}
-
-// Resolves an event's addons, whether defined as a static array or a function of the event.
-function getAddons(ev){
-  return typeof ev.addons === 'function' ? ev.addons(ev) : ev.addons;
-}
-
 const weddingEvents = [
   {
     id:'wedding', name:'Wedding', type:'package',
@@ -653,7 +640,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
     ],
-    addons: droneOnlyAddons
+    addons: baseAddons(20000)
   },
   {
     id:'maternity_photocine', name:'Photography & Cinematography', fullName:'Maternity Photography & Cinematography', type:'package',
@@ -661,7 +648,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
     ],
-    addons: droneOnlyAddons
+    addons: baseAddons(20000)
   },
   {
     id:'prewedding_photo', name:'Photography', fullName:'Pre-Wedding Photography', type:'package',
@@ -669,7 +656,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
     ],
-    addons: droneOnlyAddons
+    addons: baseAddons(20000)
   },
   {
     id:'prewedding_photocine', name:'Photography & Cinematography', fullName:'Pre-Wedding Photography & Cinematography', type:'package',
@@ -677,7 +664,7 @@ const otherEvents = [
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
       {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
     ],
-    addons: droneOnlyAddons
+    addons: baseAddons(20000)
   },
 ];
 
@@ -786,7 +773,7 @@ function eventSubtotal(ev){
     if(idx !== null && idx !== undefined) sum += ev.options[idx].price;
   }
   const aset = addonState[ev.id] || new Set();
-  getAddons(ev).forEach(a=>{ if(aset.has(a.name)) sum += a.price; });
+  ev.addons.forEach(a=>{ if(aset.has(a.name)) sum += a.price; });
   return sum;
 }
 
@@ -794,7 +781,7 @@ function renderAddonsRows(ev){
   if(!addonState[ev.id]) addonState[ev.id] = new Set();
   const aset = addonState[ev.id];
   const cineSelected = hasCineForEvent(ev);
-  const visibleAddons = getAddons(ev).filter(a=>{
+  const visibleAddons = ev.addons.filter(a=>{
     if(a.name==='Same-Day Edit' || a.name==='Reels') return cineSelected;
     return true;
   });
@@ -990,7 +977,7 @@ function getEventTeam(ev){
   }
   const aset = addonState[ev.id] || new Set();
   const personnelRoles = ['Photographer','Videographer','Cinematographer'];
-  getAddons(ev).forEach(a=>{
+  ev.addons.forEach(a=>{
     if(!aset.has(a.name)) return;
     team.push(personnelRoles.includes(a.name) ? `1 Additional ${a.name}` : a.name);
   });
@@ -1030,14 +1017,14 @@ function getAlbumLine(ev){
         const photoCountMatch = albumInc.match(/(\d+)\s*photos/i);
         const photoCount = photoCountMatch ? photoCountMatch[1] : '250';
         return albumCount > 1
-          ? `${albumCount} ${opt.name} Photo Albums (${photoCount} Client-Selected Photographs each)`
-          : `${opt.name} Photo Album (${photoCount} Client-Selected Photographs)`;
+          ? `${albumCount} ${opt.name} Photo Albums (${photoCount} Client-Selected Photos each)`
+          : `${opt.name} Photo Album (${photoCount} Client-Selected Photos)`;
       }
     }
     return null;
   } else {
     const set = state[ev.id] || new Set();
-    if(set.has('Album')) return `${evLabel(ev)} Photo Album (Client-Selected Photographs)`;
+    if(set.has('Album')) return `${evLabel(ev)} Photo Album (Client-Selected Photos)`;
     return null;
   }
 }
@@ -1090,7 +1077,7 @@ function collectSelections(){
       }
     }
     const aset = addonState[ev.id] || new Set();
-    getAddons(ev).forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
+    ev.addons.forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
   });
   return {lines, total};
 }
@@ -1146,7 +1133,7 @@ function getInstagramQRDataURL(){
   }catch(e){ return null; }
 }
 
-function fmtPDF(n){ return 'Rs. ' + n.toLocaleString('en-IN'); }
+function fmtPDF(n){ return '\u20B9' + n.toLocaleString('en-IN'); }
 
 async function fetchFontBase64(url){
   const res = await fetch(url);
@@ -1313,9 +1300,9 @@ async function buildQuotationDoc(){
       alternateRowStyles:{ fillColor: beige },
       styles:{ font:BODY, fontSize:8.3, textColor:ink, cellPadding:{top:2.2,bottom:2.2,left:2.2,right:2.2}, valign:'top', overflow:'linebreak', lineColor: lineGrey, lineWidth:0.15 },
       columnStyles:{
-        0:{cellWidth:22, fontStyle:'bold', font:BODY},
-        1:{cellWidth:20},
-        2:{cellWidth:32},
+        0:{cellWidth:42, fontStyle:'bold', font:BODY},
+        1:{cellWidth:22},
+        2:{cellWidth:30},
         3:{cellWidth:'auto'},
       },
       margin:{left:8, right:8},
@@ -1394,7 +1381,7 @@ async function buildQuotationDoc(){
   // Terms & conditions
   checkPageBreak(30);
   secStart = y;
-  bar('BOOKING TERMS');
+  bar('TERMS & CONDITIONS');
   const terms = [
     'Booking Confirmation: Your event date is confirmed only upon receipt of the booking advance.',
     'The booking advance is non-refundable, as the event date is reserved exclusively for you.',
@@ -1405,7 +1392,7 @@ async function buildQuotationDoc(){
     'Travel & Accommodation: For outstation events, travel and accommodation expenses are to be borne by the client.',
     'Portfolio Usage: Shutter Stories may use selected photographs and videos for portfolio and promotional purposes unless otherwise requested by the client.',
     'Cinematic Film: The cinematic film is a highlight edit and does not include complete event coverage. Extended videos can be added at an additional cost if requested before the event.',
-    'Raw Files: RAW photographs, project files, and master video files are not included. Only the final edited photographs and exported videos will be delivered.',
+    'Raw Files: Project files and master video files are not included. Only the final exported videos will be delivered.',
   ];
   doc.setTextColor(...ink);
   doc.setFont(BODY,'normal');
@@ -1436,7 +1423,7 @@ async function buildQuotationDoc(){
   doc.setFontSize(8.5);
   doc.setTextColor(...inkSoft);
   doc.text('Client Signature', 8, sigLineY+4.5);
-  doc.text('Studio Representative', 8+colW+10, sigLineY+4.5);
+  doc.text('Authorized Signature (Shutter Stories)', 8+colW+10, sigLineY+4.5);
   doc.setFontSize(8);
   doc.text('Name: _______________________   Date: ______________', 8, sigLineY+10);
   doc.text('Date: ______________', 8+colW+10, sigLineY+10);
