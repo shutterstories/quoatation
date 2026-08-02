@@ -705,44 +705,57 @@ document.getElementById('gate-submit').addEventListener('click', ()=>{
   // racing against that setup (which can make sendOtp() hang with no callback ever firing).
   // We only need to re-initialise for a SECOND+ OTP request in the same session — i.e.
   // after a verifyOtp() has already succeeded once, which "uses up" the widget's token.
-  if(otpVerifiedOnceThisSession && typeof window.initSendOTP === 'function'){
+  const needsReinit = otpVerifiedOnceThisSession && typeof window.initSendOTP === 'function';
+  if(needsReinit){
     window.initSendOTP(msg91Configuration);
   }
 
-  // Safety net: if neither MSG91 callback fires within 15s (e.g. a dropped network
-  // request), stop the button from being stuck on "Sending OTP…" forever.
-  let otpSendSettled = false;
+  // otpSendState tracks how this request resolves. A late SUCCESS is always allowed to
+  // win and move the client forward — even if our own timeout already gave up and showed
+  // an error — because if MSG91 actually sent the code, the worst thing we can do is trap
+  // the client on an error screen after their phone already got the OTP.
+  let otpSendState = 'pending';
   const otpSendTimeout = setTimeout(()=>{
-    if(otpSendSettled) return;
-    otpSendSettled = true;
+    if(otpSendState !== 'pending') return;
+    otpSendState = 'given-up';
     btn.textContent = 'Send OTP';
     btn.disabled = false;
-    errEl.textContent = 'This is taking longer than expected. Please check your connection and try again.';
+    errEl.textContent = 'This is taking longer than expected. If you receive the OTP by SMS/WhatsApp shortly, you can still enter it below once the code screen appears — otherwise, please check your connection and try again.';
     errEl.style.display = 'block';
-  }, 15000);
+  }, 25000);
 
-  window.sendOtp(
-    clientPhoneIntl,
-    (data) => {
-      if(otpSendSettled) return;
-      otpSendSettled = true;
-      clearTimeout(otpSendTimeout);
-      btn.textContent = 'Send OTP';
-      btn.disabled = false;
-      logToSheet({ stage: 'otp-sent', clientName, clientPhone });
-      gateShowStep('otp');
-      startResendCooldown(30);
-    },
-    (error) => {
-      if(otpSendSettled) return;
-      otpSendSettled = true;
-      clearTimeout(otpSendTimeout);
-      btn.textContent = 'Send OTP';
-      btn.disabled = false;
-      errEl.textContent = 'Could not send OTP. Please check the number and try again.';
-      errEl.style.display = 'block';
-    }
-  );
+  function doSendOtp(){
+    window.sendOtp(
+      clientPhoneIntl,
+      (data) => {
+        clearTimeout(otpSendTimeout);
+        otpSendState = 'succeeded';
+        btn.textContent = 'Send OTP';
+        btn.disabled = false;
+        errEl.style.display = 'none';
+        logToSheet({ stage: 'otp-sent', clientName, clientPhone });
+        gateShowStep('otp');
+        startResendCooldown(30);
+      },
+      (error) => {
+        if(otpSendState !== 'pending') return; // a timeout already gave up, or a late success already won — don't override either
+        clearTimeout(otpSendTimeout);
+        otpSendState = 'given-up';
+        btn.textContent = 'Send OTP';
+        btn.disabled = false;
+        errEl.textContent = 'Could not send OTP. Please check the number and try again.';
+        errEl.style.display = 'block';
+      }
+    );
+  }
+
+  // Give a freshly re-initialised widget a brief moment to settle before sending,
+  // rather than calling sendOtp() in the very same tick as initSendOTP().
+  if(needsReinit){
+    setTimeout(doSendOtp, 400);
+  } else {
+    doSendOtp();
+  }
 });
 
 // STEP 2: verify OTP
