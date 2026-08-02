@@ -1819,6 +1819,24 @@ async function buildQuotationDoc(){
     doc.text(split, 17, y);
     y += split.length*4 + 1.2;
   });
+  // Short clarifying footnote — only shown when a Cinematic/Extended film is actually
+  // part of this quote, so it never appears for clients who didn't book either.
+  if(deliverables.some(d=>/cinematic|extended/i.test(d))){
+    y += 1.5;
+    doc.setDrawColor(...lineGrey);
+    doc.setLineWidth(0.2);
+    if(doc.setLineDashPattern) doc.setLineDashPattern([1,1], 0);
+    doc.line(12, y, pageW-12, y);
+    if(doc.setLineDashPattern) doc.setLineDashPattern([], 0);
+    y += 4;
+    doc.setFont(BODY,'normal');
+    doc.setFontSize(7.6);
+    doc.setTextColor(...inkSoft);
+    const filmNote = 'Cinematic Film is a short, artistically shot highlight film. Extended Video covers ceremonies, speeches and rituals in fuller detail.';
+    const noteSplit = doc.splitTextToSize(filmNote, pageW-28);
+    doc.text(noteSplit, 12, y);
+    y += noteSplit.length*3.4;
+  }
   y += 2;
   boxAround(secStart, y);
   y += 6;
