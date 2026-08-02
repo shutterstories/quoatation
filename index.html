@@ -590,6 +590,7 @@ let clientPhone = '';       // 10-digit, no country code — used for display / 
 let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
 let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
 let lastSubmittedSignature = null;  // snapshot of the selection that was last submitted via Get Quote / WhatsApp
+let otpVerifiedOnceThisSession = false; // becomes true after the first successful verifyOtp() — see gate-submit handler
 
 // Access codes are now checked live against your Google Sheet (see SHEET_WEBHOOK_URL above).
 
@@ -708,17 +709,33 @@ document.getElementById('gate-submit').addEventListener('click', ()=>{
   btn.textContent = 'Sending OTP…';
   btn.disabled = true;
 
-  // Re-initialise the MSG91 widget before every send. Once verifyOtp() has succeeded once,
-  // the widget's internal token is "used up" — without this re-init, a second OTP request
-  // in the same page session (e.g. generating another quotation without a full page reload)
-  // silently fails to send.
-  if(typeof window.initSendOTP === 'function'){
+  // The widget is already initialised once when the page first loads, so re-running
+  // initSendOTP() here on a client's very first OTP request is unnecessary and risks
+  // racing against that setup (which can make sendOtp() hang with no callback ever firing).
+  // We only need to re-initialise for a SECOND+ OTP request in the same session — i.e.
+  // after a verifyOtp() has already succeeded once, which "uses up" the widget's token.
+  if(otpVerifiedOnceThisSession && typeof window.initSendOTP === 'function'){
     window.initSendOTP(msg91Configuration);
   }
+
+  // Safety net: if neither MSG91 callback fires within 15s (e.g. a dropped network
+  // request), stop the button from being stuck on "Sending OTP…" forever.
+  let otpSendSettled = false;
+  const otpSendTimeout = setTimeout(()=>{
+    if(otpSendSettled) return;
+    otpSendSettled = true;
+    btn.textContent = 'Send OTP';
+    btn.disabled = false;
+    errEl.textContent = 'This is taking longer than expected. Please check your connection and try again.';
+    errEl.style.display = 'block';
+  }, 15000);
 
   window.sendOtp(
     clientPhoneIntl,
     (data) => {
+      if(otpSendSettled) return;
+      otpSendSettled = true;
+      clearTimeout(otpSendTimeout);
       btn.textContent = 'Send OTP';
       btn.disabled = false;
       logToSheet({ stage: 'otp-sent', clientName, clientPhone });
@@ -726,6 +743,9 @@ document.getElementById('gate-submit').addEventListener('click', ()=>{
       startResendCooldown(30);
     },
     (error) => {
+      if(otpSendSettled) return;
+      otpSendSettled = true;
+      clearTimeout(otpSendTimeout);
       btn.textContent = 'Send OTP';
       btn.disabled = false;
       errEl.textContent = 'Could not send OTP. Please check the number and try again.';
@@ -763,6 +783,7 @@ document.getElementById('gate-verify').addEventListener('click', ()=>{
     (data) => {
       btn.textContent = 'Verify & Continue';
       btn.disabled = false;
+      otpVerifiedOnceThisSession = true;
       onOtpVerified();
     },
     (error) => {
