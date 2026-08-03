@@ -119,18 +119,39 @@
   .role-opt .rprice{ font-size: 13.5px; color: var(--navy); font-weight:600; }
 
   .pkg-opt{ border: 1.5px solid var(--line); border-radius: 10px; padding: 13px 14px; transition: border-color .15s, background .15s; position:relative; }
-  .pkg-opt.selected{ border-color: var(--gold); background: #FBF5E7; }
-  .pkg-opt .pkg-check{ display:none; position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:50%; background:var(--gold); align-items:center; justify-content:center; }
-  .pkg-opt.selected .pkg-check{ display:flex; }
-  .pkg-opt .pkg-check svg{ width:11px; height:11px; }
-  .pkg-opt .pkg-top{ display:flex; justify-content:space-between; align-items:baseline; padding-right:22px; }
+  .pkg-opt.selected{ border-color: var(--gold); background: #FBF5E7; box-shadow: 0 0 0 1px var(--gold); }
+  /* Radio-style indicator is ALWAYS visible (empty ring when unselected, filled
+     when selected) — matches the always-visible checkbox on role-opt so a
+     package card reads as something to tap, not just an info panel. */
+  .pkg-opt .pkg-check{ display:flex; position:absolute; top:12px; right:12px; width:20px; height:20px; border-radius:50%; border:1.5px solid #C9C2AC; background:#fff; align-items:center; justify-content:center; transition: background .15s, border-color .15s; }
+  .pkg-opt.selected .pkg-check{ background:var(--gold); border-color:var(--gold); }
+  .pkg-opt .pkg-check svg{ display:none; width:11px; height:11px; }
+  .pkg-opt.selected .pkg-check svg{ display:block; }
+  .pkg-opt .pkg-top{ display:flex; justify-content:space-between; align-items:baseline; padding-right:26px; }
   .pkg-opt .pname{ font-weight:600; font-size: 14.5px; color: var(--navy); }
   .pkg-opt .pprice{ font-weight:700; font-size: 15px; color: var(--gold); }
   .pkg-opt ul{ list-style:none; margin-top:6px; }
   .pkg-opt li{ font-size: 12px; color: var(--ink-soft); padding-left: 14px; position: relative; line-height: 1.6; }
   .pkg-opt li::before{ content:"—"; position:absolute; left:0; color: var(--gold); }
 
+  /* Small plain-text prompt above package options — same quiet style as the
+     "choose one" hint elsewhere, just enough to signal these are tappable. */
+  .pkg-select-hint{
+    font-size:11px; color: var(--ink-soft); font-weight:500;
+    margin: 0 0 2px;
+  }
+
   .addon-label{ font-size: 11px; text-transform:uppercase; letter-spacing:.6px; color: var(--ink-soft); margin: 4px 0 2px; }
+  /* Distinguishes the optional add-ons section from the required
+     package/role choice above it — a divider plus a plain-language note,
+     so clients don't mistake add-ons for the main service to select. */
+  .addons-heading{
+    display:flex; align-items:baseline; gap:6px; flex-wrap:wrap;
+    text-transform:none; letter-spacing:0; margin: 12px 0 6px;
+    padding-top: 10px; border-top: 1px dashed var(--line);
+  }
+  .addons-heading .ah-title{ font-size:12.5px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.4px; }
+  .addons-heading .ah-note{ font-size:11px; color:var(--ink-soft); }
   .addon-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 7px; }
   .addon-opt{
     display:flex; align-items:center; gap:8px;
@@ -195,15 +216,6 @@
   .gate-link{ display:block; text-align:center; font-size:12px; color:#5B6072; margin-top:10px; cursor:pointer; }
   .gate-resend{ display:block; text-align:center; font-size:12px; color:#C6A15B; margin-top:12px; cursor:pointer; font-weight:600; }
 
-  .insta-btn{
-    position: fixed; top: 16px; right: 16px; z-index: 250;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(10,27,51,.55); backdrop-filter: blur(4px);
-    display:flex; align-items:center; justify-content:center;
-    text-decoration:none; border:1px solid rgba(230,211,161,.5);
-  }
-  .insta-btn:active{ transform: scale(.96); }
-
   html{ scroll-behavior: smooth; }
 
   /* Progress stepper */
@@ -240,14 +252,17 @@
   .team-row:last-child{ border-bottom:none; }
   .team-row b{ color:var(--navy); }
 
-  /* WhatsApp floating contact button */
-  .wa-fab{
-    position: fixed; right:16px; bottom:190px; z-index: 55;
-    width:44px; height:44px; border-radius:50%; background:#25D366;
-    display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,.25);
-    text-decoration:none;
+  /* Floating contact cluster (Instagram / WhatsApp / Call) — laid out
+     horizontally, same colour, sized to stay easy to tap without crowding
+     the "Get Your Quote" bar underneath. */
+  .fab-cluster{ position: fixed; right:16px; bottom:186px; z-index: 55; display:flex; flex-direction:row; align-items:center; gap:11px; }
+  .fab-item{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--navy); border:1.5px solid var(--gold-soft);
+    box-shadow:0 4px 10px rgba(0,0,0,.22); text-decoration:none;
   }
-  .wa-fab:active{ transform: scale(.95); }
+  .fab-item:active{ transform: scale(.94); }
 
   /* Animations */
   @keyframes cardReveal{ from{ opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);} }
@@ -258,6 +273,17 @@
 
   @keyframes shakeCard{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
   .card.shake{ animation: shakeCard .35s ease; border-color:#B33A3A; }
+  .shake{ animation: shakeCard .35s ease; }
+
+  /* Wraps the date/time/venue inputs so a failed "Get Your Quote" attempt can
+     scroll straight to this exact box instead of just the (possibly long)
+     parent card — makes the missing fields immediately obvious. */
+  .date-fields-box{ scroll-margin: 90px; }
+  .date-fields-box.has-error{
+    border: 1.5px solid #B33A3A; border-radius: 10px;
+    padding: 10px 10px 4px; margin: 2px 0;
+    background: #FFF6F6;
+  }
 
   /* Inline field validation for date/time/venue */
   .ev-date.field-error, .ev-time.field-error, .ev-loc.field-error{
@@ -315,14 +341,6 @@
 </style>
 </head>
 <body>
-
-  <a class="insta-btn" href="https://www.instagram.com/shutter_stories__?igsh=MXFqYmZqYjVodndmeg%3D%3D&utm_source=qr" target="_blank" rel="noopener" aria-label="Follow Shutter Stories on Instagram">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="#E6D3A1" stroke-width="1.8"/>
-      <circle cx="12" cy="12" r="4.3" stroke="#E6D3A1" stroke-width="1.8"/>
-      <circle cx="17.4" cy="6.6" r="1.15" fill="#E6D3A1"/>
-    </svg>
-  </a>
 
   <div id="gate" style="position:fixed; inset:0; z-index:200; background:linear-gradient(180deg, #0A1B33 0%, #122A4D 100%); display:flex; align-items:center; justify-content:center; padding:24px;">
     <div style="max-width:380px; width:100%; background:#FFFFFF; border-radius:16px; padding:28px 24px; box-shadow:0 20px 50px rgba(0,0,0,.35);">
@@ -430,11 +448,27 @@
   </div>
   <div class="events" id="events-wedding"></div>
 
-  <a class="wa-fab" href="https://wa.me/919964052479?text=Hi%2C%20I%27d%20like%20a%20customised%20quotation." target="_blank" rel="noopener" aria-label="Message Shutter Stories on WhatsApp for a custom quote">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.82 12.04 21.82C17.5 21.82 21.95 17.37 21.95 11.91C21.95 9.27 20.92 6.79 19.05 4.92C17.18 3.05 14.68 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.29 9.71 20.28 11.91C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 13.99C16.31 13.87 15.11 13.27 14.89 13.19C14.67 13.11 14.5 13.07 14.34 13.32C14.17 13.57 13.7 14.13 13.55 14.3C13.41 14.46 13.26 14.48 13.01 14.36C12.76 14.23 11.97 13.97 11.03 13.13C10.3 12.48 9.81 11.67 9.67 11.42C9.53 11.17 9.65 11.04 9.78 10.91C9.89 10.8 10.03 10.62 10.16 10.48C10.29 10.34 10.33 10.23 10.42 10.07C10.5 9.9 10.46 9.76 10.4 9.64C10.33 9.51 9.84 8.32 9.64 7.83C9.44 7.35 9.24 7.42 9.09 7.41C8.95 7.4 8.79 7.4 8.62 7.4C8.46 7.4 8.19 7.46 7.97 7.71C7.75 7.96 7.13 8.53 7.13 9.72C7.13 10.91 7.99 12.06 8.11 12.22C8.24 12.38 9.83 14.85 12.28 15.9C12.86 16.15 13.32 16.3 13.68 16.41C14.26 16.6 14.79 16.57 15.21 16.51C15.68 16.44 16.65 15.92 16.85 15.35C17.05 14.78 17.05 14.29 16.99 14.19C16.93 14.09 16.76 14.03 16.56 13.99Z" fill="#fff"/>
-    </svg>
-  </a>
+  <!-- Contact cluster: three small buttons, same colour, spaced well apart
+       so a tap near the corner reliably hits the intended one. -->
+  <div class="fab-cluster" id="fab-cluster">
+    <a class="fab-item" href="https://www.instagram.com/shutter_stories__?igsh=MXFqYmZqYjVodndmeg%3D%3D&utm_source=qr" target="_blank" rel="noopener" aria-label="Follow Shutter Stories on Instagram">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="var(--gold-soft)" stroke-width="1.8"/>
+        <circle cx="12" cy="12" r="4.3" stroke="var(--gold-soft)" stroke-width="1.8"/>
+        <circle cx="17.4" cy="6.6" r="1.15" fill="var(--gold-soft)"/>
+      </svg>
+    </a>
+    <a class="fab-item" href="https://wa.me/919964052479?text=Hi%2C%20I%27d%20like%20a%20customised%20quotation." target="_blank" rel="noopener" aria-label="Message Shutter Stories on WhatsApp for a custom quote">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.82 12.04 21.82C17.5 21.82 21.95 17.37 21.95 11.91C21.95 9.27 20.92 6.79 19.05 4.92C17.18 3.05 14.68 2 12.04 2ZM12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 15 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.29 9.71 20.28 11.91C20.28 16.46 16.58 20.15 12.04 20.15ZM16.56 13.99C16.31 13.87 15.11 13.27 14.89 13.19C14.67 13.11 14.5 13.07 14.34 13.32C14.17 13.57 13.7 14.13 13.55 14.3C13.41 14.46 13.26 14.48 13.01 14.36C12.76 14.23 11.97 13.97 11.03 13.13C10.3 12.48 9.81 11.67 9.67 11.42C9.53 11.17 9.65 11.04 9.78 10.91C9.89 10.8 10.03 10.62 10.16 10.48C10.29 10.34 10.33 10.23 10.42 10.07C10.5 9.9 10.46 9.76 10.4 9.64C10.33 9.51 9.84 8.32 9.64 7.83C9.44 7.35 9.24 7.42 9.09 7.41C8.95 7.4 8.79 7.4 8.62 7.4C8.46 7.4 8.19 7.46 7.97 7.71C7.75 7.96 7.13 8.53 7.13 9.72C7.13 10.91 7.99 12.06 8.11 12.22C8.24 12.38 9.83 14.85 12.28 15.9C12.86 16.15 13.32 16.3 13.68 16.41C14.26 16.6 14.79 16.57 15.21 16.51C15.68 16.44 16.65 15.92 16.85 15.35C17.05 14.78 17.05 14.29 16.99 14.19C16.93 14.09 16.76 14.03 16.56 13.99Z" fill="var(--gold-soft)"/>
+      </svg>
+    </a>
+    <a class="fab-item" href="tel:+919964052479" aria-label="Call Shutter Stories">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" fill="var(--gold-soft)"/>
+      </svg>
+    </a>
+  </div>
 
   <div class="toast-wrap" id="toast-wrap"></div>
 
@@ -1106,7 +1140,7 @@ function renderAddonsRows(ev){
       <div class="atext"><b>${a.name}</b>${fmt(a.price)}${a.note?`<br><span style="color:var(--ink-soft); font-size:10.5px;">${a.note}</span>`:''}</div>
     </div>`;
   }).join('');
-  return `<div class="addon-label">Add-ons (optional)</div><div class="addon-grid">${rows}</div>`;
+  return `<div class="addon-label addons-heading"><span class="ah-title">+ Optional Add-ons</span><span class="ah-note">Optional services available in addition to your selection above.</span></div><div class="addon-grid">${rows}</div>`;
 }
 
 // Compares one package tier's "includes" list against the tier below it.
@@ -1156,7 +1190,10 @@ function dateFieldsMarkup(evId, opts){
   if(missLoc) errParts.push('venue');
   const errMsg = errParts.length ? `Please add the ${errParts.join(', ')} to continue` : '';
 
-  return `<div class="addon-label" style="margin-top:6px;">${label}</div>
+  const hasErr = showErr && errMsg;
+
+  return `<div class="date-fields-box ${hasErr?'has-error':''}" id="datebox-${evId}">
+      <div class="addon-label" style="margin-top:6px;">${label}</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <input type="date" class="ev-date ${missDate?'field-error':''}" data-event="${evId}" ${mirrorAttr} min="${TODAY_STR}" value="${dateState[evId]||''}" aria-label="Event date" style="flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
         <input type="time" class="ev-time ${missTime?'field-error':''}" data-event="${evId}" ${mirrorAttr} value="${timeState[evId]||''}" aria-label="Event time" style="flex:1 1 100px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
@@ -1165,7 +1202,8 @@ function dateFieldsMarkup(evId, opts){
       <div class="field-error-msg" id="err-${evId}" style="display:${errMsg?'flex':'none'};">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
         <span>${errMsg}</span>
-      </div>`;
+      </div>
+    </div>`;
 }
 
 function renderCard(ev, hideDateFields, dateLabel){
@@ -1189,7 +1227,9 @@ function renderCard(ev, hideDateFields, dateLabel){
     }).join('');
   } else {
     const sel = state[ev.id];
-    mainRows = ev.options.map((o,i)=>{
+    const anySelected = sel !== null && sel !== undefined;
+    const banner = anySelected ? '' : `<div class="pkg-select-hint">Choose one package to continue</div>`;
+    mainRows = banner + ev.options.map((o,i)=>{
       const isSel = sel === i;
       const li = o.includes.map(x=>`<li>${x}</li>`).join('');
       const badge = (ev.options.length===3 && i===1) ? `<span class="pkg-badge-inline">Best Value</span>` : '';
@@ -1474,12 +1514,14 @@ function refreshFieldError(evId){
   const timeEl = document.querySelector(`.ev-time[data-event="${evId}"]`);
   const locEl = document.querySelector(`.ev-loc[data-event="${evId}"]`);
   const msgEl = document.getElementById(`err-${evId}`);
+  const boxEl = document.getElementById(`datebox-${evId}`);
   if(dateEl) dateEl.classList.toggle('field-error', missDate);
   if(timeEl) timeEl.classList.toggle('field-error', missTime);
   if(locEl) locEl.classList.toggle('field-error', missLoc);
   if(!missDate && !missTime && !missLoc){
     invalidFieldEvents.delete(evId);
     if(msgEl) msgEl.style.display = 'none';
+    if(boxEl) boxEl.classList.remove('has-error');
   } else if(msgEl){
     const parts = [];
     if(missDate) parts.push('date');
@@ -1488,6 +1530,7 @@ function refreshFieldError(evId){
     const span = msgEl.querySelector('span');
     if(span) span.textContent = `Please add the ${parts.join(', ')} to continue`;
     msgEl.style.display = 'flex';
+    if(boxEl) boxEl.classList.add('has-error');
   }
 }
 
@@ -1531,11 +1574,11 @@ function revealEventCard(ev){
   if(group) groupExpanded.add(group.id);
   renderAll();
   requestAnimationFrame(()=>{
-    const cardEl = document.getElementById('card-'+ev.id);
-    if(cardEl){
-      cardEl.scrollIntoView({behavior:'smooth', block:'center'});
-      cardEl.classList.add('shake');
-      setTimeout(()=>cardEl.classList.remove('shake'), 400);
+    const target = document.getElementById('datebox-'+ev.id) || document.getElementById('card-'+ev.id);
+    if(target){
+      target.scrollIntoView({behavior:'smooth', block:'center'});
+      target.classList.add('shake');
+      setTimeout(()=>target.classList.remove('shake'), 400);
     }
   });
 }
