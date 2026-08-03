@@ -276,6 +276,14 @@
   .card.person-groom .card-head .name{ color:#3A5A80; }
   .couple-progress{ font-size:11px; color:var(--ink-soft); margin:-2px 0 4px; padding-left:2px; }
 
+  .couple-date-block{ border-top:1px dashed var(--line); margin-top:4px; padding-top:12px; }
+  .venue-toggle-link{
+    font-size:11px; color:var(--ink-soft); margin-top:8px; padding-left:1px; cursor:pointer;
+  }
+  .venue-toggle-link .venue-toggle-action{
+    color:var(--gold); font-weight:600; text-decoration:underline; text-underline-offset:2px;
+  }
+
   /* Accessibility: focus visibility for interactive rows */
   .role-opt:focus-visible, .pkg-opt:focus-visible, .addon-opt:focus-visible, .card-head:focus-visible{
     outline:2px solid var(--gold); outline-offset:2px;
@@ -988,6 +996,7 @@ const dateState = {};    // eventId -> date string
 const locationState = {}; // eventId -> venue string
 const expanded = new Set();
 const groupExpanded = new Set(); // parent group cards (e.g. Haldi) that are expanded to reveal Bride/Groom
+const groupSeparateDetails = new Set(); // group ids where the client opted OUT of the shared date/time/venue and wants separate details for Groom
 let invalidFieldEvents = new Set(); // event ids currently showing a red date/time/venue error, set on a failed "Get Your Quote" attempt
 
 // ===================== LOCAL SAVE (per-device, so a closed tab doesn't lose progress) =====================
@@ -1129,7 +1138,37 @@ function diffIncludes(currIncludes, prevIncludes){
   return notes;
 }
 
-function renderCard(ev){
+// Renders one date/time/venue field-set (+ inline validation) for a given event id.
+// Shared by renderCard (per-event) and renderCoupleDateFields (shared group-level version).
+function dateFieldsMarkup(evId, opts){
+  opts = opts || {};
+  const label = opts.label || 'Event Date, Time & Location (required to generate quote)';
+  const mirrorId = opts.mirrorId || '';
+  const mirrorAttr = mirrorId ? `data-mirror="${mirrorId}"` : '';
+
+  const showErr = invalidFieldEvents.has(evId);
+  const missDate = showErr && !dateState[evId];
+  const missTime = showErr && !timeState[evId];
+  const missLoc = showErr && !locationState[evId];
+  const errParts = [];
+  if(missDate) errParts.push('date');
+  if(missTime) errParts.push('time');
+  if(missLoc) errParts.push('venue');
+  const errMsg = errParts.length ? `Please add the ${errParts.join(', ')} to continue` : '';
+
+  return `<div class="addon-label" style="margin-top:6px;">${label}</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input type="date" class="ev-date ${missDate?'field-error':''}" data-event="${evId}" ${mirrorAttr} min="${TODAY_STR}" value="${dateState[evId]||''}" aria-label="Event date" style="flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="time" class="ev-time ${missTime?'field-error':''}" data-event="${evId}" ${mirrorAttr} value="${timeState[evId]||''}" aria-label="Event time" style="flex:1 1 100px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="text" class="ev-loc ${missLoc?'field-error':''}" data-event="${evId}" ${mirrorAttr} placeholder="Venue / Location" value="${locationState[evId]||''}" aria-label="Event venue or location" style="flex:2 1 160px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+      </div>
+      <div class="field-error-msg" id="err-${evId}" style="display:${errMsg?'flex':'none'};">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span>${errMsg}</span>
+      </div>`;
+}
+
+function renderCard(ev, hideDateFields, dateLabel){
   if(ev.type==='roles'){
     if(!state[ev.id]) state[ev.id] = new Set();
   } else {
@@ -1171,17 +1210,7 @@ function renderCard(ev){
   // together once both are expanded side by side in the same group.
   const personClass = ev.name === 'Bride' ? 'person-bride' : (ev.name === 'Groom' ? 'person-groom' : '');
 
-  // Inline field validation: only shows once this event has been flagged by
-  // a failed "Get Your Quote" attempt (see invalidFieldEvents / shareOrDownloadPDF).
-  const showErr = invalidFieldEvents.has(ev.id);
-  const missDate = showErr && !dateState[ev.id];
-  const missTime = showErr && !timeState[ev.id];
-  const missLoc = showErr && !locationState[ev.id];
-  const errParts = [];
-  if(missDate) errParts.push('date');
-  if(missTime) errParts.push('time');
-  if(missLoc) errParts.push('venue');
-  const errMsg = errParts.length ? `Please add the ${errParts.join(', ')} to continue` : '';
+  const dateBlock = hideDateFields ? '' : dateFieldsMarkup(ev.id, { label: dateLabel });
 
   return `<div class="card ${isExpanded?'expanded':''} ${personClass}" id="card-${ev.id}">
     <div class="card-head" data-toggle="${ev.id}" role="button" aria-expanded="${isExpanded}" tabindex="0">
@@ -1194,17 +1223,30 @@ function renderCard(ev){
     <div class="card-body">
       ${mainRows}
       ${renderAddonsRows(ev)}
-      <div class="addon-label" style="margin-top:6px;">Event Date, Time & Location (required to generate quote)</div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <input type="date" class="ev-date ${missDate?'field-error':''}" data-event="${ev.id}" min="${TODAY_STR}" value="${dateState[ev.id]||''}" aria-label="Event date" style="flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
-        <input type="time" class="ev-time ${missTime?'field-error':''}" data-event="${ev.id}" value="${timeState[ev.id]||''}" aria-label="Event time" style="flex:1 1 100px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
-        <input type="text" class="ev-loc ${missLoc?'field-error':''}" data-event="${ev.id}" placeholder="Venue / Location" value="${locationState[ev.id]||''}" aria-label="Event venue or location" style="flex:2 1 160px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
-      </div>
-      <div class="field-error-msg" id="err-${ev.id}" style="display:${errMsg?'flex':'none'};">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-        <span>${errMsg}</span>
-      </div>
+      ${dateBlock}
     </div>
+  </div>`;
+}
+
+// For a 2-member (Bride/Groom) group: one shared date/time/venue field-set by
+// default (applies to both, since Muhurtha/Roce are almost always one shared
+// ceremony). A small link lets a client opt into separate details when Haldi
+// or Mehendi genuinely happen at different homes/times for each side.
+function renderCoupleDateFields(group, brideEv, groomEv, separate){
+  if(!separate){
+    const shared = dateFieldsMarkup(brideEv.id, {
+      label: 'Event Date, Time & Location — applies to both Bride & Groom (required to generate quote)',
+      mirrorId: groomEv.id
+    });
+    return `<div class="couple-date-block">
+      ${shared}
+      <div class="venue-toggle-link" data-venue-toggle="${group.id}">Bride &amp; Groom at different venues? <span class="venue-toggle-action">Add separate details</span></div>
+    </div>`;
+  }
+  const brideOnly = dateFieldsMarkup(brideEv.id, { label: 'Bride — Date, Time & Location (required to generate quote)' });
+  return `<div class="couple-date-block">
+    ${brideOnly}
+    <div class="venue-toggle-link" data-venue-toggle="${group.id}">Using separate details for Groom. <span class="venue-toggle-action">Use same details for both instead</span></div>
   </div>`;
 }
 
@@ -1233,7 +1275,25 @@ function renderGroupCard(group){
   const memberEvs = group.members.map(id=>allEvents.find(e=>e.id===id));
   const groupSub = memberEvs.reduce((s,ev)=>s+eventSubtotal(ev), 0);
   const isGroupExpanded = groupExpanded.has(group.id);
-  const memberCards = memberEvs.map(renderCard).join('');
+
+  const isCouple = group.members.length === 2;
+  const separate = isCouple && groupSeparateDetails.has(group.id);
+
+  let coupleDateBlock = '';
+  if(isCouple){
+    const [brideEv, groomEv] = memberEvs;
+    coupleDateBlock = renderCoupleDateFields(group, brideEv, groomEv, separate);
+  }
+
+  const memberCards = memberEvs.map((ev, idx) => {
+    // Bride (idx 0) never shows her own date fields in a 2-member group — they
+    // live in the shared/couple block above. Groom (idx 1) only gets his own
+    // when "separate details" has been switched on.
+    const hide = isCouple && (idx===0 || !separate);
+    const label = (isCouple && idx===1 && separate) ? 'Groom — Date, Time & Location (required to generate quote)' : undefined;
+    return renderCard(ev, hide, label);
+  }).join('');
+
   return `<div class="card ${isGroupExpanded?'expanded':''}" id="card-${group.id}">
     <div class="card-head" data-group-toggle="${group.id}">
       <div class="name">${group.label}</div>
@@ -1243,8 +1303,9 @@ function renderGroupCard(group){
       </div>
     </div>
     <div class="card-body group-body">
-      ${group.members.length===2 ? coupleProgressLine(memberEvs) : ''}
+      ${isCouple ? coupleProgressLine(memberEvs) : ''}
       ${memberCards}
+      ${isCouple ? coupleDateBlock : ''}
     </div>
   </div>`;
 }
@@ -1346,16 +1407,57 @@ function attachHandlers(){
   // already-selected event, auto-collapse that card after a short pause so clients
   // don't have to keep scrolling past sections they've already finished.
   document.querySelectorAll('.ev-date').forEach(el=>{
-    el.oninput = () => { dateState[el.dataset.event] = el.value; saveSelectionsLocally(); refreshFieldError(el.dataset.event); };
-    el.onchange = () => { maybeAutoCollapse(el.dataset.event); };
+    el.oninput = () => {
+      dateState[el.dataset.event] = el.value;
+      if(el.dataset.mirror) dateState[el.dataset.mirror] = el.value;
+      saveSelectionsLocally();
+      refreshFieldError(el.dataset.event);
+      if(el.dataset.mirror) refreshFieldError(el.dataset.mirror);
+    };
+    el.onchange = () => { maybeAutoCollapse(el.dataset.event); if(el.dataset.mirror) maybeAutoCollapse(el.dataset.mirror); };
   });
   document.querySelectorAll('.ev-time').forEach(el=>{
-    el.oninput = () => { timeState[el.dataset.event] = el.value; saveSelectionsLocally(); refreshFieldError(el.dataset.event); };
-    el.onchange = () => { maybeAutoCollapse(el.dataset.event); };
+    el.oninput = () => {
+      timeState[el.dataset.event] = el.value;
+      if(el.dataset.mirror) timeState[el.dataset.mirror] = el.value;
+      saveSelectionsLocally();
+      refreshFieldError(el.dataset.event);
+      if(el.dataset.mirror) refreshFieldError(el.dataset.mirror);
+    };
+    el.onchange = () => { maybeAutoCollapse(el.dataset.event); if(el.dataset.mirror) maybeAutoCollapse(el.dataset.mirror); };
   });
   document.querySelectorAll('.ev-loc').forEach(el=>{
-    el.oninput = () => { locationState[el.dataset.event] = el.value; saveSelectionsLocally(); refreshFieldError(el.dataset.event); };
-    el.onblur = () => { maybeAutoCollapse(el.dataset.event); };
+    el.oninput = () => {
+      locationState[el.dataset.event] = el.value;
+      if(el.dataset.mirror) locationState[el.dataset.mirror] = el.value;
+      saveSelectionsLocally();
+      refreshFieldError(el.dataset.event);
+      if(el.dataset.mirror) refreshFieldError(el.dataset.mirror);
+    };
+    el.onblur = () => { maybeAutoCollapse(el.dataset.event); if(el.dataset.mirror) maybeAutoCollapse(el.dataset.mirror); };
+  });
+  // "Bride & Groom at different venues?" toggle — switches a group between one
+  // shared date/time/venue field-set and two independent ones.
+  document.querySelectorAll('[data-venue-toggle]').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const id = el.dataset.venueToggle;
+      if(groupSeparateDetails.has(id)){
+        // Reverting to shared: re-sync Groom's fields to Bride's so nothing looks lost.
+        groupSeparateDetails.delete(id);
+        const group = [...weddingCardGroups, ...otherCardGroups].find(g=>g.id===id);
+        if(group && group.members.length===2){
+          const [m1, m2] = group.members;
+          dateState[m2] = dateState[m1];
+          timeState[m2] = timeState[m1];
+          locationState[m2] = locationState[m1];
+        }
+      } else {
+        groupSeparateDetails.add(id);
+      }
+      saveSelectionsLocally();
+      renderAll();
+    };
   });
 }
 
