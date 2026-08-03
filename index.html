@@ -225,6 +225,15 @@
   .pkg-badge-inline{ font-size:8.5px; font-weight:700; color:var(--gold); background:#FBF5E7; border:1px solid var(--gold); border-radius:20px; padding:1.5px 7px; margin-left:6px; vertical-align:middle; white-space:nowrap; }
   .pkg-diff{ margin-top:7px; font-size:11px; color:#4C7A57; font-weight:600; }
 
+  /* Events-selected indicator */
+  .events-progress{ max-width:560px; margin:12px auto 0; padding:0 20px; }
+  .events-progress-inner{ background:var(--paper-2); border:1px solid var(--line); border-radius:10px; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .events-progress-text{ font-size:12.5px; color:var(--ink); font-weight:600; }
+  .events-progress-sub{ font-size:10.5px; color:var(--ink-soft); margin-top:2px; }
+  .events-progress-dots{ display:flex; gap:4px; flex-shrink:0; }
+  .events-progress-dots .dot{ width:7px; height:7px; border-radius:50%; background:var(--line); transition:background .2s; }
+  .events-progress-dots .dot.filled{ background:var(--gold); }
+
   /* Your Team */
   .team-empty{ font-size:12.5px; color:var(--ink-soft); }
   .team-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--ink); padding:6px 0; border-bottom:1px dashed var(--line); }
@@ -369,6 +378,8 @@
       <span>Please fill in the date, time, and location for each event you select below — these are required before your quotation can be generated.</span>
     </div>
   </div>
+
+  <div class="events-progress" id="events-progress"></div>
 
   <div style="max-width:560px; margin:10px auto 0; padding:0 20px; text-align:center;">
     <button id="roles-info-toggle" class="info-link-btn" aria-expanded="false" aria-controls="roles-info-panel">What's the Difference? <span style="font-weight:400; color:var(--ink-soft);">(Photographer, Videographer, Cinematographer...)</span> <span class="info-link-chevron">⌄</span></button>
@@ -872,8 +883,8 @@ const weddingEvents = [
     id:'wedding', name:'Wedding', type:'package',
     options:[
       {name:'Classic', price:90000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Photo Album (250 photos, client-selected)']},
-      {name:'Premium', price:120000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','1 Photo Album (80 pages album, 250 photos to be selected by client)']},
-      {name:'Elite', price:140000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','2 Photo Albums (80 pages album, 250 photos to be selected by client)']},
+      {name:'Premium', price:120000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','1 Photo Album (80 pages album, 250 photos to be selected by client)'], tagline:'Perfect for couples who want a cinematic wedding story.'},
+      {name:'Elite', price:140000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','2 Photo Albums (80 pages album, 250 photos to be selected by client)'], tagline:'Ideal for families who want complete wedding coverage.'},
     ],
     addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}]
   },
@@ -897,7 +908,7 @@ const otherEvents = [
     id:'maternity_photo', name:'Photography', fullName:'Maternity Photography', type:'package',
     options:[
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
-      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer'], tagline:'Great for parents-to-be who want multiple looks and more time to relax into the shoot.'},
     ],
     addons: baseAddons(20000)
   },
@@ -905,7 +916,7 @@ const otherEvents = [
     id:'maternity_photocine', name:'Photography & Cinematography', fullName:'Maternity Photography & Cinematography', type:'package',
     options:[
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
-      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer'], tagline:'Perfect for parents-to-be who want both photos and a cinematic keepsake film.'},
     ],
     addons: baseAddons(20000)
   },
@@ -913,7 +924,7 @@ const otherEvents = [
     id:'prewedding_photo', name:'Photography', fullName:'Pre-Wedding Photography', type:'package',
     options:[
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
-      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer'], tagline:'Ideal for couples who want more outfit changes and locations in one day.'},
     ],
     addons: baseAddons(20000)
   },
@@ -921,7 +932,7 @@ const otherEvents = [
     id:'prewedding_photocine', name:'Photography & Cinematography', fullName:'Pre-Wedding Photography & Cinematography', type:'package',
     options:[
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
-      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer']},
+      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer'], tagline:'Perfect for couples who want a cinematic pre-wedding story across a full day.'},
     ],
     addons: baseAddons(20000)
   },
@@ -1126,10 +1137,8 @@ function renderCard(ev){
       const li = o.includes.map(x=>`<li>${x}</li>`).join('');
       const badge = (ev.options.length===3 && i===1) ? `<span class="pkg-badge-inline">Best Value</span>` : '';
       let diffNote = '';
-      if(i>0){
-        const prev = ev.options[i-1];
-        const added = diffIncludes(o.includes, prev.includes);
-        if(added.length) diffNote = `<div class="pkg-diff">+ ${added.join(', ')} vs ${prev.name}</div>`;
+      if(i>0 && o.tagline){
+        diffNote = `<div class="pkg-diff">${o.tagline}</div>`;
       }
       return `<div class="pkg-opt ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
         <div class="pkg-check">${CHECK_SVG}</div>
@@ -1506,6 +1515,37 @@ function renderTeamList(){
 }
 
 const PROGRESS_STEPS = ['Access','Select Events','Add Details','Download Quote'];
+
+// Shows a running "X events selected" indicator with the names of the
+// selected events, so clients can see their progress at a glance while
+// scrolling through a long list of wedding functions and other occasions.
+function renderEventsProgress(){
+  const el = document.getElementById('events-progress');
+  if(!el) return;
+  const active = allEvents.filter(isEventActive);
+  const totalCount = allEvents.length;
+  if(active.length===0){
+    el.innerHTML = `<div class="events-progress-inner">
+      <div>
+        <div class="events-progress-text">No events selected yet</div>
+        <div class="events-progress-sub">Tap an event below to get started</div>
+      </div>
+    </div>`;
+    return;
+  }
+  const names = active.map(ev=>ev.fullName || ev.name).join(', ');
+  const dotsToShow = Math.min(totalCount, 8);
+  const filledDots = Math.min(active.length, dotsToShow);
+  const dots = Array.from({length:dotsToShow}, (_,i)=>`<div class="dot ${i<filledDots?'filled':''}"></div>`).join('');
+  el.innerHTML = `<div class="events-progress-inner">
+    <div>
+      <div class="events-progress-text">${active.length} event${active.length===1?'':'s'} selected</div>
+      <div class="events-progress-sub">${names}</div>
+    </div>
+    <div class="events-progress-dots">${dots}</div>
+  </div>`;
+}
+
 function renderProgress(){
   const el = document.getElementById('progress-steps');
   if(!el) return;
@@ -1570,6 +1610,7 @@ function updateTotal(){
 
   renderDeliverablesList();
   renderProgress();
+  renderEventsProgress();
 }
 
 function getInstagramQRDataURL(){
