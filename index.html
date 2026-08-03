@@ -195,10 +195,15 @@
      picked. Only shown once at least one selection exists. */
   .sticky-summary{
     position: sticky; top: 0; z-index: 30;
-    background: rgba(247,243,234,.96); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    background: var(--paper);
     border-bottom: 1px solid var(--line);
     padding: 0; max-height: 0; overflow: hidden;
     transition: max-height .18s ease, padding .18s ease;
+    /* Forces its own stable compositing layer — without this, iOS Safari can
+       intermittently fail to repaint a sticky element during momentum
+       scroll, making it flicker or vanish until the next scroll event. */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
   .sticky-summary.visible{ padding: 9px 0; max-height: 60px; }
   .sticky-summary-inner{
