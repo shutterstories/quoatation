@@ -1393,8 +1393,13 @@ function renderCard(ev, hideDateFields, dateLabel){
     const sel = state[ev.id];
     const anySelected = sel !== null && sel !== undefined;
     const banner = anySelected ? '' : `<div class="pkg-select-hint">Choose one package to continue</div>`;
-    const isComparing = ev.options.length > 1 && compareExpanded.has(ev.id);
-    const compareToggle = ev.options.length > 1
+    // Compare table only makes sense where there are several tiers with a
+    // real feature difference to spot (Wedding's 3-tier Classic/Premium/Elite).
+    // Pre-Wedding and Maternity only ever have 2 simple options, so the
+    // toggle is skipped there to avoid clutter.
+    const showCompare = ev.options.length > 1 && !ev.id.startsWith('prewedding_') && !ev.id.startsWith('maternity_');
+    const isComparing = showCompare && compareExpanded.has(ev.id);
+    const compareToggle = showCompare
       ? `<button type="button" class="compare-toggle" data-compare="${ev.id}">📊 ${isComparing ? 'Hide comparison' : 'Compare packages at a glance'}</button>`
       : '';
     const compareTable = isComparing ? renderCompareTable(ev, sel) : '';
@@ -1537,14 +1542,16 @@ function renderStickySummary(){
     if(ev.type==='roles'){
       const sel = state[ev.id];
       if(sel && sel.size>0){
-        const full = `${label}: ${sel.size} role${sel.size>1?'s':''}`;
-        chips.push(`<span class="sticky-chip" data-jump="${ev.id}" title="${full}">${label}: <b>${sel.size} role${sel.size>1?'s':''}</b></span>`);
+        // Chip shows just the event name — the exact services picked stay
+        // available via the tap/hover tooltip instead of cluttering the chip.
+        const full = `${label}: ${sel.size} service${sel.size>1?'s':''}`;
+        chips.push(`<span class="sticky-chip" data-jump="${ev.id}" title="${full}"><b>${label}</b></span>`);
       }
     } else {
       const idx = state[ev.id];
       if(idx !== null && idx !== undefined){
         const full = `${label}: ${ev.options[idx].name}`;
-        chips.push(`<span class="sticky-chip" data-jump="${ev.id}" title="${full}">${label}: <b>${ev.options[idx].name}</b></span>`);
+        chips.push(`<span class="sticky-chip" data-jump="${ev.id}" title="${full}"><b>${label}</b></span>`);
       }
     }
   });
