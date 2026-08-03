@@ -13,7 +13,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --navy: #0A1B33;
@@ -365,6 +364,17 @@
           </div>
         </div>
         <div id="gate-code-error" style="display:none; font-size:11.5px; color:#B33A3A; margin-bottom:10px;"></div>
+
+        <!-- Owner bypass only: lets you optionally tag this quote with the
+             actual client's name/number instead of it showing as "Shutter
+             Stories (Owner)" — both fields are optional. -->
+        <div id="gate-owner-fields" style="display:none; margin:-4px 0 14px; padding:12px; border:1px dashed var(--gold); border-radius:9px; background:#FBF5E7;">
+          <div style="font-size:11px; font-weight:600; color:var(--navy); margin-bottom:8px;">Owner access — tag this quote to a client (optional)</div>
+          <input id="owner-client-name" type="text" placeholder="Client name (optional)" autocomplete="off" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:10px 12px; font-family:'Poppins'; font-size:13px; background:#fff; margin-bottom:8px;">
+          <input id="owner-client-phone" type="tel" placeholder="Client contact number (optional)" autocomplete="off" style="width:100%; border:1px solid #E4DCC8; border-radius:8px; padding:10px 12px; font-family:'Poppins'; font-size:13px; background:#fff; margin-bottom:10px;">
+          <button type="button" id="owner-fields-continue" style="width:100%; background:var(--navy); color:#fff; font-weight:600; font-size:13.5px; border:none; border-radius:8px; padding:11px; cursor:pointer; font-family:'Poppins';">Continue</button>
+        </div>
+
         <button id="gate-code-submit" style="width:100%; background:#C6A15B; color:#0A1B33; font-weight:600; font-size:14.5px; border:none; border-radius:10px; padding:13px; cursor:pointer; font-family:'Poppins';">Continue</button>
         <div style="font-size:11px; color:#5B6072; text-align:center; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;">
           <span>Don't have access code? Request your quotation on WhatsApp</span>
@@ -411,7 +421,6 @@
     <p>Select your events below — your total updates live</p>
   </div>
 
-  <div id="qr-holder" style="display:none;"></div>
 
   <div class="progress-wrap" id="progress-steps"></div>
 
@@ -515,7 +524,7 @@
         <table class="payment-table">
           <tr><th>Stage</th><th>%</th><th>Amount</th><th>Due</th></tr>
           <tr><td>Booking Advance</td><td>35%</td><td class="amt" id="pay-1">₹0</td><td>To confirm booking</td></tr>
-          <tr><td>Second Instalment</td><td>60%</td><td class="amt" id="pay-2">₹0</td><td>15 days before event</td></tr>
+          <tr><td>Second Instalment</td><td>60%</td><td class="amt" id="pay-2">₹0</td><td>7 days before event</td></tr>
           <tr><td>Final Payment</td><td>5%</td><td class="amt" id="pay-3">₹0</td><td>Before delivery of final files/album</td></tr>
         </table>
       </div>
@@ -560,10 +569,17 @@
 
   <div class="ticket">
     <div class="ticket-top">
-      <div><div class="lbl">Your Total</div><div class="amt" id="total-amt">₹0</div></div>
+      <div>
+        <div class="lbl">Your Total</div>
+        <div style="display:flex; align-items:baseline; gap:8px;">
+          <div class="amt" id="total-amt">₹0</div>
+          <span id="edit-total-link" style="display:none; font-size:11px; color:var(--gold-soft); text-decoration:underline; cursor:pointer; white-space:nowrap;">✎ Edit</span>
+        </div>
+      </div>
       <div class="count" id="item-count">0 items selected</div>
     </div>
     <button class="pdf-btn" id="pdf-btn" disabled>Get Your Quote</button>
+    <button class="send-btn" id="send-btn" style="display:none;">Send PDF to Client's WhatsApp</button>
     <button class="clear-btn" id="clear-btn-bottom">Clear Selection</button>
   </div>
 
@@ -649,6 +665,7 @@ function showToast(message, type){
 let clientName = '';
 let clientPhone = '';       // 10-digit, no country code — used for display / sheet
 let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
+let ownerTotalOverride = null; // owner-only: manual custom total (null = use calculated total)
 let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
 let lastSubmittedSignature = null;  // snapshot of the selection that was last submitted via Get Quote / WhatsApp
 let otpVerifiedOnceThisSession = false; // becomes true after the first successful verifyOtp() — see gate-submit handler
@@ -696,12 +713,14 @@ document.getElementById('gate-code-submit').addEventListener('click', ()=>{
   }
   errEl.style.display = 'none';
 
-  // Owner bypass — skip Sheet check, phone entry, and OTP entirely
+  // Owner bypass — skip Sheet check, phone entry, and OTP. Instead of
+  // unlocking straight away, reveal an optional panel to tag the quote
+  // with the real client's name/number (both optional).
   if(codeVal === OWNER_BYPASS_CODE.toUpperCase()){
     usedAccessCode = 'OWNER-BYPASS';
-    clientName = 'Shutter Stories (Owner)';
-    clientPhone = '';
-    onOtpVerified();
+    document.getElementById('gate-owner-fields').style.display = 'block';
+    document.getElementById('gate-code-submit').style.display = 'none';
+    document.getElementById('owner-client-name').focus();
     return;
   }
 
@@ -734,6 +753,15 @@ document.getElementById('gate-code-submit').addEventListener('click', ()=>{
       errEl.textContent = 'Could not verify code right now. Please check your connection and try again.';
       errEl.style.display = 'block';
     });
+});
+
+// Owner bypass, step 2: optional client name/number, then unlock straight away
+document.getElementById('owner-fields-continue').addEventListener('click', ()=>{
+  const nameVal = document.getElementById('owner-client-name').value.trim();
+  const phoneVal = document.getElementById('owner-client-phone').value.trim().replace(/\D/g,'');
+  clientName = nameVal || 'Shutter Stories (Owner)';
+  clientPhone = phoneVal || '';
+  onOtpVerified();
 });
 
 // STEP 1: collect name + phone, send OTP
@@ -918,8 +946,10 @@ function unlockQuoteForm(){
 }
 
 function onOtpVerified(){
-  if(usedAccessCode !== 'OWNER-BYPASS'){
-    logToSheet({ stage: 'verified-entry', clientName, clientPhone });
+  const ownerTaggedWithClient = usedAccessCode === 'OWNER-BYPASS' &&
+    (Boolean(clientPhone) || (clientName && clientName !== 'Shutter Stories (Owner)'));
+  if(usedAccessCode !== 'OWNER-BYPASS' || ownerTaggedWithClient){
+    logToSheet({ stage: 'verified-entry', clientName, clientPhone, accessCode: usedAccessCode });
   }
   unlockQuoteForm();
 }
@@ -1002,11 +1032,11 @@ const allEvents = [...weddingEvents, ...otherEvents];
 // Grouping used only for rendering — pairs of Bride/Groom sub-events collapse into a single parent card.
 const weddingCardGroups = [
   { id:'wedding', label:'Wedding', members:['wedding'] },
-  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'], hint:'choose one' },
-  { id:'muhurtha', label:'Muhurtha', members:['muhurtha1','muhurtha2'], hint:'choose one' },
-  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'], hint:'choose one' },
+  { id:'haldi', label:'Haldi', members:['haldi1','haldi2'], hint:'choose one', coupleGroup:true },
+  { id:'muhurtha', label:'Muhurtha', members:['muhurtha1','muhurtha2'], hint:'choose one', coupleGroup:true },
+  { id:'mehendi', label:'Mehendi', members:['mehendi1','mehendi2'], hint:'choose one', coupleGroup:true },
   { id:'sangeet', label:'Sangeet', members:['sangeet'] },
-  { id:'roce', label:'Roce', members:['roce1','roce2'], hint:'choose one' },
+  { id:'roce', label:'Roce', members:['roce1','roce2'], hint:'choose one', coupleGroup:true },
   { id:'reception', label:'Reception', members:['reception'] },
   { id:'engagement', label:'Engagement', members:['engagement'] },
 ];
@@ -1315,7 +1345,7 @@ function renderGroupCard(group){
   const groupSub = memberEvs.reduce((s,ev)=>s+eventSubtotal(ev), 0);
   const isGroupExpanded = groupExpanded.has(group.id);
 
-  const isCouple = group.members.length === 2;
+  const isCouple = group.coupleGroup === true;
   const separate = isCouple && groupSeparateDetails.has(group.id);
 
   let coupleDateBlock = '';
@@ -1370,10 +1400,13 @@ function attachHandlers(){
         groupExpanded.delete(id);
       } else {
         groupExpanded.add(id);
-        // Auto-expand every member (Bride & Groom) the moment the group opens,
-        // so Groom is never left collapsed and easy to miss under Bride.
+        // Auto-expand both sides the moment the group opens ONLY for real
+        // Bride/Groom groups (Haldi, Muhurtha, Mehendi, Roce) — that way
+        // Groom is never left collapsed and easy to miss under Bride.
+        // Category-choice groups (Pre-Wedding, Maternity) stay collapsed to
+        // a simple two-row list; the client taps a category to see its detail.
         const group = [...weddingCardGroups, ...otherCardGroups].find(g=>g.id===id);
-        if(group) group.members.forEach(m=>expanded.add(m));
+        if(group && group.coupleGroup === true) group.members.forEach(m=>expanded.add(m));
       }
       renderAll();
     };
@@ -1485,7 +1518,7 @@ function attachHandlers(){
         // Reverting to shared: re-sync Groom's fields to Bride's so nothing looks lost.
         groupSeparateDetails.delete(id);
         const group = [...weddingCardGroups, ...otherCardGroups].find(g=>g.id===id);
-        if(group && group.members.length===2){
+        if(group && group.coupleGroup === true){
           const [m1, m2] = group.members;
           dateState[m2] = dateState[m1];
           timeState[m2] = timeState[m1];
@@ -1655,7 +1688,7 @@ function getAlbumLine(ev){
     return null;
   } else {
     const set = state[ev.id] || new Set();
-    if(set.has('Album')) return `${evLabel(ev)} Photo Album (Client-Selected Photos)`;
+    if(set.has('Album')) return `${evLabel(ev)} Photo Album (150 Client-Selected Photos)`;
     return null;
   }
 }
@@ -1688,7 +1721,7 @@ function buildDeliverables(){
     if(aset.has('Same-Day Edit')) lines.push(`${evLabel(ev)} Same-Day Edit`);
     if(aset.has('Reels')) lines.push(`${evLabel(ev)} Reel`);
   });
-  lines.push('On request, the final photographs can be delivered on a client-provided hard drive (HDD).');
+  lines.push('On request, All photographs can be delivered on a client-provided hard drive (HDD).');
   return lines;
 }
 
@@ -1710,7 +1743,12 @@ function collectSelections(){
     const aset = addonState[ev.id] || new Set();
     ev.addons.forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
   });
-  return {lines, total};
+  const computedTotal = total;
+  // Owner-only manual override — lets Pavan quote a custom negotiated total
+  // instead of the auto-summed line items. Applies everywhere total is used
+  // (ticket bar, PDF, payment schedule) since they all read from here.
+  const overridden = usedAccessCode === 'OWNER-BYPASS' && ownerTotalOverride !== null;
+  return { lines, total: overridden ? ownerTotalOverride : computedTotal, computedTotal, overridden };
 }
 
 function renderDeliverablesList(){
@@ -1817,13 +1855,25 @@ function hashString(str){
 let prevTotalValue = null;
 let totalIsRevealed = false; // read by renderCard/renderGroupCard to keep per-event prices hidden too, until Get Your Quote has been tapped
 function updateTotal(){
-  const {lines, total} = collectSelections();
+  const {lines, total, overridden} = collectSelections();
   const totalAmtEl = document.getElementById('total-amt');
   document.getElementById('item-count').textContent = `${lines.length} item${lines.length===1?'':'s'} selected`;
   document.getElementById('pdf-btn').disabled = lines.length===0;
 
-  const isRevealed = usedAccessCode === 'OWNER-BYPASS' || (lastSubmittedSignature !== null && selectionSignature(lines, total) === lastSubmittedSignature);
+  const isOwner = usedAccessCode === 'OWNER-BYPASS';
+  const isRevealed = isOwner || (lastSubmittedSignature !== null && selectionSignature(lines, total) === lastSubmittedSignature);
   totalIsRevealed = isRevealed;
+
+  const editLink = document.getElementById('edit-total-link');
+  if(editLink){
+    editLink.style.display = isOwner ? 'inline' : 'none';
+    editLink.textContent = overridden ? '✎ Custom · Reset' : '✎ Edit';
+  }
+  const sendBtn = document.getElementById('send-btn');
+  if(sendBtn){
+    sendBtn.style.display = (isOwner && clientPhone) ? 'flex' : 'none';
+    sendBtn.disabled = lines.length===0;
+  }
 
   if(isRevealed){
     totalAmtEl.classList.remove('masked');
@@ -1849,20 +1899,6 @@ function updateTotal(){
   renderDeliverablesList();
   renderProgress();
   renderEventsProgress();
-}
-
-function getInstagramQRDataURL(){
-  try{
-    const holder = document.getElementById('qr-holder');
-    holder.innerHTML = '';
-    new QRCode(holder, {
-      text: 'https://www.instagram.com/shutter_stories__?igsh=MXFqYmZqYjVodndmeg%3D%3D&utm_source=qr',
-      width: 240, height: 240,
-      colorDark: '#0A1B33', colorLight: '#F7F3EA',
-    });
-    const canvas = holder.querySelector('canvas');
-    return canvas ? canvas.toDataURL('image/png') : null;
-  }catch(e){ return null; }
 }
 
 function fmtPDF(n){ return 'Rs. ' + n.toLocaleString('en-IN'); }
@@ -1992,12 +2028,29 @@ async function buildQuotationDoc(){
   doc.text('PHOTOGRAPHY QUOTATION', 11, 32.5);
   if(doc.setCharSpace) doc.setCharSpace(0);
 
-  const qrData = getInstagramQRDataURL();
-  if(qrData){
-    doc.setFillColor(...beige);
-    doc.roundedRect(pageW-36, 8, 25, 25, 2, 2, 'F');
-    doc.addImage(qrData, 'PNG', pageW-34, 9.5, 21, 21);
-  }
+  const igUrl = 'https://www.instagram.com/shutter_stories__?igsh=MXFqYmZqYjVodndmeg%3D%3D&utm_source=qr';
+
+  // Instagram button — small icon plus a light "Tap to follow" cue so
+  // clients realise it's clickable, not just a logo. Whole tile links out.
+  const igBoxW = 22, igBoxH = 15, igBoxX = pageW-33, igBoxY = 8;
+  doc.setFillColor(...beige);
+  doc.roundedRect(igBoxX, igBoxY, igBoxW, igBoxH, 2.2, 2.2, 'F');
+
+  const igCX = igBoxX + igBoxW/2, igCY = igBoxY + 6;
+  doc.setDrawColor(...navy);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(igCX-3, igCY-3, 6, 6, 1.8, 1.8, 'S');
+  doc.circle(igCX, igCY, 1.7, 'S');
+  doc.setFillColor(...navy);
+  doc.circle(igCX+1.9, igCY-1.9, 0.45, 'F');
+
+  doc.setFont(BODY,'normal');
+  doc.setFontSize(5.2);
+  doc.setTextColor(...gold);
+  doc.text('Tap to follow', igCX, igBoxY+13, {align:'center'});
+
+  // Whole tile is one clickable link
+  doc.link(igBoxX, igBoxY, igBoxW, igBoxH, { url: igUrl });
   pageBorder();
   y = 44;
 
@@ -2129,7 +2182,7 @@ async function buildQuotationDoc(){
     head: [['Stage','%','Amount','Due']],
     body: [
       ['Booking Advance','35%', fmtPDF(Math.round(total*0.35)), 'To confirm booking'],
-      ['Second Instalment','60%', fmtPDF(Math.round(total*0.60)), '15 days before event'],
+      ['Second Instalment','60%', fmtPDF(Math.round(total*0.60)), '7 days before event'],
       ['Final Payment','5%', fmtPDF(Math.round(total*0.05)), 'Before delivery of final files/album'],
     ],
     theme:'grid',
@@ -2248,7 +2301,13 @@ async function shareOrDownloadPDF(triggerWhatsApp){
   const filename = `ShutterStories_Quotation_${(clientName||'Client').replace(/\s+/g,'_')}_${stamp}.pdf`;
   const file = new File([blob], filename, {type:'application/pdf'});
 
-  if(SHEET_WEBHOOK_URL && usedAccessCode !== 'OWNER-BYPASS'){
+  // Owner-bypass quotes normally skip the sheet entirely (Pavan just testing
+  // things), but if he tagged the quote with a real client name/number via
+  // the owner panel, we DO want it logged like any other submission.
+  const ownerTaggedWithClient = usedAccessCode === 'OWNER-BYPASS' &&
+    (Boolean(clientPhone) || (clientName && clientName !== 'Shutter Stories (Owner)'));
+
+  if(SHEET_WEBHOOK_URL && (usedAccessCode !== 'OWNER-BYPASS' || ownerTaggedWithClient)){
     btn.textContent = 'Saving details…';
     const schedule = collectSchedule();
     const pdfDataUri = doc.output('datauristring');
@@ -2316,6 +2375,50 @@ if(completeCloseBtn){
 }
 
 document.getElementById('pdf-btn').addEventListener('click', ()=> shareOrDownloadPDF(false));
+
+// Owner-only: manually override the total quote amount
+const editTotalLink = document.getElementById('edit-total-link');
+if(editTotalLink){
+  editTotalLink.addEventListener('click', ()=>{
+    const {computedTotal} = collectSelections();
+    if(ownerTotalOverride !== null){
+      ownerTotalOverride = null;
+      updateTotal();
+      showToast('Reset to calculated total.', 'success');
+      return;
+    }
+    const input = window.prompt(`Enter a custom total quote amount (₹).\nCalculated total is ${fmt(computedTotal)}. Leave blank to cancel.`, computedTotal);
+    if(input === null) return;
+    const digits = input.replace(/[^\d]/g,'');
+    if(!digits){ return; }
+    ownerTotalOverride = parseInt(digits, 10);
+    updateTotal();
+    showToast(`Total set to ${fmt(ownerTotalOverride)}.`, 'success');
+  });
+}
+
+// Owner-only: send the quotation PDF straight to the tagged client's WhatsApp.
+// Generates/shares the PDF as usual, then opens WhatsApp already addressed to
+// that specific number — full auto-attach isn't possible from a web page, so
+// if the native share sheet isn't available the PDF downloads and Pavan just
+// attaches it in the chat that's already open and ready.
+async function sendQuoteToClientWhatsApp(){
+  if(!clientPhone){
+    showToast("No client WhatsApp number on file — add one via the owner access panel first.", 'error');
+    return;
+  }
+  await shareOrDownloadPDF(true);
+  const digits = clientPhone.replace(/\D/g,'');
+  const intl = digits.length===10 ? `91${digits}` : digits;
+  const firstName = (clientName||'').trim().split(' ')[0];
+  const greeting = firstName && firstName !== 'Shutter' ? `Hi ${firstName}` : 'Hi';
+  const msg = encodeURIComponent(`${greeting}, please find your Shutter Stories photography quotation attached above. Let us know if you have any questions!`);
+  window.open(`https://wa.me/${intl}?text=${msg}`, '_blank');
+}
+const sendToClientBtn = document.getElementById('send-btn');
+if(sendToClientBtn){
+  sendToClientBtn.addEventListener('click', sendQuoteToClientWhatsApp);
+}
 
 const clearBtnBottom = document.getElementById('clear-btn-bottom');
 if(clearBtnBottom){
