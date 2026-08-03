@@ -189,6 +189,39 @@
   .ticket-top .amt{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size: 26px; color: var(--gold-soft); }
   .ticket-top .amt.masked{ font-family:'Poppins',sans-serif; font-weight:500; font-size: 13px; letter-spacing:.2px; color: rgba(230,211,161,.85); }
   .ticket-top .count{ font-size: 11.5px; color: rgba(255,255,255,.7); }
+
+  /* Sticky selection summary — pinned under the hero while scrolling through
+     the event list, so clients never lose track of what they've already
+     picked. Only shown once at least one selection exists. */
+  .sticky-summary{
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(247,243,234,.96); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    padding: 0; max-height: 0; overflow: hidden;
+    transition: max-height .18s ease, padding .18s ease;
+  }
+  .sticky-summary.visible{ padding: 9px 0; max-height: 60px; }
+  .sticky-summary-inner{
+    max-width: 560px; margin: 0 auto; padding: 0 20px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sticky-summary-scroll{
+    display:flex; align-items:center; gap:7px; min-width:0; flex:1 1 auto;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .sticky-summary-scroll::-webkit-scrollbar{ display:none; }
+  .sticky-summary-label{ flex-shrink:0; font-size:9.5px; text-transform:uppercase; letter-spacing:.6px; color: var(--ink-soft); font-weight:600; }
+  .sticky-chip{
+    flex-shrink:0; background:#fff; border:1px solid var(--gold-soft); border-radius:20px;
+    padding:4px 10px; font-size:11px; color: var(--ink); white-space:nowrap; cursor:pointer;
+    max-width: 155px; overflow:hidden; text-overflow:ellipsis;
+  }
+  .sticky-chip:active{ opacity:.7; }
+  .sticky-chip b{ color: var(--navy); }
+  .sticky-summary-total{
+    flex-shrink:0; padding-left:10px; border-left:1px solid var(--line); font-weight:700;
+    color: var(--navy); font-size:12.5px; white-space:nowrap;
+  }
   .send-btn{
     max-width: 560px; margin: 8px auto 0; display:flex; align-items:center; justify-content:center; gap:8px;
     background: var(--gold); color: var(--navy); font-weight:600; font-size: 14.5px;
@@ -235,6 +268,36 @@
   /* Package comparison */
   .pkg-badge-inline{ font-size:8.5px; font-weight:700; color:var(--gold); background:#FBF5E7; border:1px solid var(--gold); border-radius:20px; padding:1.5px 7px; margin-left:6px; vertical-align:middle; white-space:nowrap; }
   .pkg-diff{ margin-top:7px; font-size:11px; color:#4C7A57; font-weight:600; }
+
+  /* Package comparison table — lets a client see all tiers side by side
+     instead of opening each package card individually. */
+  .compare-toggle{
+    display:flex; align-items:center; gap:6px; width:100%; margin-bottom:10px;
+    background:#FBF5E7; border:1px dashed var(--gold); border-radius:8px;
+    padding:9px 12px; font-family:'Poppins'; font-size:12px; font-weight:600;
+    color: var(--navy); cursor:pointer;
+  }
+  .compare-toggle:active{ opacity:.7; }
+  .compare-wrap{ margin-bottom:12px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .compare-table{ table-layout:fixed; border-collapse:collapse; width:100%; font-family:'Poppins'; }
+  .compare-table th, .compare-table td{ padding:7px 5px; text-align:center; border-bottom:1px solid var(--line); font-size:10.5px; line-height:1.35; word-break:break-word; }
+  .compare-table th:first-child, .compare-table td:first-child{ width:34%; text-align:left; color:var(--ink-soft); font-size:10px; white-space:normal; }
+  .compare-table thead th{ background: var(--paper); }
+  .compare-table thead .ct-name{ font-family:'Cormorant Garamond', serif; font-weight:700; font-size:12.5px; color:var(--navy); display:block; }
+  .compare-table thead .ct-price{ font-weight:700; color: var(--gold); font-size:10.5px; display:block; margin-top:2px; }
+  .compare-table thead th.ct-current{ background:#FBF5E7; }
+  .compare-table td.ct-yes{ color:#4C7A57; font-weight:700; }
+  .compare-table td.ct-no{ color:#C9C2AC; }
+  .compare-table tbody tr:last-child td{ border-bottom:none; }
+  .compare-select-row td{ border-bottom:none; padding:8px 4px; }
+  .compare-select-btn{
+    width:100%; border:1.5px solid var(--gold); background:#fff; color:var(--navy);
+    font-family:'Poppins'; font-weight:600; font-size:10px; border-radius:7px; padding:6px 3px; cursor:pointer;
+  }
+  .compare-select-btn.is-selected{ background:var(--gold); color:#fff; }
+  .compare-select-btn:active{ opacity:.75; }
+  .pkg-opt-compact{ padding:11px 14px; }
+  .pkg-opt-compact .pkg-diff{ margin-top:4px; }
 
   /* Events-selected indicator */
   .events-progress{ max-width:560px; margin:12px auto 0; padding:0 20px; }
@@ -417,6 +480,8 @@
     <p>Select your events below — your total updates live</p>
   </div>
 
+
+  <div class="sticky-summary" id="sticky-summary"></div>
 
   <div class="progress-wrap" id="progress-steps"></div>
 
@@ -1045,6 +1110,15 @@ const otherCardGroups = [
 
 function evLabel(ev){ return ev.fullName || ev.name; }
 
+// Given an event id, returns the id of the group card that should be
+// expanded/scrolled to in order to reveal it (couple-group members like
+// Haldi Bride/Groom live inside a shared parent group card).
+function groupIdForEvent(evId){
+  const allGroups = [...weddingCardGroups, ...otherCardGroups];
+  const g = allGroups.find(gr => gr.members.includes(evId));
+  return g && g.members.length > 1 ? g.id : evId;
+}
+
 // Today's date (YYYY-MM-DD) — used as the `min` on event date pickers so clients can't pick a past date.
 const TODAY_STR = new Date().toISOString().slice(0,10);
 
@@ -1056,6 +1130,7 @@ const dateState = {};    // eventId -> date string
 const locationState = {}; // eventId -> venue string
 const expanded = new Set();
 const groupExpanded = new Set(); // parent group cards (e.g. Haldi) that are expanded to reveal Bride/Groom
+const compareExpanded = new Set(); // package-type event ids currently showing the side-by-side compare table
 const groupSeparateDetails = new Set(['haldi','mehendi','muhurtha','roce']); // group ids where Bride & Groom get their own separate date/time/venue by default. Client can still switch a group to shared details via the toggle link.
 let invalidFieldEvents = new Set(); // event ids currently showing a red date/time/venue error, set on a failed "Get Your Quote" attempt
 
@@ -1198,6 +1273,69 @@ function diffIncludes(currIncludes, prevIncludes){
   return notes;
 }
 
+// Renders a side-by-side comparison table for a package-type event's tiers,
+// so a client can see price + full feature list for every option at once
+// instead of opening each package card individually.
+function renderCompareTable(ev, sel){
+  // Build the union of feature lines across all tiers, preserving first-seen order.
+  function parse(s){
+    const m = s.match(/^(\d+)\s+(.*)$/);
+    return m ? { qty: parseInt(m[1],10), rest: m[2] } : { qty: 1, rest: s };
+  }
+  function key(rest){
+    return rest.replace(/\bAlbums\b/,'Album').trim().toLowerCase();
+  }
+  const featureOrder = []; // list of {key, label}
+  const seen = new Set();
+  ev.options.forEach(o=>{
+    o.includes.forEach(raw=>{
+      const p = parse(raw);
+      // Group by the item name with any trailing parenthetical detail
+      // stripped, so e.g. "Photo Album (250 photos...)" and "Photo Album
+      // (80 pages...)" collapse into one row instead of two.
+      const k = key(p.rest.replace(/\s*\(.*?\)\s*$/,''));
+      if(!seen.has(k)){ seen.add(k); featureOrder.push({ key:k, label:p.rest.replace(/\s*\(.*?\)\s*$/,'') }); }
+    });
+  });
+  const parsedPerOption = ev.options.map(o=> o.includes.map(raw=>{
+    const parsed = parse(raw);
+    return { ...parsed, raw, groupKey: key(parsed.rest.replace(/\s*\(.*?\)\s*$/,'')) };
+  }));
+
+  const headerCells = ev.options.map((o,i)=>`
+    <th class="${sel===i?'ct-current':''}">
+      <span class="ct-name">${o.name}</span>
+      <span class="ct-price">${fmt(o.price)}</span>
+    </th>`).join('');
+
+  const bodyRows = featureOrder.map(f=>{
+    // Collect the exact original wording used by each tier for this feature,
+    // so nothing is lost when rows get merged under one shortened label —
+    // available via the title tooltip on tap/hover.
+    const originalPhrasings = [];
+    ev.options.forEach((o,i)=>{
+      const match = parsedPerOption[i].find(p=>p.groupKey===f.key);
+      if(match && !originalPhrasings.includes(match.raw)) originalPhrasings.push(match.raw);
+    });
+    const tooltip = originalPhrasings.join(' • ').replace(/"/g,'&quot;');
+    const cells = ev.options.map((o,i)=>{
+      const match = parsedPerOption[i].find(p=>p.groupKey===f.key);
+      if(!match) return `<td class="ct-no">—</td>`;
+      const qtyLabel = match.qty>1 ? `${match.qty}×` : '✓';
+      return `<td class="ct-yes">${qtyLabel}</td>`;
+    }).join('');
+    return `<tr><td title="${tooltip}">${f.label.replace(/^\d+\s+/,'')}</td>${cells}</tr>`;
+  }).join('');
+
+  const selectRow = `<tr class="compare-select-row"><td></td>${ev.options.map((o,i)=>`
+    <td><button type="button" class="compare-select-btn ${sel===i?'is-selected':''}" data-event="${ev.id}" data-idx="${i}">${sel===i?'Selected ✓':'Select'}</button></td>`).join('')}</tr>`;
+
+  return `<div class="compare-wrap"><table class="compare-table">
+    <thead><tr><th></th>${headerCells}</tr></thead>
+    <tbody>${bodyRows}${selectRow}</tbody>
+  </table></div>`;
+}
+
 // Renders one date/time/venue field-set (+ inline validation) for a given event id.
 // Shared by renderCard (per-event) and renderCoupleDateFields (shared group-level version).
 function dateFieldsMarkup(evId, opts){
@@ -1255,13 +1393,29 @@ function renderCard(ev, hideDateFields, dateLabel){
     const sel = state[ev.id];
     const anySelected = sel !== null && sel !== undefined;
     const banner = anySelected ? '' : `<div class="pkg-select-hint">Choose one package to continue</div>`;
-    mainRows = banner + ev.options.map((o,i)=>{
+    const isComparing = ev.options.length > 1 && compareExpanded.has(ev.id);
+    const compareToggle = ev.options.length > 1
+      ? `<button type="button" class="compare-toggle" data-compare="${ev.id}">📊 ${isComparing ? 'Hide comparison' : 'Compare packages at a glance'}</button>`
+      : '';
+    const compareTable = isComparing ? renderCompareTable(ev, sel) : '';
+    mainRows = compareToggle + compareTable + banner + ev.options.map((o,i)=>{
       const isSel = sel === i;
-      const li = o.includes.map(x=>`<li>${x}</li>`).join('');
+      // While the compare table above is open, the feature list here would
+      // just repeat what the table already shows — collapse each card down
+      // to name + price + tagline so the client isn't scrolling past the
+      // same bullets twice. Expands back the moment compare is closed.
       let diffNote = '';
       if(i>0 && o.tagline){
         diffNote = `<div class="pkg-diff">${o.tagline}</div>`;
       }
+      if(isComparing){
+        return `<div class="pkg-opt pkg-opt-compact ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
+          <div class="pkg-check">${CHECK_SVG}</div>
+          <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
+          ${diffNote}
+        </div>`;
+      }
+      const li = o.includes.map(x=>`<li>${x}</li>`).join('');
       return `<div class="pkg-opt ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
         <div class="pkg-check">${CHECK_SVG}</div>
         <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
@@ -1367,7 +1521,61 @@ function renderAll(){
   updateTotal(); // sets totalIsRevealed + refreshes ticket/team/deliverables/progress before cards read it
   document.getElementById('events-wedding').innerHTML = weddingCardGroups.map(renderGroupCard).join('');
   document.getElementById('events-other').innerHTML = otherCardGroups.map(renderGroupCard).join('');
+  renderStickySummary();
   attachHandlers();
+}
+
+// Compact sticky bar pinned under the hero, listing every selection made so
+// far as small chips. Keeps clients from losing track of earlier choices
+// while they scroll further down a long event list.
+function renderStickySummary(){
+  const el = document.getElementById('sticky-summary');
+  if(!el) return;
+  const chips = [];
+  allEvents.forEach(ev=>{
+    const label = evLabel(ev);
+    if(ev.type==='roles'){
+      const sel = state[ev.id];
+      if(sel && sel.size>0){
+        const full = `${label}: ${sel.size} role${sel.size>1?'s':''}`;
+        chips.push(`<span class="sticky-chip" data-jump="${ev.id}" title="${full}">${label}: <b>${sel.size} role${sel.size>1?'s':''}</b></span>`);
+      }
+    } else {
+      const idx = state[ev.id];
+      if(idx !== null && idx !== undefined){
+        const full = `${label}: ${ev.options[idx].name}`;
+        chips.push(`<span class="sticky-chip" data-jump="${ev.id}" title="${full}">${label}: <b>${ev.options[idx].name}</b></span>`);
+      }
+    }
+  });
+  if(chips.length === 0){
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.add('visible');
+  const { total } = collectSelections();
+  const totalLabel = totalIsRevealed ? fmt(total) : 'Selected ✓';
+  el.innerHTML = `<div class="sticky-summary-inner">
+    <div class="sticky-summary-scroll">
+      <span class="sticky-summary-label">Selected</span>
+      ${chips.join('')}
+    </div>
+    <span class="sticky-summary-total">${totalLabel}</span>
+  </div>`;
+  el.querySelectorAll('.sticky-chip').forEach(chip=>{
+    chip.onclick = () => {
+      const evId = chip.dataset.jump;
+      const groupId = groupIdForEvent(evId);
+      if(groupId !== evId) groupExpanded.add(groupId);
+      expanded.add(evId);
+      renderAll();
+      requestAnimationFrame(()=>{
+        const target = document.getElementById(`card-${evId}`) || document.getElementById(`card-${groupId}`);
+        if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+    };
+  });
 }
 
 function attachHandlers(){
@@ -1421,6 +1629,24 @@ function attachHandlers(){
       renderAll();
     };
     addKeyActivate(el);
+  });
+  document.querySelectorAll('.compare-toggle').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const evId = el.dataset.compare;
+      if(compareExpanded.has(evId)) compareExpanded.delete(evId); else compareExpanded.add(evId);
+      renderAll();
+    };
+    addKeyActivate(el);
+  });
+  document.querySelectorAll('.compare-select-btn').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      const evId = el.dataset.event, idx = parseInt(el.dataset.idx);
+      state[evId] = (state[evId] === idx) ? null : idx;
+      saveSelectionsLocally();
+      renderAll();
+    };
   });
   document.querySelectorAll('.addon-opt').forEach(el=>{
     el.onclick = (e) => {
@@ -1794,10 +2020,12 @@ function renderEventsProgress(){
   const dotsToShow = Math.min(totalCount, 8);
   const filledDots = Math.min(active.length, dotsToShow);
   const dots = Array.from({length:dotsToShow}, (_,i)=>`<div class="dot ${i<filledDots?'filled':''}"></div>`).join('');
+  // Names are already listed in the sticky summary bar above (which stays
+  // visible while scrolling and is tappable) — showing them again here would
+  // just duplicate that. This card now only shows count + progress dots.
   el.innerHTML = `<div class="events-progress-inner">
     <div>
       <div class="events-progress-text">${active.length} event${active.length===1?'':'s'} selected</div>
-      <div class="events-progress-sub">${names}</div>
     </div>
     <div class="events-progress-dots">${dots}</div>
   </div>`;
