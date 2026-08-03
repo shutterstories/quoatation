@@ -295,10 +295,6 @@
   .field-error-msg svg{ flex-shrink:0; }
 
   /* Bride / Groom colour coding so the two never blend together when stacked */
-  .card.person-bride{ border-left:3px solid #D97757; }
-  .card.person-groom{ border-left:3px solid #4A6FA0; }
-  .card.person-bride .card-head .name{ color:#B0603D; }
-  .card.person-groom .card-head .name{ color:#3A5A80; }
   .couple-progress{ font-size:11px; color:var(--ink-soft); margin:-2px 0 4px; padding-left:2px; }
 
   .couple-date-block{ border-top:1px dashed var(--line); margin-top:4px; padding-top:12px; }
@@ -1060,7 +1056,7 @@ const dateState = {};    // eventId -> date string
 const locationState = {}; // eventId -> venue string
 const expanded = new Set();
 const groupExpanded = new Set(); // parent group cards (e.g. Haldi) that are expanded to reveal Bride/Groom
-const groupSeparateDetails = new Set(); // group ids where the client opted OUT of the shared date/time/venue and wants separate details for Groom
+const groupSeparateDetails = new Set(['haldi','mehendi','muhurtha','roce']); // group ids where Bride & Groom get their own separate date/time/venue by default. Client can still switch a group to shared details via the toggle link.
 let invalidFieldEvents = new Set(); // event ids currently showing a red date/time/venue error, set on a failed "Get Your Quote" attempt
 
 // ===================== LOCAL SAVE (per-device, so a closed tab doesn't lose progress) =====================
@@ -1277,7 +1273,7 @@ function renderCard(ev, hideDateFields, dateLabel){
 
   // Bride/Groom sub-cards get a colour accent so the two never visually blend
   // together once both are expanded side by side in the same group.
-  const personClass = ev.name === 'Bride' ? 'person-bride' : (ev.name === 'Groom' ? 'person-groom' : '');
+  const personClass = '';
 
   const dateBlock = hideDateFields ? '' : dateFieldsMarkup(ev.id, { label: dateLabel });
 
@@ -1297,25 +1293,15 @@ function renderCard(ev, hideDateFields, dateLabel){
   </div>`;
 }
 
-// For a 2-member (Bride/Groom) group: one shared date/time/venue field-set by
-// default (applies to both, since Muhurtha/Roce are almost always one shared
-// ceremony). A small link lets a client opt into separate details when Haldi
-// or Mehendi genuinely happen at different homes/times for each side.
+// For a 2-member (Bride/Groom) group: Bride and Groom always get their own
+// separate date/time/venue field-set (each side's ceremony can happen at a
+// different home/time), so both are rendered here — no shared/toggle option.
 function renderCoupleDateFields(group, brideEv, groomEv, separate){
-  if(!separate){
-    const shared = dateFieldsMarkup(brideEv.id, {
-      label: 'Event Date, Time & Location — applies to both Bride & Groom (required to generate quote)',
-      mirrorId: groomEv.id
-    });
-    return `<div class="couple-date-block">
-      ${shared}
-      <div class="venue-toggle-link" data-venue-toggle="${group.id}">Bride &amp; Groom at different venues? <span class="venue-toggle-action">Add separate details</span></div>
-    </div>`;
-  }
-  const brideOnly = dateFieldsMarkup(brideEv.id, { label: 'Bride — Date, Time & Location (required to generate quote)' });
-  return `<div class="couple-date-block">
-    ${brideOnly}
-    <div class="venue-toggle-link" data-venue-toggle="${group.id}">Using separate details for Groom. <span class="venue-toggle-action">Use same details for both instead</span></div>
+  const brideFields = dateFieldsMarkup(brideEv.id, { label: 'Bride — Date, Time & Location (required to generate quote)' });
+  const groomFields = dateFieldsMarkup(groomEv.id, { label: 'Groom — Date, Time & Location (required to generate quote)' });
+  return `<div class="couple-date-block" style="display:flex; flex-direction:column; gap:14px;">
+    ${brideFields}
+    ${groomFields}
   </div>`;
 }
 
@@ -1354,13 +1340,11 @@ function renderGroupCard(group){
     coupleDateBlock = renderCoupleDateFields(group, brideEv, groomEv, separate);
   }
 
-  const memberCards = memberEvs.map((ev, idx) => {
-    // Bride (idx 0) never shows her own date fields in a 2-member group — they
-    // live in the shared/couple block above. Groom (idx 1) only gets his own
-    // when "separate details" has been switched on.
-    const hide = isCouple && (idx===0 || !separate);
-    const label = (isCouple && idx===1 && separate) ? 'Groom — Date, Time & Location (required to generate quote)' : undefined;
-    return renderCard(ev, hide, label);
+  const memberCards = memberEvs.map((ev) => {
+    // Neither Bride nor Groom shows date fields inside their own card — both
+    // sides' date/time/venue always live together in the couple block below,
+    // each clearly labeled Bride / Groom.
+    return renderCard(ev, isCouple);
   }).join('');
 
   return `<div class="card ${isGroupExpanded?'expanded':''}" id="card-${group.id}">
@@ -1400,13 +1384,10 @@ function attachHandlers(){
         groupExpanded.delete(id);
       } else {
         groupExpanded.add(id);
-        // Auto-expand both sides the moment the group opens ONLY for real
-        // Bride/Groom groups (Haldi, Muhurtha, Mehendi, Roce) — that way
-        // Groom is never left collapsed and easy to miss under Bride.
-        // Category-choice groups (Pre-Wedding, Maternity) stay collapsed to
-        // a simple two-row list; the client taps a category to see its detail.
-        const group = [...weddingCardGroups, ...otherCardGroups].find(g=>g.id===id);
-        if(group && group.coupleGroup === true) group.members.forEach(m=>expanded.add(m));
+        // Bride/Groom groups (Haldi, Muhurtha, Mehendi, Roce) open to a simple
+        // collapsed summary — Bride and Groom rows shown as tappable price
+        // rows, not auto-expanded into full role details. The client taps
+        // Bride or Groom individually to reveal that side's choices.
       }
       renderAll();
     };
