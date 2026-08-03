@@ -259,6 +259,23 @@
   @keyframes shakeCard{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
   .card.shake{ animation: shakeCard .35s ease; border-color:#B33A3A; }
 
+  /* Inline field validation for date/time/venue */
+  .ev-date.field-error, .ev-time.field-error, .ev-loc.field-error{
+    border-color:#B33A3A !important; background:#FCEEEE !important;
+  }
+  .field-error-msg{
+    align-items:center; gap:5px; font-size:11px; color:#B33A3A; font-weight:500;
+    margin:-2px 0 2px 1px;
+  }
+  .field-error-msg svg{ flex-shrink:0; }
+
+  /* Bride / Groom colour coding so the two never blend together when stacked */
+  .card.person-bride{ border-left:3px solid #D97757; }
+  .card.person-groom{ border-left:3px solid #4A6FA0; }
+  .card.person-bride .card-head .name{ color:#B0603D; }
+  .card.person-groom .card-head .name{ color:#3A5A80; }
+  .couple-progress{ font-size:11px; color:var(--ink-soft); margin:-2px 0 4px; padding-left:2px; }
+
   /* Accessibility: focus visibility for interactive rows */
   .role-opt:focus-visible, .pkg-opt:focus-visible, .addon-opt:focus-visible, .card-head:focus-visible{
     outline:2px solid var(--gold); outline-offset:2px;
@@ -971,6 +988,7 @@ const dateState = {};    // eventId -> date string
 const locationState = {}; // eventId -> venue string
 const expanded = new Set();
 const groupExpanded = new Set(); // parent group cards (e.g. Haldi) that are expanded to reveal Bride/Groom
+let invalidFieldEvents = new Set(); // event ids currently showing a red date/time/venue error, set on a failed "Get Your Quote" attempt
 
 // ===================== LOCAL SAVE (per-device, so a closed tab doesn't lose progress) =====================
 const SELECTIONS_STORAGE_KEY = 'ss_quote_selections_v1';
@@ -1149,7 +1167,23 @@ function renderCard(ev){
     }).join('');
   }
 
-  return `<div class="card ${isExpanded?'expanded':''}" id="card-${ev.id}">
+  // Bride/Groom sub-cards get a colour accent so the two never visually blend
+  // together once both are expanded side by side in the same group.
+  const personClass = ev.name === 'Bride' ? 'person-bride' : (ev.name === 'Groom' ? 'person-groom' : '');
+
+  // Inline field validation: only shows once this event has been flagged by
+  // a failed "Get Your Quote" attempt (see invalidFieldEvents / shareOrDownloadPDF).
+  const showErr = invalidFieldEvents.has(ev.id);
+  const missDate = showErr && !dateState[ev.id];
+  const missTime = showErr && !timeState[ev.id];
+  const missLoc = showErr && !locationState[ev.id];
+  const errParts = [];
+  if(missDate) errParts.push('date');
+  if(missTime) errParts.push('time');
+  if(missLoc) errParts.push('venue');
+  const errMsg = errParts.length ? `Please add the ${errParts.join(', ')} to continue` : '';
+
+  return `<div class="card ${isExpanded?'expanded':''} ${personClass}" id="card-${ev.id}">
     <div class="card-head" data-toggle="${ev.id}" role="button" aria-expanded="${isExpanded}" tabindex="0">
       <div class="name">${ev.name}</div>
       <div class="right">
@@ -1162,12 +1196,33 @@ function renderCard(ev){
       ${renderAddonsRows(ev)}
       <div class="addon-label" style="margin-top:6px;">Event Date, Time & Location (required to generate quote)</div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <input type="date" class="ev-date" data-event="${ev.id}" min="${TODAY_STR}" value="${dateState[ev.id]||''}" aria-label="Event date" style="flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
-        <input type="time" class="ev-time" data-event="${ev.id}" value="${timeState[ev.id]||''}" aria-label="Event time" style="flex:1 1 100px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
-        <input type="text" class="ev-loc" data-event="${ev.id}" placeholder="Venue / Location" value="${locationState[ev.id]||''}" aria-label="Event venue or location" style="flex:2 1 160px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="date" class="ev-date ${missDate?'field-error':''}" data-event="${ev.id}" min="${TODAY_STR}" value="${dateState[ev.id]||''}" aria-label="Event date" style="flex:1 1 130px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="time" class="ev-time ${missTime?'field-error':''}" data-event="${ev.id}" value="${timeState[ev.id]||''}" aria-label="Event time" style="flex:1 1 100px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+        <input type="text" class="ev-loc ${missLoc?'field-error':''}" data-event="${ev.id}" placeholder="Venue / Location" value="${locationState[ev.id]||''}" aria-label="Event venue or location" style="flex:2 1 160px; border:1px solid var(--line); border-radius:8px; padding:9px 10px; font-family:'Poppins'; font-size:12.5px; background:var(--paper); color:var(--ink);">
+      </div>
+      <div class="field-error-msg" id="err-${ev.id}" style="display:${errMsg?'flex':'none'};">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span>${errMsg}</span>
       </div>
     </div>
   </div>`;
+}
+
+// For a 2-member (Bride/Groom) group, a short status line so it's obvious at a
+// glance whether one side still needs attention — without having to scroll and
+// compare two card headers against each other.
+function coupleProgressLine(memberEvs){
+  const bride = memberEvs.find(e=>e.name==='Bride');
+  const groom = memberEvs.find(e=>e.name==='Groom');
+  if(!bride || !groom) return '';
+  const brideOn = isEventActive(bride);
+  const groomOn = isEventActive(groom);
+  let text;
+  if(brideOn && groomOn) text = 'Bride selected · Groom selected';
+  else if(brideOn) text = 'Bride selected · Groom not selected yet';
+  else if(groomOn) text = 'Groom selected · Bride not selected yet';
+  else text = 'Select for Bride and/or Groom below';
+  return `<div class="couple-progress">${text}</div>`;
 }
 
 function renderGroupCard(group){
@@ -1188,6 +1243,7 @@ function renderGroupCard(group){
       </div>
     </div>
     <div class="card-body group-body">
+      ${group.members.length===2 ? coupleProgressLine(memberEvs) : ''}
       ${memberCards}
     </div>
   </div>`;
@@ -1210,7 +1266,15 @@ function attachHandlers(){
     el.onclick = (e) => {
       e.stopPropagation();
       const id = el.dataset.groupToggle;
-      if(groupExpanded.has(id)) groupExpanded.delete(id); else groupExpanded.add(id);
+      if(groupExpanded.has(id)){
+        groupExpanded.delete(id);
+      } else {
+        groupExpanded.add(id);
+        // Auto-expand every member (Bride & Groom) the moment the group opens,
+        // so Groom is never left collapsed and easy to miss under Bride.
+        const group = [...weddingCardGroups, ...otherCardGroups].find(g=>g.id===id);
+        if(group) group.members.forEach(m=>expanded.add(m));
+      }
       renderAll();
     };
   });
@@ -1282,17 +1346,47 @@ function attachHandlers(){
   // already-selected event, auto-collapse that card after a short pause so clients
   // don't have to keep scrolling past sections they've already finished.
   document.querySelectorAll('.ev-date').forEach(el=>{
-    el.oninput = () => { dateState[el.dataset.event] = el.value; saveSelectionsLocally(); };
+    el.oninput = () => { dateState[el.dataset.event] = el.value; saveSelectionsLocally(); refreshFieldError(el.dataset.event); };
     el.onchange = () => { maybeAutoCollapse(el.dataset.event); };
   });
   document.querySelectorAll('.ev-time').forEach(el=>{
-    el.oninput = () => { timeState[el.dataset.event] = el.value; saveSelectionsLocally(); };
+    el.oninput = () => { timeState[el.dataset.event] = el.value; saveSelectionsLocally(); refreshFieldError(el.dataset.event); };
     el.onchange = () => { maybeAutoCollapse(el.dataset.event); };
   });
   document.querySelectorAll('.ev-loc').forEach(el=>{
-    el.oninput = () => { locationState[el.dataset.event] = el.value; saveSelectionsLocally(); };
+    el.oninput = () => { locationState[el.dataset.event] = el.value; saveSelectionsLocally(); refreshFieldError(el.dataset.event); };
     el.onblur = () => { maybeAutoCollapse(el.dataset.event); };
   });
+}
+
+// Updates the red border / inline message for one event's date/time/venue
+// fields in place (no full re-render), so the client doesn't lose focus or
+// their cursor position while typing. Once all three are filled, the event
+// is cleared from invalidFieldEvents entirely.
+function refreshFieldError(evId){
+  if(!invalidFieldEvents.has(evId)) return;
+  const missDate = !dateState[evId];
+  const missTime = !timeState[evId];
+  const missLoc = !locationState[evId];
+  const dateEl = document.querySelector(`.ev-date[data-event="${evId}"]`);
+  const timeEl = document.querySelector(`.ev-time[data-event="${evId}"]`);
+  const locEl = document.querySelector(`.ev-loc[data-event="${evId}"]`);
+  const msgEl = document.getElementById(`err-${evId}`);
+  if(dateEl) dateEl.classList.toggle('field-error', missDate);
+  if(timeEl) timeEl.classList.toggle('field-error', missTime);
+  if(locEl) locEl.classList.toggle('field-error', missLoc);
+  if(!missDate && !missTime && !missLoc){
+    invalidFieldEvents.delete(evId);
+    if(msgEl) msgEl.style.display = 'none';
+  } else if(msgEl){
+    const parts = [];
+    if(missDate) parts.push('date');
+    if(missTime) parts.push('time');
+    if(missLoc) parts.push('venue');
+    const span = msgEl.querySelector('span');
+    if(span) span.textContent = `Please add the ${parts.join(', ')} to continue`;
+    msgEl.style.display = 'flex';
+  }
 }
 
 // Collapses an event's card once it has a role/package selected AND date, time
@@ -1982,8 +2076,19 @@ async function shareOrDownloadPDF(triggerWhatsApp){
 
   const missing = validateEventDetails();
   if(missing.length>0){
+    // Mark every incomplete event so its date/time/venue fields show a red
+    // outline + inline message, not just the first one we scroll to.
+    invalidFieldEvents = new Set(missing.map(ev=>ev.id));
+    missing.forEach(ev=>{
+      expanded.add(ev.id);
+      const g = [...weddingCardGroups, ...otherCardGroups].find(gr=>gr.members.includes(ev.id));
+      if(g) groupExpanded.add(g.id);
+    });
     revealEventCard(missing[0]);
-    showToast(`Please fill in the date, time and venue for "${evLabel(missing[0])}" before generating your quotation.`, 'error');
+    const msg = missing.length>1
+      ? `${missing.length} events still need date, time & venue — check the highlighted fields below.`
+      : `Please fill in the date, time and venue for "${evLabel(missing[0])}" before generating your quotation.`;
+    showToast(msg, 'error');
     return;
   }
 
