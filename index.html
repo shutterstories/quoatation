@@ -1232,14 +1232,13 @@ function renderCard(ev, hideDateFields, dateLabel){
     mainRows = banner + ev.options.map((o,i)=>{
       const isSel = sel === i;
       const li = o.includes.map(x=>`<li>${x}</li>`).join('');
-      const badge = (ev.options.length===3 && i===1) ? `<span class="pkg-badge-inline">Best Value</span>` : '';
       let diffNote = '';
       if(i>0 && o.tagline){
         diffNote = `<div class="pkg-diff">${o.tagline}</div>`;
       }
       return `<div class="pkg-opt ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
         <div class="pkg-check">${CHECK_SVG}</div>
-        <div class="pkg-top"><div class="pname">${o.name}${badge}</div><div class="pprice">${fmt(o.price)}</div></div>
+        <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
         <ul>${li}</ul>
         ${diffNote}
       </div>`;
