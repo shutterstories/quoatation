@@ -140,6 +140,9 @@
     margin: 0 0 2px;
   }
 
+  .muhurtha-session-block{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--line); }
+  .muhurtha-note{ font-size:10.5px; line-height:1.5; color: var(--ink-soft); background:#FBF5E7; border:1px solid var(--gold-soft); border-radius:8px; padding:8px 10px; margin-top:2px; }
+
   .addon-label{ font-size: 11px; text-transform:uppercase; letter-spacing:.6px; color: var(--ink-soft); margin: 4px 0 2px; }
   /* Distinguishes the optional add-ons section from the required
      package/role choice above it — a divider plus a plain-language note,
@@ -733,6 +736,7 @@ let clientPhone = '';       // 10-digit, no country code — used for display / 
 let clientPhoneIntl = '';   // with 91 prefix — used for MSG91 sendOtp/verifyOtp
 let ownerTotalOverride = null; // owner-only: manual custom total (null = use calculated total)
 let usedAccessCode = '';    // the access code the client entered, kept for logging on submission
+function isOwnerMode(){ return usedAccessCode === 'OWNER-BYPASS'; } // gates Owner-only packages/add-ons
 let lastSubmittedSignature = null;  // snapshot of the selection that was last submitted via Get Quote / WhatsApp
 let otpVerifiedOnceThisSession = false; // becomes true after the first successful verifyOtp() — see gate-submit handler
 
@@ -1040,18 +1044,21 @@ const weddingEvents = [
       {name:'Classic', price:90000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Photo Album (250 photos, client-selected)']},
       {name:'Premium', price:120000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','1 Photo Album (80 pages album, 250 photos to be selected by client)'], tagline:'Perfect for couples who want a cinematic wedding story.'},
       {name:'Elite', price:140000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','2 Photo Albums (80 pages album, 250 photos to be selected by client)'], tagline:'Ideal for families who want complete wedding coverage.'},
+      // Owner-only tier — never shown to clients or any other login type. Kept last
+      // in the array so existing client-saved selection indices (0/1/2) never shift.
+      {name:'Basic', price:55000, includes:['1 Photographer','1 Photo Album (250 photos, client-selected)'], ownerOnly:true},
     ],
-    addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}]
+    addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}, {name:'Extended Video Film', price:5000, ownerOnly:true}]
   },
   { id:'haldi1', name:'Bride', fullName:'Haldi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
   { id:'haldi2', name:'Groom', fullName:'Haldi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'muhurtha1', name:'Bride', fullName:'Muhurtha Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: baseAddons(20000) },
-  { id:'muhurtha2', name:'Groom', fullName:'Muhurtha Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: baseAddons(20000) },
-  { id:'mehendi1', name:'Bride', fullName:'Mehendi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'mehendi2', name:'Groom', fullName:'Mehendi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'roce1', name:'Bride', fullName:'Roce Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'roce2', name:'Groom', fullName:'Roce Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
+  { id:'muhurtha1', name:'Bride', fullName:'Muhurtha Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
+  { id:'muhurtha2', name:'Groom', fullName:'Muhurtha Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
+  { id:'mehendi1', name:'Bride', fullName:'Mehendi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
+  { id:'mehendi2', name:'Groom', fullName:'Mehendi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
+  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
+  { id:'roce1', name:'Bride', fullName:'Roce Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
+  { id:'roce2', name:'Groom', fullName:'Roce Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
   { id:'reception', name:'Reception', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
   { id:'engagement', name:'Engagement', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000) },
 ];
@@ -1115,6 +1122,23 @@ const otherCardGroups = [
 
 function evLabel(ev){ return ev.fullName || ev.name; }
 
+// For deliverable naming — collapses a Bride/Groom sub-event (e.g. "Mehendi
+// Bride") down to its parent occasion name ("Mehendi") so a deliverable like
+// "Extended Mehendi Film" reads naturally instead of "Extended Mehendi Bride Film".
+function extendedFilmEventName(ev){
+  const allGroups = [...weddingCardGroups, ...otherCardGroups];
+  const g = allGroups.find(gr => gr.members.includes(ev.id));
+  return g ? g.label : evLabel(ev);
+}
+
+// Owner/client toggle for whether Muhurtha is held as its own separate
+// date/session (charged normally) or continuously as part of the Wedding
+// event on the same date/session (no additional Muhurtha charge).
+const muhurthaSessionState = { mode: 'separate' }; // 'separate' | 'same'
+function muhurthaZero(ev){
+  return (ev.id === 'muhurtha1' || ev.id === 'muhurtha2') && muhurthaSessionState.mode === 'same';
+}
+
 // Given an event id, returns the id of the group card that should be
 // expanded/scrolled to in order to reveal it (couple-group members like
 // Haldi Bride/Groom live inside a shared parent group card).
@@ -1159,6 +1183,7 @@ function saveSelectionsLocally(){
       state: serializedState,
       addonState: serializedAddons,
       dateState, timeState, locationState,
+      muhurthaMode: muhurthaSessionState.mode,
       savedAt: Date.now()
     };
     localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify(payload));
@@ -1190,6 +1215,7 @@ function loadSelectionsLocally(){
     Object.assign(dateState, payload.dateState||{});
     Object.assign(timeState, payload.timeState||{});
     Object.assign(locationState, payload.locationState||{});
+    if(payload.muhurthaMode==='same' || payload.muhurthaMode==='separate') muhurthaSessionState.mode = payload.muhurthaMode;
     return true;
   }catch(e){ /* corrupted/unavailable storage — start fresh, non-critical */ return false; }
 }
@@ -1205,6 +1231,7 @@ function clearSavedSelections(){
   });
   expanded.clear();
   groupExpanded.clear();
+  muhurthaSessionState.mode = 'separate';
   lastSubmittedSignature = null;
   renderAll();
 }
@@ -1214,6 +1241,7 @@ function clearSavedSelections(){
 function fmt(n){ return '₹' + n.toLocaleString('en-IN'); }
 
 function eventSubtotal(ev){
+  if(muhurthaZero(ev)) return 0;
   let sum = 0;
   if(ev.type==='roles'){
     const set = state[ev.id] || new Set();
@@ -1232,12 +1260,16 @@ function renderAddonsRows(ev){
   const aset = addonState[ev.id];
   const cineSelected = hasCineForEvent(ev);
   const visibleAddons = ev.addons.filter(a=>{
+    if(a.ownerOnly && !isOwnerMode()) return false;
     if(a.name==='Same-Day Edit' || a.name==='Reels') return cineSelected;
     return true;
   });
   if(!cineSelected){
     aset.delete('Same-Day Edit');
     aset.delete('Reels');
+  }
+  if(!isOwnerMode()){
+    ev.addons.forEach(a=>{ if(a.ownerOnly) aset.delete(a.name); });
   }
   const rows = visibleAddons.map(a=>{
     const isSel = aset.has(a.name);
@@ -1290,9 +1322,13 @@ function renderCompareTable(ev, sel){
   function key(rest){
     return rest.replace(/\bAlbums\b/,'Album').trim().toLowerCase();
   }
+  // Basic tier is Owner-login only — never shown to clients, including in the
+  // side-by-side compare table. Keep each option paired with its REAL index
+  // in ev.options so data-idx / state[ev.id] comparisons stay correct.
+  const visible = ev.options.map((o,i)=>({o,i})).filter(({o}) => !o.ownerOnly || isOwnerMode());
   const featureOrder = []; // list of {key, label}
   const seen = new Set();
-  ev.options.forEach(o=>{
+  visible.forEach(({o})=>{
     o.includes.forEach(raw=>{
       const p = parse(raw);
       // Group by the item name with any trailing parenthetical detail
@@ -1302,12 +1338,12 @@ function renderCompareTable(ev, sel){
       if(!seen.has(k)){ seen.add(k); featureOrder.push({ key:k, label:p.rest.replace(/\s*\(.*?\)\s*$/,'') }); }
     });
   });
-  const parsedPerOption = ev.options.map(o=> o.includes.map(raw=>{
+  const parsedPerOption = visible.map(({o})=> o.includes.map(raw=>{
     const parsed = parse(raw);
     return { ...parsed, raw, groupKey: key(parsed.rest.replace(/\s*\(.*?\)\s*$/,'')) };
   }));
 
-  const headerCells = ev.options.map((o,i)=>`
+  const headerCells = visible.map(({o,i}, vi)=>`
     <th class="${sel===i?'ct-current':''}">
       <span class="ct-name">${o.name}</span>
       <span class="ct-price">${fmt(o.price)}</span>
@@ -1318,13 +1354,13 @@ function renderCompareTable(ev, sel){
     // so nothing is lost when rows get merged under one shortened label —
     // available via the title tooltip on tap/hover.
     const originalPhrasings = [];
-    ev.options.forEach((o,i)=>{
-      const match = parsedPerOption[i].find(p=>p.groupKey===f.key);
+    visible.forEach(({o}, vi)=>{
+      const match = parsedPerOption[vi].find(p=>p.groupKey===f.key);
       if(match && !originalPhrasings.includes(match.raw)) originalPhrasings.push(match.raw);
     });
     const tooltip = originalPhrasings.join(' • ').replace(/"/g,'&quot;');
-    const cells = ev.options.map((o,i)=>{
-      const match = parsedPerOption[i].find(p=>p.groupKey===f.key);
+    const cells = visible.map(({o}, vi)=>{
+      const match = parsedPerOption[vi].find(p=>p.groupKey===f.key);
       if(!match) return `<td class="ct-no">—</td>`;
       const qtyLabel = match.qty>1 ? `${match.qty}×` : '✓';
       return `<td class="ct-yes">${qtyLabel}</td>`;
@@ -1332,7 +1368,7 @@ function renderCompareTable(ev, sel){
     return `<tr><td title="${tooltip}">${f.label.replace(/^\d+\s+/,'')}</td>${cells}</tr>`;
   }).join('');
 
-  const selectRow = `<tr class="compare-select-row"><td></td>${ev.options.map((o,i)=>`
+  const selectRow = `<tr class="compare-select-row"><td></td>${visible.map(({o,i})=>`
     <td><button type="button" class="compare-select-btn ${sel===i?'is-selected':''}" data-event="${ev.id}" data-idx="${i}">${sel===i?'Selected ✓':'Select'}</button></td>`).join('')}</tr>`;
 
   return `<div class="compare-wrap"><table class="compare-table">
@@ -1398,24 +1434,28 @@ function renderCard(ev, hideDateFields, dateLabel){
     const sel = state[ev.id];
     const anySelected = sel !== null && sel !== undefined;
     const banner = anySelected ? '' : `<div class="pkg-select-hint">Choose one package to continue</div>`;
+    // Basic tier is Owner-login only — filtered out here for clients/other
+    // logins, but each entry keeps its REAL index (i) so data-idx / state
+    // comparisons still line up correctly with ev.options.
+    const visibleOptions = ev.options.map((o,i)=>({o,i})).filter(({o}) => !o.ownerOnly || isOwnerMode());
     // Compare table only makes sense where there are several tiers with a
     // real feature difference to spot (Wedding's 3-tier Classic/Premium/Elite).
     // Pre-Wedding and Maternity only ever have 2 simple options, so the
     // toggle is skipped there to avoid clutter.
-    const showCompare = ev.options.length > 1 && !ev.id.startsWith('prewedding_') && !ev.id.startsWith('maternity_');
+    const showCompare = visibleOptions.length > 1 && !ev.id.startsWith('prewedding_') && !ev.id.startsWith('maternity_');
     const isComparing = showCompare && compareExpanded.has(ev.id);
     const compareToggle = showCompare
       ? `<button type="button" class="compare-toggle" data-compare="${ev.id}">📊 ${isComparing ? 'Hide comparison' : 'Compare packages at a glance'}</button>`
       : '';
     const compareTable = isComparing ? renderCompareTable(ev, sel) : '';
-    mainRows = compareToggle + compareTable + banner + ev.options.map((o,i)=>{
+    mainRows = compareToggle + compareTable + banner + visibleOptions.map(({o,i}, vi)=>{
       const isSel = sel === i;
       // While the compare table above is open, the feature list here would
       // just repeat what the table already shows — collapse each card down
       // to name + price + tagline so the client isn't scrolling past the
       // same bullets twice. Expands back the moment compare is closed.
       let diffNote = '';
-      if(i>0 && o.tagline){
+      if(vi>0 && o.tagline){
         diffNote = `<div class="pkg-diff">${o.tagline}</div>`;
       }
       if(isComparing){
@@ -1486,6 +1526,27 @@ function coupleProgressLine(memberEvs){
   return `<div class="couple-progress">${text}</div>`;
 }
 
+// Muhurtha-only: lets the client/owner state whether the Muhurtha is being
+// held continuously as part of the Wedding (same date/session — no extra
+// charge) or as its own separate date/session (charged normally). The
+// pricing note here is calculator-only and is intentionally left out of the
+// generated PDF.
+function renderMuhurthaSessionToggle(){
+  const mode = muhurthaSessionState.mode;
+  const opt = (val, label) => {
+    const isSel = mode === val;
+    return `<div class="role-opt ${isSel?'selected':''}" data-muhurtha-mode="${val}" role="radio" aria-checked="${isSel}" tabindex="0">
+      <div class="left"><div class="box">${CHECK_SVG}</div><div class="rname">${label}</div></div>
+    </div>`;
+  };
+  return `<div class="muhurtha-session-block">
+    <div class="pkg-select-hint">Is the Muhurtha part of the Wedding, or a separate date/session?</div>
+    ${opt('same', 'Part of the Wedding / Same Session')}
+    ${opt('separate', 'Separate Date / Separate Session')}
+    <div class="muhurtha-note">Muhurtham Pricing Note: Additional charges apply only when the Muhurtham is conducted on a separate date or as a separate session. If the Muhurtham is conducted continuously along with the Wedding event, no additional Muhurtham charges will be applicable.</div>
+  </div>`;
+}
+
 function renderGroupCard(group){
   if(group.members.length === 1){
     const ev = allEvents.find(e=>e.id===group.members[0]);
@@ -1521,6 +1582,7 @@ function renderGroupCard(group){
     </div>
     <div class="card-body group-body">
       ${isCouple ? coupleProgressLine(memberEvs) : ''}
+      ${group.id==='muhurtha' ? renderMuhurthaSessionToggle() : ''}
       ${memberCards}
       ${isCouple ? coupleDateBlock : ''}
     </div>
@@ -1637,6 +1699,15 @@ function attachHandlers(){
       e.stopPropagation();
       const evId = el.dataset.event, idx = parseInt(el.dataset.idx);
       state[evId] = (state[evId] === idx) ? null : idx;
+      saveSelectionsLocally();
+      renderAll();
+    };
+    addKeyActivate(el);
+  });
+  document.querySelectorAll('[data-muhurtha-mode]').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      muhurthaSessionState.mode = el.dataset.muhurthaMode;
       saveSelectionsLocally();
       renderAll();
     };
@@ -1842,6 +1913,56 @@ function collectSchedule(){
   });
 }
 
+function eventServiceLabel(ev){
+  if(ev.type==='package'){
+    const idx = state[ev.id];
+    return (idx!==null && idx!==undefined) ? ev.options[idx].name : '-';
+  }
+  const set = state[ev.id] || new Set();
+  return set.size ? Array.from(set).join(', ') : '-';
+}
+
+function eventAddonsLabel(ev){
+  const aset = addonState[ev.id] || new Set();
+  const names = ev.addons.filter(a=>aset.has(a.name)).map(a=>a.name);
+  return names.length ? names.join(', ') : '-';
+}
+
+// Groups every active event by its date (chronological order) for the PDF's
+// date-wise event schedule — each event carries its package/service, add-ons,
+// event-specific deliverables and event-specific price, so the whole
+// schedule is readable at a glance without cross-referencing other sections.
+function buildDateWiseSchedule(){
+  const active = allEvents.filter(isEventActive);
+  const groupsMap = new Map();
+  active.forEach(ev=>{
+    const dateVal = dateState[ev.id] || '';
+    const key = dateVal || '__TBD__';
+    if(!groupsMap.has(key)){
+      groupsMap.set(key, {
+        sortVal: dateVal ? new Date(dateVal+'T00:00:00').getTime() : Infinity,
+        displayDate: dateVal ? new Date(dateVal+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : 'Date To Be Confirmed',
+        items: []
+      });
+    }
+    groupsMap.get(key).items.push({
+      time: timeState[ev.id] || '',
+      name: evLabel(ev),
+      location: locationState[ev.id] || '-',
+      service: eventServiceLabel(ev),
+      addons: eventAddonsLabel(ev),
+      team: getEventTeam(ev),
+      deliverables: buildEventDeliverables(ev),
+      price: eventSubtotal(ev),
+      zeroOut: muhurthaZero(ev)
+    });
+  });
+  const groups = Array.from(groupsMap.values());
+  groups.forEach(g => g.items.sort((a,b)=> (a.time||'').localeCompare(b.time||'')));
+  groups.sort((a,b)=> a.sortVal - b.sortVal);
+  return groups;
+}
+
 function getEventTeam(ev){
   const team = [];
   if(ev.type==='roles'){
@@ -1912,6 +2033,33 @@ function getAlbumLine(ev){
   }
 }
 
+// Deliverables scoped to a single event — reused both by the combined
+// Deliverables list and by the date-wise PDF event breakdown so the two
+// never drift out of sync.
+function buildEventDeliverables(ev){
+  const lines = [];
+  const al = getAlbumLine(ev);
+  if(al) lines.push(al);
+  if(ev.id==='reception'){
+    lines.push(`Cinematic ${evLabel(ev)} Film`);
+    lines.push(`Extended ${evLabel(ev)} Film`);
+  } else {
+    if(hasCineForEvent(ev)) lines.push(`Cinematic ${evLabel(ev)} Film`);
+    if(hasVideoForEvent(ev)) lines.push(`Extended ${evLabel(ev)} Film`);
+  }
+  const aset = addonState[ev.id] || new Set();
+  // Extended Video Film add-on (Owner-only) is tied to whichever event it was
+  // selected under — automatically names the correct event instead of
+  // showing the generic add-on name "Extended Video Film" as a deliverable.
+  if(aset.has('Extended Video Film')){
+    const line = `Extended ${extendedFilmEventName(ev)} Film`;
+    if(!lines.includes(line)) lines.push(line);
+  }
+  if(aset.has('Same-Day Edit')) lines.push(`${evLabel(ev)} Same-Day Edit`);
+  if(aset.has('Reels')) lines.push(`${evLabel(ev)} Reel`);
+  return lines;
+}
+
 function buildDeliverables(){
   const lines = [
     'Edited High Resolution Photographs',
@@ -1919,26 +2067,7 @@ function buildDeliverables(){
   ];
   allEvents.forEach(ev=>{
     if(!isEventActive(ev)) return;
-    const al = getAlbumLine(ev);
-    if(al) lines.push(al);
-  });
-  allEvents.forEach(ev=>{
-    if(!isEventActive(ev)) return;
-    if(ev.id==='reception'){
-      lines.push(`Cinematic ${evLabel(ev)} Film`);
-      lines.push(`Extended ${evLabel(ev)} Film`);
-      return;
-    }
-    const cine = hasCineForEvent(ev);
-    const vid = hasVideoForEvent(ev);
-    if(cine) lines.push(`Cinematic ${evLabel(ev)} Film`);
-    if(vid) lines.push(`Extended ${evLabel(ev)} Film`);
-  });
-  allEvents.forEach(ev=>{
-    if(!isEventActive(ev)) return;
-    const aset = addonState[ev.id] || new Set();
-    if(aset.has('Same-Day Edit')) lines.push(`${evLabel(ev)} Same-Day Edit`);
-    if(aset.has('Reels')) lines.push(`${evLabel(ev)} Reel`);
+    lines.push(...buildEventDeliverables(ev));
   });
   lines.push('On request, All photographs can be delivered on a client-provided hard drive (HDD).');
   return lines;
@@ -1948,19 +2077,25 @@ function collectSelections(){
   const lines = [];
   let total = 0;
   allEvents.forEach(ev=>{
+    // If Muhurtha is being run continuously as part of the Wedding (same
+    // session), it still shows in the itemized list for clarity, but at
+    // ₹0 — no additional Muhurtha charge is added to the total.
+    const zeroOut = muhurthaZero(ev);
+    const zSuffix = zeroOut ? ' (Included with Wedding — Same Session)' : '';
     if(ev.type==='roles'){
       const set = state[ev.id] || new Set();
-      ev.roles.forEach(r=>{ if(set.has(r.name)){ lines.push({label:`${evLabel(ev)} — ${r.name}`, price:r.price}); total+=r.price; } });
+      ev.roles.forEach(r=>{ if(set.has(r.name)){ const p = zeroOut?0:r.price; lines.push({label:`${evLabel(ev)} — ${r.name}${zSuffix}`, price:p}); total+=p; } });
     } else {
       const idx = state[ev.id];
       if(idx !== null && idx !== undefined){
         const o = ev.options[idx];
-        lines.push({label:`${evLabel(ev)} — ${o.name}`, price:o.price});
-        total += o.price;
+        const p = zeroOut?0:o.price;
+        lines.push({label:`${evLabel(ev)} — ${o.name}${zSuffix}`, price:p});
+        total += p;
       }
     }
     const aset = addonState[ev.id] || new Set();
-    ev.addons.forEach(a=>{ if(aset.has(a.name)){ lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}`, price:a.price}); total += a.price; } });
+    ev.addons.forEach(a=>{ if(aset.has(a.name)){ const p = zeroOut?0:a.price; lines.push({label:`${evLabel(ev)} — Add-on: ${a.name}${zSuffix}`, price:p}); total += p; } });
   });
   const computedTotal = total;
   // Owner-only manual override — lets Pavan quote a custom negotiated total
@@ -2306,28 +2441,74 @@ async function buildQuotationDoc(){
   boxAround(secStart, y);
   y += 6;
 
-  // Event schedule with team allocation
-  const schedule = collectSchedule();
-  if(schedule.length>0){
+  // Event schedule — organised date-wise so the whole event calendar reads
+  // at a glance. Each event under its date shows package/service, add-ons,
+  // event-specific deliverables and event-specific pricing, in chronological
+  // order across dates.
+  const dateGroups = buildDateWiseSchedule();
+  if(dateGroups.length>0){
     secStart = y;
-    bar('EVENT SCHEDULE');
-    doc.autoTable({
-      startY: y,
-      head: [['Event','Date','Location','Allocated Team']],
-      body: schedule.map(s=>[s.name, s.date, s.location, s.team.length? s.team.join('\n') : '-']),
-      theme: 'grid',
-      headStyles:{ font:HEAD, fontStyle:'bold', fillColor: navy, textColor: 255, fontSize:9, halign:'left', lineColor: lineGrey, lineWidth:0.15 },
-      alternateRowStyles:{ fillColor: beige },
-      styles:{ font:BODY, fontSize:8.3, textColor:ink, cellPadding:{top:2.2,bottom:2.2,left:2.2,right:2.2}, valign:'top', overflow:'linebreak', lineColor: lineGrey, lineWidth:0.15 },
-      columnStyles:{
-        0:{cellWidth:42, fontStyle:'bold', font:BODY},
-        1:{cellWidth:22},
-        2:{cellWidth:30},
-        3:{cellWidth:'auto'},
-      },
-      margin:{left:8, right:8},
+    bar('EVENT SCHEDULE — DATE-WISE');
+    y += 4;
+    dateGroups.forEach(g=>{
+      checkPageBreak(16);
+      doc.setFillColor(...navy);
+      doc.roundedRect(8, y, pageW-16, 6.5, 1.2, 1.2, 'F');
+      doc.setTextColor(...gold);
+      doc.setFont(HEAD,'bold');
+      doc.setFontSize(10);
+      doc.text(g.displayDate, 11, y+4.6);
+      y += 9.5;
+
+      g.items.forEach(it=>{
+        const rows = [];
+        rows.push(['Package / Service', it.service]);
+        if(it.addons !== '-') rows.push(['Add-ons', it.addons]);
+        rows.push(['Location', it.location]);
+        if(it.team.length) rows.push(['Team', it.team.join(', ')]);
+        rows.push(['Deliverables', it.deliverables.length ? it.deliverables.join(', ') : '-']);
+
+        // Rough height estimate so we page-break before starting an event
+        // block rather than splitting it awkwardly across pages.
+        doc.setFont(BODY,'normal');
+        doc.setFontSize(8);
+        let estLines = 1;
+        rows.forEach(r=>{ estLines += doc.splitTextToSize(`${r[0]}: ${r[1]}`, pageW-30).length; });
+        checkPageBreak(estLines*3.6 + 10);
+
+        doc.setFont(HEAD,'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(...navy);
+        const titleLine = it.time ? `${it.name}  •  ${it.time}` : it.name;
+        doc.text(titleLine, 11, y);
+        doc.setFont(BODY,'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(...gold);
+        const priceLabel = it.zeroOut ? 'Included (Same Session)' : fmtPDF(it.price);
+        doc.text(priceLabel, pageW-11, y, {align:'right'});
+        y += 4.8;
+
+        doc.setFont(BODY,'normal');
+        doc.setFontSize(8);
+        rows.forEach(r=>{
+          const split = doc.splitTextToSize(`${r[0]}: ${r[1]}`, pageW-30);
+          if(y + split.length*3.6 > pageH-16){ doc.addPage(); pageBorder(); y = 14; }
+          doc.setTextColor(...inkSoft);
+          doc.text(r[0]+':', 13, y);
+          doc.setTextColor(...ink);
+          const labelW = doc.getTextWidth(r[0]+': ');
+          const wrapped = doc.splitTextToSize(r[1], pageW-30-labelW);
+          doc.text(wrapped, 13+labelW, y);
+          y += Math.max(split.length, wrapped.length)*3.6 + 0.8;
+        });
+        y += 2;
+        doc.setDrawColor(...lineGrey);
+        doc.setLineWidth(0.15);
+        doc.line(11, y, pageW-11, y);
+        y += 3.2;
+      });
     });
-    y = doc.lastAutoTable.finalY + 2;
+    y += 1;
     boxAround(secStart, y);
     y += 6;
   }
