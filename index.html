@@ -143,6 +143,13 @@
   .muhurtha-session-block{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--line); }
   .muhurtha-note{ font-size:10.5px; line-height:1.5; color: var(--ink-soft); background:#FBF5E7; border:1px solid var(--gold-soft); border-radius:8px; padding:8px 10px; margin-top:2px; }
 
+  .deliverable-owner-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .deliverable-owner-row span{ flex:1; }
+  .deliverable-del-btn{ flex:0 0 auto; border:1px solid var(--line); background:#fff; color:#B3413B; width:20px; height:20px; line-height:1; border-radius:50%; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+  .deliverable-del-btn:hover{ background:#FBEAE9; border-color:#B3413B; }
+  .deliverable-restore-btn{ margin-top:8px; border:1px dashed var(--gold-soft); background:#FBF5E7; color: var(--navy); font-size:11px; padding:6px 10px; border-radius:8px; cursor:pointer; }
+  .deliverable-restore-btn:hover{ background:#F5EBD0; }
+
   .addon-label{ font-size: 11px; text-transform:uppercase; letter-spacing:.6px; color: var(--ink-soft); margin: 4px 0 2px; }
   /* Distinguishes the optional add-ons section from the required
      package/role choice above it — a divider plus a plain-language note,
@@ -580,8 +587,9 @@
   </div>
   <div class="info-card">
     <div class="card expanded">
-      <div class="card-body" style="display:flex; padding-top:14px;">
+      <div class="card-body" style="display:flex; flex-direction:column; padding-top:14px;">
         <ul class="terms-list" id="deliverables-list"></ul>
+        <div id="deliverables-restore-wrap"></div>
       </div>
     </div>
   </div>
@@ -1139,6 +1147,11 @@ function muhurthaZero(ev){
   return (ev.id === 'muhurtha1' || ev.id === 'muhurtha2') && muhurthaSessionState.mode === 'same';
 }
 
+// Owner-only: deliverable lines the owner has manually removed from this
+// quote (e.g. a line that doesn't apply for a particular client). Removal
+// disappears from both the calculator's Deliverables list and the PDF.
+const deletedDeliverables = new Set();
+
 // Given an event id, returns the id of the group card that should be
 // expanded/scrolled to in order to reveal it (couple-group members like
 // Haldi Bride/Groom live inside a shared parent group card).
@@ -1184,6 +1197,7 @@ function saveSelectionsLocally(){
       addonState: serializedAddons,
       dateState, timeState, locationState,
       muhurthaMode: muhurthaSessionState.mode,
+      deletedDeliverables: Array.from(deletedDeliverables),
       savedAt: Date.now()
     };
     localStorage.setItem(SELECTIONS_STORAGE_KEY, JSON.stringify(payload));
@@ -1216,6 +1230,10 @@ function loadSelectionsLocally(){
     Object.assign(timeState, payload.timeState||{});
     Object.assign(locationState, payload.locationState||{});
     if(payload.muhurthaMode==='same' || payload.muhurthaMode==='separate') muhurthaSessionState.mode = payload.muhurthaMode;
+    if(Array.isArray(payload.deletedDeliverables)){
+      deletedDeliverables.clear();
+      payload.deletedDeliverables.forEach(d=>deletedDeliverables.add(d));
+    }
     return true;
   }catch(e){ /* corrupted/unavailable storage — start fresh, non-critical */ return false; }
 }
@@ -1232,6 +1250,7 @@ function clearSavedSelections(){
   expanded.clear();
   groupExpanded.clear();
   muhurthaSessionState.mode = 'separate';
+  deletedDeliverables.clear();
   lastSubmittedSignature = null;
   renderAll();
 }
@@ -1713,6 +1732,25 @@ function attachHandlers(){
     };
     addKeyActivate(el);
   });
+  document.querySelectorAll('[data-del-deliverable]').forEach(el=>{
+    el.onclick = (e) => {
+      e.stopPropagation();
+      if(!isOwnerMode()) return; // safety net — button only ever renders in owner mode
+      deletedDeliverables.add(el.dataset.delDeliverable);
+      saveSelectionsLocally();
+      renderAll();
+    };
+  });
+  const restoreBtn = document.querySelector('[data-restore-deliverables]');
+  if(restoreBtn){
+    restoreBtn.onclick = (e) => {
+      e.stopPropagation();
+      if(!isOwnerMode()) return;
+      deletedDeliverables.clear();
+      saveSelectionsLocally();
+      renderAll();
+    };
+  }
   document.querySelectorAll('.compare-toggle').forEach(el=>{
     el.onclick = (e) => {
       e.stopPropagation();
@@ -1906,61 +1944,21 @@ function revealEventCard(ev){
 }
 
 function collectSchedule(){
-  return allEvents.filter(ev=>isEventActive(ev)).map(ev=>{
-    let dt = dateState[ev.id] ? new Date(dateState[ev.id]+'T00:00:00').toLocaleDateString('en-GB') : '-';
+  const list = allEvents.filter(ev=>isEventActive(ev)).map(ev=>{
+    const raw = dateState[ev.id] || '';
+    let dt = raw ? new Date(raw+'T00:00:00').toLocaleDateString('en-GB') : '-';
     if(timeState[ev.id]) dt += dt!=='-' ? ` ${timeState[ev.id]}` : timeState[ev.id];
-    return { name: evLabel(ev), date: dt, location: locationState[ev.id] || '-', team: getEventTeam(ev) };
+    return { name: evLabel(ev), date: dt, location: locationState[ev.id] || '-', team: getEventTeam(ev), _sortDate: raw, _sortTime: timeState[ev.id] || '' };
   });
-}
-
-function eventServiceLabel(ev){
-  if(ev.type==='package'){
-    const idx = state[ev.id];
-    return (idx!==null && idx!==undefined) ? ev.options[idx].name : '-';
-  }
-  const set = state[ev.id] || new Set();
-  return set.size ? Array.from(set).join(', ') : '-';
-}
-
-function eventAddonsLabel(ev){
-  const aset = addonState[ev.id] || new Set();
-  const names = ev.addons.filter(a=>aset.has(a.name)).map(a=>a.name);
-  return names.length ? names.join(', ') : '-';
-}
-
-// Groups every active event by its date (chronological order) for the PDF's
-// date-wise event schedule — each event carries its package/service, add-ons,
-// event-specific deliverables and event-specific price, so the whole
-// schedule is readable at a glance without cross-referencing other sections.
-function buildDateWiseSchedule(){
-  const active = allEvents.filter(isEventActive);
-  const groupsMap = new Map();
-  active.forEach(ev=>{
-    const dateVal = dateState[ev.id] || '';
-    const key = dateVal || '__TBD__';
-    if(!groupsMap.has(key)){
-      groupsMap.set(key, {
-        sortVal: dateVal ? new Date(dateVal+'T00:00:00').getTime() : Infinity,
-        displayDate: dateVal ? new Date(dateVal+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : 'Date To Be Confirmed',
-        items: []
-      });
-    }
-    groupsMap.get(key).items.push({
-      time: timeState[ev.id] || '',
-      name: evLabel(ev),
-      location: locationState[ev.id] || '-',
-      service: eventServiceLabel(ev),
-      addons: eventAddonsLabel(ev),
-      team: getEventTeam(ev),
-      deliverables: buildEventDeliverables(ev),
-      price: eventSubtotal(ev),
-      zeroOut: muhurthaZero(ev)
-    });
+  // Organised date-wise: chronological by date, then by time within the same
+  // date. Events with no date set yet are kept at the end.
+  list.sort((a,b)=>{
+    const av = a._sortDate ? new Date(a._sortDate+'T00:00:00').getTime() : Infinity;
+    const bv = b._sortDate ? new Date(b._sortDate+'T00:00:00').getTime() : Infinity;
+    if(av !== bv) return av - bv;
+    return (a._sortTime||'').localeCompare(b._sortTime||'');
   });
-  const groups = Array.from(groupsMap.values());
-  groups.forEach(g => g.items.sort((a,b)=> (a.time||'').localeCompare(b.time||'')));
-  groups.sort((a,b)=> a.sortVal - b.sortVal);
-  return groups;
+  return list;
 }
 
 function getEventTeam(ev){
@@ -2022,7 +2020,7 @@ function getAlbumLine(ev){
         const photoCount = photoCountMatch ? photoCountMatch[1] : '250';
         return albumCount > 1
           ? `${albumCount} ${opt.name} Photo Albums (${photoCount} Client-Selected Photos each)`
-          : `${opt.name} Photo Album (${photoCount} Client-Selected Photos)`;
+          : `${opt.name==='Basic' ? 'Photo Album' : opt.name+' Photo Album'} (${photoCount} Client-Selected Photos)`;
       }
     }
     return null;
@@ -2070,7 +2068,9 @@ function buildDeliverables(){
     lines.push(...buildEventDeliverables(ev));
   });
   lines.push('On request, All photographs can be delivered on a client-provided hard drive (HDD).');
-  return lines;
+  // Owner-only manual removals are applied last so a deleted line never
+  // resurfaces even if the underlying selection is re-rendered.
+  return lines.filter(l => !deletedDeliverables.has(l));
 }
 
 function collectSelections(){
@@ -2109,7 +2109,18 @@ function renderDeliverablesList(){
   const el = document.getElementById('deliverables-list');
   if(!el) return;
   const deliverables = buildDeliverables();
-  el.innerHTML = deliverables.map(d=>`<li>${d}</li>`).join('');
+  const owner = isOwnerMode();
+  const escAttr = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  el.innerHTML = deliverables.map(d=> owner
+    ? `<li class="deliverable-owner-row"><span>${d}</span><button type="button" class="deliverable-del-btn" data-del-deliverable="${escAttr(d)}" title="Remove this deliverable (Owner only)" aria-label="Remove ${escAttr(d)}">✕</button></li>`
+    : `<li>${d}</li>`
+  ).join('');
+  const resetWrap = document.getElementById('deliverables-restore-wrap');
+  if(resetWrap){
+    resetWrap.innerHTML = (owner && deletedDeliverables.size>0)
+      ? `<button type="button" class="deliverable-restore-btn" data-restore-deliverables>↺ Restore ${deletedDeliverables.size} removed deliverable${deletedDeliverables.size>1?'s':''}</button>`
+      : '';
+  }
 }
 
 // Aggregates getEventTeam() across every active event into role -> quantity counts,
@@ -2441,74 +2452,30 @@ async function buildQuotationDoc(){
   boxAround(secStart, y);
   y += 6;
 
-  // Event schedule — organised date-wise so the whole event calendar reads
-  // at a glance. Each event under its date shows package/service, add-ons,
-  // event-specific deliverables and event-specific pricing, in chronological
-  // order across dates.
-  const dateGroups = buildDateWiseSchedule();
-  if(dateGroups.length>0){
+  // Event schedule with team allocation — same table layout as before,
+  // now organised date-wise (collectSchedule() sorts chronologically by
+  // date, then by time within a date).
+  const schedule = collectSchedule();
+  if(schedule.length>0){
     secStart = y;
-    bar('EVENT SCHEDULE — DATE-WISE');
-    y += 4;
-    dateGroups.forEach(g=>{
-      checkPageBreak(16);
-      doc.setFillColor(...navy);
-      doc.roundedRect(8, y, pageW-16, 6.5, 1.2, 1.2, 'F');
-      doc.setTextColor(...gold);
-      doc.setFont(HEAD,'bold');
-      doc.setFontSize(10);
-      doc.text(g.displayDate, 11, y+4.6);
-      y += 9.5;
-
-      g.items.forEach(it=>{
-        const rows = [];
-        rows.push(['Package / Service', it.service]);
-        if(it.addons !== '-') rows.push(['Add-ons', it.addons]);
-        rows.push(['Location', it.location]);
-        if(it.team.length) rows.push(['Team', it.team.join(', ')]);
-        rows.push(['Deliverables', it.deliverables.length ? it.deliverables.join(', ') : '-']);
-
-        // Rough height estimate so we page-break before starting an event
-        // block rather than splitting it awkwardly across pages.
-        doc.setFont(BODY,'normal');
-        doc.setFontSize(8);
-        let estLines = 1;
-        rows.forEach(r=>{ estLines += doc.splitTextToSize(`${r[0]}: ${r[1]}`, pageW-30).length; });
-        checkPageBreak(estLines*3.6 + 10);
-
-        doc.setFont(HEAD,'bold');
-        doc.setFontSize(11);
-        doc.setTextColor(...navy);
-        const titleLine = it.time ? `${it.name}  •  ${it.time}` : it.name;
-        doc.text(titleLine, 11, y);
-        doc.setFont(BODY,'bold');
-        doc.setFontSize(9.5);
-        doc.setTextColor(...gold);
-        const priceLabel = it.zeroOut ? 'Included (Same Session)' : fmtPDF(it.price);
-        doc.text(priceLabel, pageW-11, y, {align:'right'});
-        y += 4.8;
-
-        doc.setFont(BODY,'normal');
-        doc.setFontSize(8);
-        rows.forEach(r=>{
-          const split = doc.splitTextToSize(`${r[0]}: ${r[1]}`, pageW-30);
-          if(y + split.length*3.6 > pageH-16){ doc.addPage(); pageBorder(); y = 14; }
-          doc.setTextColor(...inkSoft);
-          doc.text(r[0]+':', 13, y);
-          doc.setTextColor(...ink);
-          const labelW = doc.getTextWidth(r[0]+': ');
-          const wrapped = doc.splitTextToSize(r[1], pageW-30-labelW);
-          doc.text(wrapped, 13+labelW, y);
-          y += Math.max(split.length, wrapped.length)*3.6 + 0.8;
-        });
-        y += 2;
-        doc.setDrawColor(...lineGrey);
-        doc.setLineWidth(0.15);
-        doc.line(11, y, pageW-11, y);
-        y += 3.2;
-      });
+    bar('EVENT SCHEDULE');
+    doc.autoTable({
+      startY: y,
+      head: [['Event','Date','Location','Allocated Team']],
+      body: schedule.map(s=>[s.name, s.date, s.location, s.team.length? s.team.join('\n') : '-']),
+      theme: 'grid',
+      headStyles:{ font:HEAD, fontStyle:'bold', fillColor: navy, textColor: 255, fontSize:9, halign:'left', lineColor: lineGrey, lineWidth:0.15 },
+      alternateRowStyles:{ fillColor: beige },
+      styles:{ font:BODY, fontSize:8.3, textColor:ink, cellPadding:{top:2.2,bottom:2.2,left:2.2,right:2.2}, valign:'top', overflow:'linebreak', lineColor: lineGrey, lineWidth:0.15 },
+      columnStyles:{
+        0:{cellWidth:42, fontStyle:'bold', font:BODY},
+        1:{cellWidth:22},
+        2:{cellWidth:30},
+        3:{cellWidth:'auto'},
+      },
+      margin:{left:8, right:8},
     });
-    y += 1;
+    y = doc.lastAutoTable.finalY + 2;
     boxAround(secStart, y);
     y += 6;
   }
