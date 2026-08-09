@@ -151,6 +151,7 @@
   .deliverable-restore-btn:hover{ background:#F5EBD0; }
 
   .addon-label{ font-size: 11px; text-transform:uppercase; letter-spacing:.6px; color: var(--ink-soft); margin: 4px 0 2px; }
+  .addon-included-note{ font-size:11px; color:#4C7A57; background:#F1F6F2; border:1px solid #D8E8DC; border-radius:8px; padding:7px 10px; margin:4px 0 8px; }
   /* Distinguishes the optional add-ons section from the required
      package/role choice above it — a divider plus a plain-language note,
      so clients don't mistake add-ons for the main service to select. */
@@ -283,6 +284,8 @@
   /* Package comparison */
   .pkg-badge-inline{ font-size:8.5px; font-weight:700; color:var(--gold); background:#FBF5E7; border:1px solid var(--gold); border-radius:20px; padding:1.5px 7px; margin-left:6px; vertical-align:middle; white-space:nowrap; }
   .pkg-diff{ margin-top:7px; font-size:11px; color:#4C7A57; font-weight:600; }
+  .pkg-badge{ position:absolute; top:-9px; right:12px; background: var(--gold); color: var(--navy); font-size:10px; font-weight:700; letter-spacing:.3px; padding:3px 9px; border-radius:20px; border:1px solid var(--gold-soft); }
+  .pkg-opt-featured{ position:relative; border-color: var(--gold-soft); box-shadow: 0 0 0 1px var(--gold-soft) inset; }
 
   /* Package comparison table — lets a client see all tiers side by side
      instead of opening each package card individually. */
@@ -293,15 +296,18 @@
     color: var(--navy); cursor:pointer;
   }
   .compare-toggle:active{ opacity:.7; }
-  .compare-wrap{ margin-bottom:12px; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .compare-wrap{ margin-bottom:12px; border:1px solid var(--line); border-radius:10px; overflow-x:auto; }
+  .compare-table{ min-width:460px; }
+  .compare-scroll-hint{ font-size:10.5px; color: var(--ink-soft); text-align:right; margin-bottom:4px; }
   .compare-table{ table-layout:fixed; border-collapse:collapse; width:100%; font-family:'Poppins'; }
   .compare-table th, .compare-table td{ padding:7px 5px; text-align:center; border-bottom:1px solid var(--line); font-size:10.5px; line-height:1.35; word-break:break-word; }
   .compare-table th:first-child, .compare-table td:first-child{ width:34%; text-align:left; color:var(--ink-soft); font-size:10px; white-space:normal; }
   .compare-table thead th{ background: var(--paper); }
   .compare-table thead .ct-name{ font-family:'Cormorant Garamond', serif; font-weight:700; font-size:12.5px; color:var(--navy); display:block; }
-  .compare-table thead .ct-price{ font-weight:700; color: var(--gold); font-size:10.5px; display:block; margin-top:2px; }
+  .compare-table thead .ct-price{ font-weight:700; color: var(--gold); font-size:10px; display:block; margin-top:2px; white-space:nowrap; }
   .compare-table thead th.ct-current{ background:#FBF5E7; }
   .compare-table td.ct-yes{ color:#4C7A57; font-weight:700; }
+  .compare-table td.ct-detail{ font-size:9px; font-weight:500; line-height:1.3; color: var(--ink-soft); white-space:normal; }
   .compare-table td.ct-no{ color:#C9C2AC; }
   .compare-table tbody tr:last-child td{ border-bottom:none; }
   .compare-select-row td{ border-bottom:none; padding:8px 4px; }
@@ -1049,12 +1055,10 @@ const weddingEvents = [
   {
     id:'wedding', name:'Wedding', type:'package',
     options:[
-      {name:'Classic', price:90000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Photo Album (250 photos, client-selected)']},
-      {name:'Premium', price:120000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','1 Photo Album (80 pages album, 250 photos to be selected by client)'], tagline:'Perfect for couples who want a cinematic wedding story.'},
-      {name:'Elite', price:140000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','2 Photo Albums (80 pages album, 250 photos to be selected by client)'], tagline:'Ideal for families who want complete wedding coverage.'},
-      // Owner-only tier — never shown to clients or any other login type. Kept last
-      // in the array so existing client-saved selection indices (0/1/2) never shift.
-      {name:'Basic', price:55000, includes:['1 Photographer','1 Photo Album (250 photos, client-selected)'], ownerOnly:true},
+      {name:'Basic', price:55000, includes:['1 Photographer','1 Photo Album','60 pages | Up to 200 client-selected photographs']},
+      {name:'Classic', price:90000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Photo Album','80 pages | Up to 250 client-selected photographs']},
+      {name:'Premium', price:120000, featured:true, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','1 Premium Photo Album','80 pages | Up to 250 client-selected photographs','Cinematic Wedding Film'], tagline:'Perfect for couples who want a cinematic wedding story.'},
+      {name:'Elite', price:140000, includes:['1 Traditional Photographer','1 Candid Photographer','1 Videographer','1 Cinematographer','2 Premium Photo Albums','100 pages | Up to 300 client-selected photographs','Wedding Reels','Same-Day Wedding Cinematic Film Edit'], tagline:'Ideal for families who want complete wedding coverage.'},
     ],
     addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}, {name:'Extended Video Film', price:5000, ownerOnly:true}]
   },
@@ -1278,8 +1282,16 @@ function renderAddonsRows(ev){
   if(!addonState[ev.id]) addonState[ev.id] = new Set();
   const aset = addonState[ev.id];
   const cineSelected = hasCineForEvent(ev);
+  // Elite already bundles a free same-day cinematic edit — the paid
+  // "Same-Day Edit" add-on would just double up on that, so it's hidden
+  // (and auto-cleared) whenever Elite is the selected package.
+  const eliteSelected = ev.type==='package' && (() => {
+    const idx = state[ev.id];
+    return idx !== null && idx !== undefined && ev.options[idx].name === 'Elite';
+  })();
   const visibleAddons = ev.addons.filter(a=>{
     if(a.ownerOnly && !isOwnerMode()) return false;
+    if(a.name==='Same-Day Edit' && eliteSelected) return false;
     if(a.name==='Same-Day Edit' || a.name==='Reels') return cineSelected;
     return true;
   });
@@ -1287,9 +1299,13 @@ function renderAddonsRows(ev){
     aset.delete('Same-Day Edit');
     aset.delete('Reels');
   }
+  if(eliteSelected) aset.delete('Same-Day Edit');
   if(!isOwnerMode()){
     ev.addons.forEach(a=>{ if(a.ownerOnly) aset.delete(a.name); });
   }
+  const eliteNote = eliteSelected
+    ? `<div class="addon-included-note">✓ Same-Day Edit is already included free with Elite — no need to add it separately.</div>`
+    : '';
   const rows = visibleAddons.map(a=>{
     const isSel = aset.has(a.name);
     return `<div class="addon-opt ${isSel?'selected':''}" data-event="${ev.id}" data-addon="${a.name}">
@@ -1297,7 +1313,7 @@ function renderAddonsRows(ev){
       <div class="atext"><b>${a.name}</b>${fmt(a.price)}${a.note?`<br><span style="color:var(--ink-soft); font-size:10.5px;">${a.note}</span>`:''}</div>
     </div>`;
   }).join('');
-  return `<div class="addon-label addons-heading"><span class="ah-title">+ Optional Add-ons</span><span class="ah-note">Optional services available in addition to your selection above.</span></div><div class="addon-grid">${rows}</div>`;
+  return `<div class="addon-label addons-heading"><span class="ah-title">+ Optional Add-ons</span><span class="ah-note">Optional services available in addition to your selection above.</span></div>${eliteNote}<div class="addon-grid">${rows}</div>`;
 }
 
 // Compares one package tier's "includes" list against the tier below it.
@@ -1334,11 +1350,17 @@ function diffIncludes(currIncludes, prevIncludes){
 // instead of opening each package card individually.
 function renderCompareTable(ev, sel){
   // Build the union of feature lines across all tiers, preserving first-seen order.
+  function isPagesLine(s){ return /^\d+\s*pages\b/i.test(s.trim()); }
   function parse(s){
+    if(isPagesLine(s)) return { qty:null, rest:s, isPages:true };
     const m = s.match(/^(\d+)\s+(.*)$/);
     return m ? { qty: parseInt(m[1],10), rest: m[2] } : { qty: 1, rest: s };
   }
-  function key(rest){
+  function key(rest, isPages){
+    // Album page-count/photo-count details differ in exact numbers across
+    // every tier — group them under one shared "Album Details" row instead
+    // of one row per unique number, so the row aligns cleanly across tiers.
+    if(isPages) return '__pages_photos__';
     return rest.replace(/\bAlbums\b/,'Album').trim().toLowerCase();
   }
   // Basic tier is Owner-login only — never shown to clients, including in the
@@ -1350,6 +1372,11 @@ function renderCompareTable(ev, sel){
   visible.forEach(({o})=>{
     o.includes.forEach(raw=>{
       const p = parse(raw);
+      if(p.isPages){
+        const k = key(null, true);
+        if(!seen.has(k)){ seen.add(k); featureOrder.push({ key:k, label:'Album Details', isPages:true }); }
+        return;
+      }
       // Group by the item name with any trailing parenthetical detail
       // stripped, so e.g. "Photo Album (250 photos...)" and "Photo Album
       // (80 pages...)" collapse into one row instead of two.
@@ -1359,12 +1386,12 @@ function renderCompareTable(ev, sel){
   });
   const parsedPerOption = visible.map(({o})=> o.includes.map(raw=>{
     const parsed = parse(raw);
-    return { ...parsed, raw, groupKey: key(parsed.rest.replace(/\s*\(.*?\)\s*$/,'')) };
+    return { ...parsed, raw, groupKey: parsed.isPages ? key(null, true) : key(parsed.rest.replace(/\s*\(.*?\)\s*$/,'')) };
   }));
 
   const headerCells = visible.map(({o,i}, vi)=>`
     <th class="${sel===i?'ct-current':''}">
-      <span class="ct-name">${o.name}</span>
+      <span class="ct-name">${o.name}${o.featured?' ⭐':''}</span>
       <span class="ct-price">${fmt(o.price)}</span>
     </th>`).join('');
 
@@ -1381,6 +1408,12 @@ function renderCompareTable(ev, sel){
     const cells = visible.map(({o}, vi)=>{
       const match = parsedPerOption[vi].find(p=>p.groupKey===f.key);
       if(!match) return `<td class="ct-no">—</td>`;
+      if(f.isPages){
+        // Shortened for the tight compare-table column — full wording
+        // still shows in the package card list and tooltip.
+        const compact = match.raw.replace(/client-selected photographs/i,'photos').replace(/\s*\|\s*/,', ');
+        return `<td class="ct-yes ct-detail">${compact}</td>`;
+      }
       const qtyLabel = match.qty>1 ? `${match.qty}×` : '✓';
       return `<td class="ct-yes">${qtyLabel}</td>`;
     }).join('');
@@ -1390,7 +1423,8 @@ function renderCompareTable(ev, sel){
   const selectRow = `<tr class="compare-select-row"><td></td>${visible.map(({o,i})=>`
     <td><button type="button" class="compare-select-btn ${sel===i?'is-selected':''}" data-event="${ev.id}" data-idx="${i}">${sel===i?'Selected ✓':'Select'}</button></td>`).join('')}</tr>`;
 
-  return `<div class="compare-wrap"><table class="compare-table">
+  const scrollHint = visible.length > 3 ? `<div class="compare-scroll-hint">Swipe to see all packages →</div>` : '';
+  return `${scrollHint}<div class="compare-wrap"><table class="compare-table">
     <thead><tr><th></th>${headerCells}</tr></thead>
     <tbody>${bodyRows}${selectRow}</tbody>
   </table></div>`;
@@ -1477,16 +1511,19 @@ function renderCard(ev, hideDateFields, dateLabel){
       if(vi>0 && o.tagline){
         diffNote = `<div class="pkg-diff">${o.tagline}</div>`;
       }
+      const badge = o.featured ? `<div class="pkg-badge">⭐ Most Popular</div>` : '';
       if(isComparing){
-        return `<div class="pkg-opt pkg-opt-compact ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
+        return `<div class="pkg-opt pkg-opt-compact ${isSel?'selected':''} ${o.featured?'pkg-opt-featured':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
           <div class="pkg-check">${CHECK_SVG}</div>
+          ${badge}
           <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
           ${diffNote}
         </div>`;
       }
       const li = o.includes.map(x=>`<li>${x}</li>`).join('');
-      return `<div class="pkg-opt ${isSel?'selected':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
+      return `<div class="pkg-opt ${isSel?'selected':''} ${o.featured?'pkg-opt-featured':''}" data-event="${ev.id}" data-idx="${i}" role="radio" aria-checked="${isSel}" aria-label="${o.name}, ${fmt(o.price)}" tabindex="0">
         <div class="pkg-check">${CHECK_SVG}</div>
+        ${badge}
         <div class="pkg-top"><div class="pname">${o.name}</div><div class="pprice">${fmt(o.price)}</div></div>
         <ul>${li}</ul>
         ${diffNote}
@@ -1972,8 +2009,14 @@ function getEventTeam(ev){
   } else {
     const idx = state[ev.id];
     if(idx!==null && idx!==undefined){
+      // Package "includes" now also carries non-crew lines (photo album,
+      // pages/photo-count detail, and package-included deliverables like
+      // "Cinematic Wedding Film" / "Wedding Reels") — the Team column should
+      // only ever list actual personnel, so keep just the crew bullets.
       ev.options[idx].includes.forEach(inc=>{
-        if(!/photo album/i.test(inc)) team.push(inc);
+        if(/photo album/i.test(inc)) return;
+        if(/^\d+\s*pages\b/i.test(inc.trim())) return;
+        if(/photographer|videographer|cinematographer/i.test(inc)) team.push(inc);
       });
     }
   }
@@ -2014,13 +2057,24 @@ function getAlbumLine(ev){
       const opt = ev.options[idx];
       const albumInc = opt.includes.find(x=>/photo album/i.test(x));
       if(albumInc){
-        const albumCountMatch = albumInc.match(/^(\d+)\s*Photo Albums?/i);
+        const albumCountMatch = albumInc.match(/^(\d+)\s*(?:Premium\s+)?Photo Albums?/i);
         const albumCount = albumCountMatch ? parseInt(albumCountMatch[1],10) : 1;
-        const photoCountMatch = albumInc.match(/(\d+)\s*photos/i);
-        const photoCount = photoCountMatch ? photoCountMatch[1] : '250';
+        const albumTypeName = /premium photo album/i.test(albumInc) ? 'Premium Photo Album' : 'Photo Album';
+        // Pages/photo-count detail now lives in its own bullet, e.g.
+        // "80 pages | Up to 250 client-selected photographs" — pull the
+        // numbers from there instead of a trailing parenthetical.
+        const pagesLine = opt.includes.find(x=>/^\d+\s*pages\b/i.test(x.trim()));
+        let detail = 'Up to 250 Client-Selected Photos';
+        if(pagesLine){
+          const pageMatch = pagesLine.match(/^(\d+)\s*pages/i);
+          const photoMatch = pagesLine.match(/(\d+)\s*client-selected/i);
+          const pages = pageMatch ? pageMatch[1] : null;
+          const photos = photoMatch ? photoMatch[1] : '250';
+          detail = pages ? `${pages} Pages, Up to ${photos} Client-Selected Photos` : `Up to ${photos} Client-Selected Photos`;
+        }
         return albumCount > 1
-          ? `${albumCount} ${opt.name} Photo Albums (${photoCount} Client-Selected Photos each)`
-          : `${opt.name==='Basic' ? 'Photo Album' : opt.name+' Photo Album'} (${photoCount} Client-Selected Photos)`;
+          ? `${albumCount} ${albumTypeName}s (${detail} each)`
+          : `${albumTypeName} (${detail})`;
       }
     }
     return null;
@@ -2044,6 +2098,16 @@ function buildEventDeliverables(ev){
   } else {
     if(hasCineForEvent(ev)) lines.push(`Cinematic ${evLabel(ev)} Film`);
     if(hasVideoForEvent(ev)) lines.push(`Extended ${evLabel(ev)} Film`);
+  }
+  // Elite-tier package extra — Wedding Reels is included automatically
+  // whenever the Elite package is selected, by either the client or the
+  // owner, with no add-on needed. (The "Same-Day Wedding Cinematic Film
+  // Edit" line stays as a package-card feature only — not auto-added here.)
+  if(ev.type==='package'){
+    const idx = state[ev.id];
+    if(idx !== null && idx !== undefined && ev.options[idx].name === 'Elite'){
+      if(!lines.includes('Wedding Reels')) lines.push('Wedding Reels');
+    }
   }
   const aset = addonState[ev.id] || new Set();
   // Extended Video Film add-on (Owner-only) is tied to whichever event it was
