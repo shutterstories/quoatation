@@ -647,7 +647,6 @@
     </a>
   </div>
 
-  <div id="restore-note" class="foot-note" style="display:none; margin-top:10px; color:var(--gold); font-weight:500;">Your previous selections were restored.</div>
   <div class="foot-note" style="margin-top:6px;"><span id="clear-selections-link" style="text-decoration:underline; cursor:pointer;">Clear my selections</span></div>
 
   <div class="ticket">
@@ -1021,12 +1020,13 @@ document.getElementById('gate-back').addEventListener('click', ()=>{
 function unlockQuoteForm(){
   document.getElementById('gate').style.display = 'none';
   document.body.style.overflow = 'auto';
-  const restored = loadSelectionsLocally();
-  renderAll();
-  if(restored){
-    const note = document.getElementById('restore-note');
-    if(note){ note.style.display = 'block'; setTimeout(()=>{ note.style.display = 'none'; }, 6000); }
-  }
+  // Every fresh login starts with a completely clear quote. (Owner bypass
+  // always reuses the same 'OWNER-BYPASS' access code no matter which
+  // client Pavan is actually quoting, so the old same-access-code restore
+  // check couldn't tell one owner session from the next and kept pulling
+  // back the previous client's picks. Clients now also always start clean
+  // rather than resuming a stale in-progress quote left on this device.)
+  clearSavedSelections();
 }
 
 function onOtpVerified(){
