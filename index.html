@@ -284,7 +284,7 @@
   /* Package comparison */
   .pkg-badge-inline{ font-size:8.5px; font-weight:700; color:var(--gold); background:#FBF5E7; border:1px solid var(--gold); border-radius:20px; padding:1.5px 7px; margin-left:6px; vertical-align:middle; white-space:nowrap; }
   .pkg-diff{ margin-top:7px; font-size:11px; color:#4C7A57; font-weight:600; }
-  .pkg-badge{ position:absolute; top:-9px; right:12px; background: var(--gold); color: var(--navy); font-size:10px; font-weight:700; letter-spacing:.3px; padding:3px 9px; border-radius:20px; border:1px solid var(--gold-soft); }
+  .pkg-badge{ position:absolute; top:-9px; right:12px; background: transparent; color: var(--navy); font-size:10px; font-weight:400; letter-spacing:.3px; padding:3px 9px; border-radius:20px; border:none; }
   .pkg-opt-featured{ position:relative; border-color: var(--gold-soft); box-shadow: 0 0 0 1px var(--gold-soft) inset; }
 
   /* Package comparison table — lets a client see all tiers side by side
@@ -1652,36 +1652,83 @@ function renderGroupCard(group){
   </div>`;
 }
 
-function renderAll(){
-  // Rebuilding the event cards below replaces their DOM nodes entirely, and
-  // on mobile Safari/Chrome the browser's automatic "scroll anchoring" can
-  // pick a different anchor node once the old ones are gone — causing the
-  // page to silently jump up/down even though nothing the user is looking
-  // at actually moved (e.g. tapping "Bride" to expand it). We snapshot the
-  // scroll position beforehand and restore it right after, so the only
-  // scrolling that happens is scrolling we explicitly ask for elsewhere
-  // (revealEventCard, sticky-chip jumps, etc. — those run their own
-  // scrollIntoView in a requestAnimationFrame *after* this restore).
-  const preservedScrollY = window.scrollY;
+// Finds a stable, re-render-safe DOM id (a card, group-card, or date/time/
+// venue box) currently visible near the top of the viewport, so renderAll()
+// can keep THAT exact element pinned in place across a re-render. Used only
+// as a fallback when the caller doesn't know exactly which element the
+// client was interacting with (see renderAll's explicit anchorId param,
+// which is far more reliable and used for the interactions that were
+// actually reported as jumpy).
+function pickScrollAnchor(){
+  const nodes = document.querySelectorAll('#events-wedding [id], #events-other [id]');
+  const viewportMid = window.innerHeight / 2;
+  let best = null, bestDist = Infinity;
+  nodes.forEach(el=>{
+    const id = el.id;
+    if(!id || !/^(card-|datebox-)/.test(id)) return;
+    const rect = el.getBoundingClientRect();
+    if(rect.bottom <= 0 || rect.top >= window.innerHeight) return; // not on screen
+    const elMid = rect.top + rect.height/2;
+    const dist = Math.abs(elMid - viewportMid);
+    if(dist < bestDist){ bestDist = dist; best = { id, top: rect.top }; }
+  });
+  return best;
+}
+
+function reassertScrollAnchor(anchor){
+  if(!anchor) return;
+  const el = document.getElementById(anchor.id);
+  if(!el) return;
+  const delta = el.getBoundingClientRect().top - anchor.top;
+  // Must be instant, not smooth — the page sets `scroll-behavior: smooth`
+  // globally (for deliberate scrollIntoView calls elsewhere), but that would
+  // turn this corrective snap into a slow, very visible slide instead of an
+  // invisible instant correction, and would also race with the belt-and-
+  // braces re-checks below (each seeing a mid-animation position and firing
+  // another correction on top of it — the actual cause of the residual jump).
+  if(Math.abs(delta) > 0.5) window.scrollBy({ top: delta, left: 0, behavior: 'instant' });
+}
+
+// anchorId: when the caller already knows exactly which element the client
+// is looking at/interacting with (a card being toggled, the date/time/venue
+// box they just filled in, etc.), pass its id here — that element's on-screen
+// position is preserved exactly across the re-render. Without it, we fall
+// back to a heuristic guess (pickScrollAnchor) which works for most other
+// cases but can occasionally lock onto the wrong element when a very tall
+// card happens to sit near the viewport's vertical center.
+function renderAll(anchorId){
+  // Rebuilding the event cards below replaces their DOM nodes entirely,
+  // which can shift the page in ways the client didn't ask for — either
+  // because the browser's own "scroll anchoring" picks a different anchor
+  // once the old nodes are gone (e.g. tapping "Bride" to expand it), or
+  // because content genuinely changed height above what they're looking at
+  // (e.g. a role card auto-collapsing right above the date fields they just
+  // finished filling in). Either way, we note what's on screen beforehand
+  // and pin it back in place right after, so only scrolling we explicitly
+  // ask for elsewhere (revealEventCard, sticky-chip jumps, etc. — those run
+  // their own scrollIntoView in a requestAnimationFrame *after* this
+  // restore) actually moves the page.
+  let anchor = null;
+  if(anchorId){
+    const hintEl = document.getElementById(anchorId);
+    if(hintEl) anchor = { id: anchorId, top: hintEl.getBoundingClientRect().top };
+  }
+  if(!anchor) anchor = pickScrollAnchor();
   updateTotal(); // sets totalIsRevealed + refreshes ticket/team/deliverables/progress before cards read it
   document.getElementById('events-wedding').innerHTML = weddingCardGroups.map(renderGroupCard).join('');
   document.getElementById('events-other').innerHTML = otherCardGroups.map(renderGroupCard).join('');
   renderStickySummary();
   attachHandlers();
-  if(window.scrollY !== preservedScrollY){
-    window.scrollTo(0, preservedScrollY);
-  }
-  // Belt-and-braces: some mobile browsers apply their scroll-anchoring
-  // correction a frame late (after layout/paint settles), which would
-  // undo the restore above. Re-assert once more on the next frame. Any
+  reassertScrollAnchor(anchor);
+  // Belt-and-braces: some mobile browsers apply their own scroll-anchoring
+  // correction a frame late (after layout/paint settles), which would undo
+  // the restore above. Re-check once more on the next couple of frames. Any
   // intentional scroll (revealEventCard, sticky-chip jump, etc.) is
   // scheduled via its own requestAnimationFrame call AFTER renderAll()
-  // returns, so it queues after this one and still wins.
+  // returns, so it queues after these and still wins.
   requestAnimationFrame(()=>{
-    if(window.scrollY !== preservedScrollY) window.scrollTo(0, preservedScrollY);
-    requestAnimationFrame(()=>{
-      if(window.scrollY !== preservedScrollY) window.scrollTo(0, preservedScrollY);
-    });
+    reassertScrollAnchor(anchor);
+    requestAnimationFrame(()=> reassertScrollAnchor(anchor));
   });
 }
 
@@ -1759,7 +1806,7 @@ function attachHandlers(){
         // rows, not auto-expanded into full role details. The client taps
         // Bride or Groom individually to reveal that side's choices.
       }
-      renderAll();
+      renderAll('card-'+id);
     };
   });
   document.querySelectorAll('[data-toggle]').forEach(el=>{
@@ -1767,7 +1814,7 @@ function attachHandlers(){
       e.stopPropagation();
       const id = el.dataset.toggle;
       if(expanded.has(id)) expanded.delete(id); else expanded.add(id);
-      renderAll();
+      renderAll('card-'+id);
     };
     addKeyActivate(el);
   });
@@ -1778,7 +1825,7 @@ function attachHandlers(){
       const set = state[evId];
       if(set.has(role)) set.delete(role); else set.add(role);
       saveSelectionsLocally();
-      renderAll();
+      renderAll('card-'+evId);
     };
     addKeyActivate(el);
   });
@@ -1788,7 +1835,7 @@ function attachHandlers(){
       const evId = el.dataset.event, idx = parseInt(el.dataset.idx);
       state[evId] = (state[evId] === idx) ? null : idx;
       saveSelectionsLocally();
-      renderAll();
+      renderAll('card-'+evId);
     };
     addKeyActivate(el);
   });
@@ -1797,7 +1844,7 @@ function attachHandlers(){
       e.stopPropagation();
       muhurthaSessionState.mode = el.dataset.muhurthaMode;
       saveSelectionsLocally();
-      renderAll();
+      renderAll('card-muhurtha');
     };
     addKeyActivate(el);
   });
@@ -1835,7 +1882,7 @@ function attachHandlers(){
       const evId = el.dataset.event, idx = parseInt(el.dataset.idx);
       state[evId] = (state[evId] === idx) ? null : idx;
       saveSelectionsLocally();
-      renderAll();
+      renderAll('card-'+evId);
     };
   });
   document.querySelectorAll('.addon-opt').forEach(el=>{
@@ -1845,7 +1892,7 @@ function attachHandlers(){
       const aset = addonState[evId];
       if(aset.has(name)) aset.delete(name); else aset.add(name);
       saveSelectionsLocally();
-      renderAll();
+      renderAll('card-'+evId);
     };
   });
   const tt = document.getElementById('terms-toggle');
@@ -1925,7 +1972,7 @@ function attachHandlers(){
         groupSeparateDetails.add(id);
       }
       saveSelectionsLocally();
-      renderAll();
+      renderAll('card-'+id);
     };
   });
 }
@@ -1974,7 +2021,9 @@ function maybeAutoCollapse(evId){
   if(dateState[evId] && timeState[evId] && locationState[evId]){
     setTimeout(()=>{
       expanded.delete(evId);
-      renderAll();
+      // Anchor on the date/time/venue box itself so it stays exactly where
+      // the client is looking when the role card above it collapses away.
+      renderAll('datebox-'+evId);
     }, 550);
   }
 }
@@ -2054,9 +2103,13 @@ function getEventTeam(ev){
   }
   const aset = addonState[ev.id] || new Set();
   const personnelRoles = ['Photographer','Videographer','Cinematographer'];
+  // Team should only ever list actual crew — equipment/service add-ons
+  // (Drone, LED, YouTube Live, Same-Day Edit, Reels, Additional Album,
+  // Extended Video Film) belong under Add-ons/Deliverables, not here.
   ev.addons.forEach(a=>{
     if(!aset.has(a.name)) return;
-    team.push(personnelRoles.includes(a.name) ? `1 Additional ${a.name}` : a.name);
+    if(!personnelRoles.includes(a.name)) return;
+    team.push(`1 Additional ${a.name}`);
   });
   return team;
 }
@@ -2154,6 +2207,16 @@ function getAlbumLines(ev){
   }
 }
 
+// Maternity and Pre-Wedding cinematic film deliverables get a clean,
+// occasion-specific name ("Pre-Wedding Cinematic Film" / "Maternity
+// Cinematic Film") instead of echoing the full package-card label (e.g.
+// "Cinematic Pre-Wedding Photography & Cinematography Film").
+function cinematicFilmLine(ev){
+  if(ev.id.startsWith('prewedding')) return 'Pre-Wedding Cinematic Film';
+  if(ev.id.startsWith('maternity')) return 'Maternity Cinematic Film';
+  return `Cinematic ${evLabel(ev)} Film`;
+}
+
 // Deliverables scoped to a single event — reused both by the combined
 // Deliverables list and by the date-wise PDF event breakdown so the two
 // never drift out of sync.
@@ -2164,7 +2227,7 @@ function buildEventDeliverables(ev){
     lines.push(`Cinematic ${evLabel(ev)} Film`);
     lines.push(`Extended ${evLabel(ev)} Film`);
   } else {
-    if(hasCineForEvent(ev)) lines.push(`Cinematic ${evLabel(ev)} Film`);
+    if(hasCineForEvent(ev)) lines.push(cinematicFilmLine(ev));
     if(hasVideoForEvent(ev)) lines.push(`Extended ${evLabel(ev)} Film`);
   }
   // Elite-tier package extra — Wedding Reels is included automatically
@@ -2191,12 +2254,20 @@ function buildEventDeliverables(ev){
 }
 
 function buildDeliverables(){
+  const activeEvents = allEvents.filter(isEventActive);
+  // Maternity and Pre-Wedding shoots don't get the "Complete Photo Gallery"
+  // line — that's only meaningful for a full event day with a large take,
+  // not a single short session. Only drop it when the booking is made up
+  // entirely of Maternity/Pre-Wedding events; a mixed booking (e.g. also
+  // includes the Wedding itself) keeps it as normal.
+  const isMaternityOrPrewedding = ev => ev.id.startsWith('maternity') || ev.id.startsWith('prewedding');
+  const onlyMaternityOrPrewedding = activeEvents.length>0 && activeEvents.every(isMaternityOrPrewedding);
+
   const lines = [
     'Edited High Resolution Photographs',
-    'Complete Photo Gallery (Google Drive link valid for 30 days)'
+    ...(onlyMaternityOrPrewedding ? [] : ['Complete Photo Gallery (Google Drive link valid for 30 days)'])
   ];
-  allEvents.forEach(ev=>{
-    if(!isEventActive(ev)) return;
+  activeEvents.forEach(ev=>{
     lines.push(...buildEventDeliverables(ev));
   });
   lines.push('On request, All photographs can be delivered on a client-provided hard drive (HDD).');
@@ -2772,7 +2843,12 @@ async function shareOrDownloadPDF(triggerWhatsApp){
   const {lines, total} = collectSelections();
   if(lines.length===0) return;
 
-  const missing = validateEventDetails();
+  // Owner bypass can generate/send a quote even with some events missing
+  // date/time/venue (Pavan is often just testing or quoting before those
+  // details are confirmed) — clients still must fill them all in. Whatever
+  // date/time/location the owner HAS entered is still used normally; this
+  // only skips the block, it doesn't clear anything already typed.
+  const missing = usedAccessCode === 'OWNER-BYPASS' ? [] : validateEventDetails();
   if(missing.length>0){
     // Mark every incomplete event so its date/time/venue fields show a red
     // outline + inline message, not just the first one we scroll to.
