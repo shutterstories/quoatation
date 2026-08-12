@@ -87,7 +87,7 @@
   .info-panel-inner h4{ font-family:'Poppins'; font-size:12px; font-weight:700; color:var(--navy); margin:0 0 3px; }
   .info-panel-inner p{ font-size:11.5px; color:var(--ink-soft); line-height:1.55; margin:0 0 12px; }
 
-  .events{ max-width: 560px; margin: 0 auto; padding: 0 20px; display:flex; flex-direction:column; gap:12px; }
+  .events{ max-width: 560px; margin: 0 auto; padding: 0 20px; display:flex; flex-direction:column; gap:12px; overflow-anchor: none; }
 
   .card{ background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   .card-head{ padding: 14px 16px; display:flex; justify-content: space-between; align-items:center; cursor:pointer; }
@@ -1308,9 +1308,16 @@ function renderAddonsRows(ev){
     : '';
   const rows = visibleAddons.map(a=>{
     const isSel = aset.has(a.name);
+    // "Additional Album" always mirrors the selected Wedding tier's own
+    // pages/photo spec (see ADDITIONAL_ALBUM_SPECS) instead of a fixed note.
+    let noteText = a.note;
+    if(a.name==='Additional Album'){
+      const spec = getAdditionalAlbumSpec(ev);
+      noteText = `${spec.pages} pages album, ${spec.photos} photos • ₹200 per extra page`;
+    }
     return `<div class="addon-opt ${isSel?'selected':''}" data-event="${ev.id}" data-addon="${a.name}">
       <div class="box">${CHECK_SVG}</div>
-      <div class="atext"><b>${a.name}</b>${fmt(a.price)}${a.note?`<br><span style="color:var(--ink-soft); font-size:10.5px;">${a.note}</span>`:''}</div>
+      <div class="atext"><b>${a.name}</b>${fmt(a.price)}${noteText?`<br><span style="color:var(--ink-soft); font-size:10.5px;">${noteText}</span>`:''}</div>
     </div>`;
   }).join('');
   return `<div class="addon-label addons-heading"><span class="ah-title">+ Optional Add-ons</span><span class="ah-note">Optional services available in addition to your selection above.</span></div>${eliteNote}<div class="addon-grid">${rows}</div>`;
@@ -1646,11 +1653,36 @@ function renderGroupCard(group){
 }
 
 function renderAll(){
+  // Rebuilding the event cards below replaces their DOM nodes entirely, and
+  // on mobile Safari/Chrome the browser's automatic "scroll anchoring" can
+  // pick a different anchor node once the old ones are gone — causing the
+  // page to silently jump up/down even though nothing the user is looking
+  // at actually moved (e.g. tapping "Bride" to expand it). We snapshot the
+  // scroll position beforehand and restore it right after, so the only
+  // scrolling that happens is scrolling we explicitly ask for elsewhere
+  // (revealEventCard, sticky-chip jumps, etc. — those run their own
+  // scrollIntoView in a requestAnimationFrame *after* this restore).
+  const preservedScrollY = window.scrollY;
   updateTotal(); // sets totalIsRevealed + refreshes ticket/team/deliverables/progress before cards read it
   document.getElementById('events-wedding').innerHTML = weddingCardGroups.map(renderGroupCard).join('');
   document.getElementById('events-other').innerHTML = otherCardGroups.map(renderGroupCard).join('');
   renderStickySummary();
   attachHandlers();
+  if(window.scrollY !== preservedScrollY){
+    window.scrollTo(0, preservedScrollY);
+  }
+  // Belt-and-braces: some mobile browsers apply their scroll-anchoring
+  // correction a frame late (after layout/paint settles), which would
+  // undo the restore above. Re-assert once more on the next frame. Any
+  // intentional scroll (revealEventCard, sticky-chip jump, etc.) is
+  // scheduled via its own requestAnimationFrame call AFTER renderAll()
+  // returns, so it queues after this one and still wins.
+  requestAnimationFrame(()=>{
+    if(window.scrollY !== preservedScrollY) window.scrollTo(0, preservedScrollY);
+    requestAnimationFrame(()=>{
+      if(window.scrollY !== preservedScrollY) window.scrollTo(0, preservedScrollY);
+    });
+  });
 }
 
 // Compact sticky bar pinned under the hero, listing every selection made so
@@ -2050,7 +2082,30 @@ function hasVideoForEvent(ev){
   return aset.has('Videographer');
 }
 
-function getAlbumLine(ev){
+// Additional Album (Wedding add-on) always mirrors the pages/photo-count
+// spec of whichever Wedding package tier the client has selected — Pavan
+// wants the add-on's own deliverable to scale with the primary package,
+// not stay pinned to one fixed spec regardless of tier.
+const ADDITIONAL_ALBUM_SPECS = {
+  'Basic':   { pages: 60,  photos: 100 },
+  'Classic': { pages: 80,  photos: 250 },
+  'Premium': { pages: 80,  photos: 250 },
+  'Elite':   { pages: 100, photos: 300 },
+};
+
+function getAdditionalAlbumSpec(ev){
+  if(ev.type==='package'){
+    const idx = state[ev.id];
+    const tierName = (idx!==null && idx!==undefined) ? ev.options[idx].name : null;
+    if(tierName && ADDITIONAL_ALBUM_SPECS[tierName]) return ADDITIONAL_ALBUM_SPECS[tierName];
+  }
+  return ADDITIONAL_ALBUM_SPECS['Classic']; // sensible fallback before a tier is chosen
+}
+
+function getAlbumLines(ev){
+  const aset = addonState[ev.id] || new Set();
+  const hasAdditionalAlbum = aset.has('Additional Album');
+
   if(ev.type==='package'){
     const idx = state[ev.id];
     if(idx!==null && idx!==undefined){
@@ -2064,24 +2119,38 @@ function getAlbumLine(ev){
         // "80 pages | Up to 250 client-selected photographs" — pull the
         // numbers from there instead of a trailing parenthetical.
         const pagesLine = opt.includes.find(x=>/^\d+\s*pages\b/i.test(x.trim()));
-        let detail = 'Up to 250 Client-Selected Photos';
+        let pages = null, photos = '250';
         if(pagesLine){
           const pageMatch = pagesLine.match(/^(\d+)\s*pages/i);
           const photoMatch = pagesLine.match(/(\d+)\s*client-selected/i);
-          const pages = pageMatch ? pageMatch[1] : null;
-          const photos = photoMatch ? photoMatch[1] : '250';
-          detail = pages ? `${pages} Pages, Up to ${photos} Client-Selected Photos` : `Up to ${photos} Client-Selected Photos`;
+          pages = pageMatch ? pageMatch[1] : null;
+          photos = photoMatch ? photoMatch[1] : '250';
         }
-        return albumCount > 1
+        const detail = pages ? `${pages} Pages, Up to ${photos} Client-Selected Photos` : `Up to ${photos} Client-Selected Photos`;
+        const baseLine = albumCount > 1
           ? `${albumCount} ${albumTypeName}s (${detail} each)`
           : `${albumTypeName} (${detail})`;
+
+        if(!hasAdditionalAlbum) return [baseLine];
+
+        // Additional Album add-on — its own pages/photo spec always follows
+        // whichever tier is currently selected (see ADDITIONAL_ALBUM_SPECS).
+        const addSpec = getAdditionalAlbumSpec(ev);
+        const addDetail = `${addSpec.pages} Pages, Up to ${addSpec.photos} Client-Selected Photos`;
+        // Same spec as the base album (Classic/Premium) → merge into one
+        // combined count instead of two separate near-identical lines.
+        if(pages && String(addSpec.pages) === String(pages) && String(addSpec.photos) === String(photos)){
+          const mergedCount = albumCount + 1;
+          return [`${mergedCount} ${albumTypeName}s (${detail} each)`];
+        }
+        return [baseLine, `1 Additional Photo Album (${addDetail})`];
       }
     }
-    return null;
+    return [];
   } else {
     const set = state[ev.id] || new Set();
-    if(set.has('Album')) return `${evLabel(ev)} Photo Album (150 Client-Selected Photos)`;
-    return null;
+    if(set.has('Album')) return [`${evLabel(ev)} Photo Album (150 Client-Selected Photos)`];
+    return [];
   }
 }
 
@@ -2090,8 +2159,7 @@ function getAlbumLine(ev){
 // never drift out of sync.
 function buildEventDeliverables(ev){
   const lines = [];
-  const al = getAlbumLine(ev);
-  if(al) lines.push(al);
+  lines.push(...getAlbumLines(ev));
   if(ev.id==='reception'){
     lines.push(`Cinematic ${evLabel(ev)} Film`);
     lines.push(`Extended ${evLabel(ev)} Film`);
