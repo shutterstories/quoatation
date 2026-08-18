@@ -2061,12 +2061,26 @@ function revealEventCard(ev){
   });
 }
 
+// Maternity/Pre-Wedding "Option 1 (Single Session)" vs "Option 2 (One Day)"
+// gets a short note next to the crew in the PDF's Allocated Team column, so
+// it's obvious at a glance how many outfit changes that booking covers.
+function getSessionOutfitTagline(ev){
+  if(!(ev.id.startsWith('maternity') || ev.id.startsWith('prewedding'))) return null;
+  if(ev.type!=='package') return null;
+  const idx = state[ev.id];
+  if(idx===null || idx===undefined) return null;
+  const optName = ev.options[idx].name;
+  if(optName.startsWith('Option 1')) return 'Single session, 1 outfit';
+  if(optName.startsWith('Option 2')) return 'One-day session, 2/3 outfits';
+  return null;
+}
+
 function collectSchedule(){
   const list = allEvents.filter(ev=>isEventActive(ev)).map(ev=>{
     const raw = dateState[ev.id] || '';
     let dt = raw ? new Date(raw+'T00:00:00').toLocaleDateString('en-GB') : '-';
     if(timeState[ev.id]) dt += dt!=='-' ? ` ${timeState[ev.id]}` : timeState[ev.id];
-    return { name: evLabel(ev), date: dt, location: locationState[ev.id] || '-', team: getEventTeam(ev), _sortDate: raw, _sortTime: timeState[ev.id] || '' };
+    return { name: evLabel(ev), date: dt, location: locationState[ev.id] || '-', team: getEventTeam(ev), teamTagline: getSessionOutfitTagline(ev), _sortDate: raw, _sortTime: timeState[ev.id] || '' };
   });
   // Organised date-wise: chronological by date, then by time within the same
   // date. Events with no date set yet are kept at the end.
@@ -2665,7 +2679,17 @@ async function buildQuotationDoc(){
     doc.autoTable({
       startY: y,
       head: [['Event','Date','Location','Allocated Team']],
-      body: schedule.map(s=>[s.name, s.date, s.location, s.team.length? s.team.join('\n') : '-']),
+      // The Maternity/Pre-Wedding session/outfit note (if any) is included
+      // as the LAST line of this same cell's text, purely so autoTable
+      // calculates the correct row height for it. It's drawn in the normal
+      // ink color by autoTable's own renderer first, then didDrawCell below
+      // repaints just that last line in gold/italic on top — see there for
+      // why it's done this way instead of a separate column/cell.
+      body: schedule.map(s=>{
+        const teamLines = s.team.length ? s.team.slice() : ['-'];
+        if(s.teamTagline) teamLines.push(s.teamTagline);
+        return [s.name, s.date, s.location, teamLines.join('\n')];
+      }),
       theme: 'grid',
       headStyles:{ font:HEAD, fontStyle:'bold', fillColor: navy, textColor: 255, fontSize:9, halign:'left', lineColor: lineGrey, lineWidth:0.15 },
       alternateRowStyles:{ fillColor: beige },
@@ -2675,6 +2699,35 @@ async function buildQuotationDoc(){
         1:{cellWidth:22},
         2:{cellWidth:30},
         3:{cellWidth:'auto'},
+      },
+      // Repaints the Allocated Team cell's LAST line in gold/italic when
+      // that row has a session/outfit tagline (Maternity/Pre-Wedding only).
+      // We can't mix two text colors in one autoTable cell natively, so we
+      // let the default renderer draw everything in ink first (this keeps
+      // row-height/wrapping/pagination all correctly handled by autoTable
+      // itself), then paint a same-size beige/white patch over just that
+      // last line and redraw it in gold on top — using doc.getTextDimensions()
+      // for the line height rather than a guessed constant, so it tracks
+      // the actual font/size/line-spacing autoTable itself is using.
+      didDrawCell: function(data){
+        if(data.column.index !== 3 || data.row.section !== 'body') return;
+        const rowInfo = schedule[data.row.index];
+        if(!rowInfo || !rowInfo.teamTagline) return;
+        doc.setFont(BODY, 'normal');
+        doc.setFontSize(8.3);
+        const lineH = doc.getTextDimensions('Mg').h;
+        const numTeamLines = rowInfo.team.length ? rowInfo.team.length : 1;
+        const padTop = data.cell.padding('top');
+        const padLeft = data.cell.padding('left');
+        const lineTopY = data.cell.y + padTop + (numTeamLines * lineH);
+        const isAltRow = data.row.index % 2 === 1;
+        doc.setFillColor(...(isAltRow ? beige : [255,255,255]));
+        doc.rect(data.cell.x, lineTopY, data.cell.width, lineH, 'F');
+        doc.setFont(BODY, 'italic');
+        doc.setTextColor(...gold);
+        doc.text(rowInfo.teamTagline, data.cell.x + padLeft, lineTopY + lineH*0.78);
+        doc.setFont(BODY, 'normal');
+        doc.setTextColor(...ink);
       },
       margin:{left:8, right:8},
     });
@@ -2960,7 +3013,12 @@ if(editTotalLink){
     const {computedTotal} = collectSelections();
     if(ownerTotalOverride !== null){
       ownerTotalOverride = null;
-      updateTotal();
+      // Must be renderAll(), not updateTotal() — updateTotal() alone rebuilds
+      // the deliverables list's HTML but never re-runs attachHandlers(), so
+      // every "✕ remove deliverable" button rendered after using Edit Total
+      // was left with no click handler at all (visible, but permanently
+      // dead) until the next unrelated interaction happened to re-render.
+      renderAll();
       showToast('Reset to calculated total.', 'success');
       return;
     }
@@ -2969,7 +3027,7 @@ if(editTotalLink){
     const digits = input.replace(/[^\d]/g,'');
     if(!digits){ return; }
     ownerTotalOverride = parseInt(digits, 10);
-    updateTotal();
+    renderAll();
     showToast(`Total set to ${fmt(ownerTotalOverride)}.`, 'success');
   });
 }
