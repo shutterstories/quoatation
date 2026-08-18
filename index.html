@@ -2014,18 +2014,13 @@ function refreshFieldError(evId){
 // and venue are all filled in — a subtle nudge that keeps the page shorter as
 // clients progress, without forcing a collapse mid-edit.
 function maybeAutoCollapse(evId){
-  const ev = allEvents.find(e=>e.id===evId);
-  if(!ev || !expanded.has(evId)) return;
-  const hasMain = ev.type==='roles' ? (state[evId] && state[evId].size>0) : (state[evId]!==null && state[evId]!==undefined);
-  if(!hasMain) return;
-  if(dateState[evId] && timeState[evId] && locationState[evId]){
-    setTimeout(()=>{
-      expanded.delete(evId);
-      // Anchor on the date/time/venue box itself so it stays exactly where
-      // the client is looking when the role card above it collapses away.
-      renderAll('datebox-'+evId);
-    }, 550);
-  }
+  // Disabled — this used to fold the card back up 550ms after date/time/
+  // location were all filled in, but that made the card disappear out from
+  // under Pavan mid-flow (e.g. right after finishing the venue, while still
+  // meaning to pick add-ons), forcing a re-tap on the event just to keep
+  // editing. Cards now only collapse when the client/owner taps the header
+  // themselves — no more surprise auto-collapse.
+  return;
 }
 
 function isEventActive(ev){
