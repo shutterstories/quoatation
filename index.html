@@ -2112,13 +2112,16 @@ function getEventTeam(ev){
   }
   const aset = addonState[ev.id] || new Set();
   const personnelRoles = ['Photographer','Videographer','Cinematographer'];
-  // Team should only ever list actual crew — equipment/service add-ons
-  // (Drone, LED, YouTube Live, Same-Day Edit, Reels, Additional Album,
-  // Extended Video Film) belong under Add-ons/Deliverables, not here.
+  // On-site equipment/crew add-ons show in Team alongside the crew, since
+  // they represent someone/something physically present at the event.
+  // Same-Day Edit, Reels, Additional Album, and Extended Video Film are
+  // post-production/deliverable items, not on-site team entries, so they
+  // stay out of this list — they show under Add-ons/Deliverables instead.
+  const equipmentInTeam = ['Drone','LED','YouTube Live'];
   ev.addons.forEach(a=>{
     if(!aset.has(a.name)) return;
-    if(!personnelRoles.includes(a.name)) return;
-    team.push(`1 Additional ${a.name}`);
+    if(personnelRoles.includes(a.name)){ team.push(`1 Additional ${a.name}`); return; }
+    if(equipmentInTeam.includes(a.name)){ team.push(a.name); return; }
   });
   return team;
 }
@@ -2239,14 +2242,17 @@ function buildEventDeliverables(ev){
     if(hasCineForEvent(ev)) lines.push(cinematicFilmLine(ev));
     if(hasVideoForEvent(ev)) lines.push(`Extended ${evLabel(ev)} Film`);
   }
-  // Elite-tier package extra — Wedding Reels is included automatically
-  // whenever the Elite package is selected, by either the client or the
-  // owner, with no add-on needed. (The "Same-Day Wedding Cinematic Film
-  // Edit" line stays as a package-card feature only — not auto-added here.)
+  // Elite-tier package extras — Wedding Reels and Same-Day Edit are both
+  // included automatically whenever Elite is selected, with no add-on
+  // needed (the Optional Add-ons section already hides/hints this for
+  // Same-Day Edit — this is what actually makes that promise show up in
+  // the deliverables list too, instead of only being a UI note).
   if(ev.type==='package'){
     const idx = state[ev.id];
     if(idx !== null && idx !== undefined && ev.options[idx].name === 'Elite'){
       if(!lines.includes('Wedding Reels')) lines.push('Wedding Reels');
+      const sameDayLine = `${evLabel(ev)} Same-Day Edit`;
+      if(!lines.includes(sameDayLine)) lines.push(sameDayLine);
     }
   }
   const aset = addonState[ev.id] || new Set();
@@ -2257,8 +2263,8 @@ function buildEventDeliverables(ev){
     const line = `Extended ${extendedFilmEventName(ev)} Film`;
     if(!lines.includes(line)) lines.push(line);
   }
-  if(aset.has('Same-Day Edit')) lines.push(`${evLabel(ev)} Same-Day Edit`);
-  if(aset.has('Reels')) lines.push(`${evLabel(ev)} Reel`);
+  if(aset.has('Same-Day Edit') && !lines.includes(`${evLabel(ev)} Same-Day Edit`)) lines.push(`${evLabel(ev)} Same-Day Edit`);
+  if(aset.has('Reels') && !lines.includes(`${evLabel(ev)} Reels`)) lines.push(`${evLabel(ev)} Reels`);
   return lines;
 }
 
