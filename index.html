@@ -2680,15 +2680,18 @@ async function buildQuotationDoc(){
     doc.autoTable({
       startY: y,
       head: [['Event','Date','Location','Allocated Team']],
-      // The Maternity/Pre-Wedding session/outfit note (if any) is included
-      // as the LAST line of this same cell's text, purely so autoTable
-      // calculates the correct row height for it. It's drawn in the normal
-      // ink color by autoTable's own renderer first, then didDrawCell below
-      // repaints just that last line in gold/italic on top — see there for
-      // why it's done this way instead of a separate column/cell.
+      // The Maternity/Pre-Wedding session/outfit note (if any) is reserved
+      // as a BLANK last line here — a single space, not the real tagline
+      // text — purely so autoTable calculates the correct row height for
+      // an extra line. Leaving it blank means there's nothing underneath
+      // for didDrawCell below to have to precisely cover; it just paints
+      // the real gold/italic text into that empty reserved space, with no
+      // risk of a sliver of the original text peeking out from a slightly
+      // imperfect overlay (which is what happened when this used to redraw
+      // on top of real ink-colored text instead).
       body: schedule.map(s=>{
         const teamLines = s.team.length ? s.team.slice() : ['-'];
-        if(s.teamTagline) teamLines.push(s.teamTagline);
+        if(s.teamTagline) teamLines.push(' ');
         return [s.name, s.date, s.location, teamLines.join('\n')];
       }),
       theme: 'grid',
@@ -2701,15 +2704,11 @@ async function buildQuotationDoc(){
         2:{cellWidth:30},
         3:{cellWidth:'auto'},
       },
-      // Repaints the Allocated Team cell's LAST line in gold/italic when
-      // that row has a session/outfit tagline (Maternity/Pre-Wedding only).
-      // We can't mix two text colors in one autoTable cell natively, so we
-      // let the default renderer draw everything in ink first (this keeps
-      // row-height/wrapping/pagination all correctly handled by autoTable
-      // itself), then paint a same-size beige/white patch over just that
-      // last line and redraw it in gold on top — using doc.getTextDimensions()
-      // for the line height rather than a guessed constant, so it tracks
-      // the actual font/size/line-spacing autoTable itself is using.
+      // Draws the Maternity/Pre-Wedding session/outfit tagline in gold/
+      // italic into the blank line reserved for it above (see body:
+      // above). Nothing to erase or cover here — the line was left empty
+      // on purpose, so this only ever adds ink, never overlaps or leaves a
+      // ghost of other text behind.
       didDrawCell: function(data){
         if(data.column.index !== 3 || data.row.section !== 'body') return;
         const rowInfo = schedule[data.row.index];
@@ -2721,9 +2720,6 @@ async function buildQuotationDoc(){
         const padTop = data.cell.padding('top');
         const padLeft = data.cell.padding('left');
         const lineTopY = data.cell.y + padTop + (numTeamLines * lineH);
-        const isAltRow = data.row.index % 2 === 1;
-        doc.setFillColor(...(isAltRow ? beige : [255,255,255]));
-        doc.rect(data.cell.x, lineTopY, data.cell.width, lineH, 'F');
         doc.setFont(BODY, 'italic');
         doc.setTextColor(...gold);
         doc.text(rowInfo.teamTagline, data.cell.x + padLeft, lineTopY + lineH*0.78);
