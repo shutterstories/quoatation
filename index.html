@@ -1062,22 +1062,22 @@ const weddingEvents = [
     ],
     addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}, {name:'Extended Video Film', price:5000, ownerOnly:true}]
   },
-  { id:'haldi1', name:'Bride', fullName:'Haldi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'haldi2', name:'Groom', fullName:'Haldi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'muhurtha1', name:'Bride', fullName:'Muhurtha Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'muhurtha2', name:'Groom', fullName:'Muhurtha Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'mehendi1', name:'Bride', fullName:'Mehendi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'mehendi2', name:'Groom', fullName:'Mehendi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'roce1', name:'Bride', fullName:'Roce Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'roce2', name:'Groom', fullName:'Roce Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}] },
-  { id:'reception', name:'Reception', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: baseAddons(20000) },
-  { id:'engagement', name:'Engagement', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000), albumPhotoCount: 100 },
+  { id:'haldi1', name:'Bride', fullName:'Haldi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'haldi2', name:'Groom', fullName:'Haldi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'muhurtha1', name:'Bride', fullName:'Muhurtha Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'muhurtha2', name:'Groom', fullName:'Muhurtha Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'mehendi1', name:'Bride', fullName:'Mehendi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'mehendi2', name:'Groom', fullName:'Mehendi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'roce1', name:'Bride', fullName:'Roce Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'roce2', name:'Groom', fullName:'Roce Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
+  { id:'reception', name:'Reception', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000}, {name:'Album', price:20000}], albumPhotoCount: 100 },
+  { id:'engagement', name:'Engagement', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000}], albumPhotoCount: 100 },
 ];
 
 const otherEvents = [
-  { id:'birthday', name:'Birthday', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000},{name:'Album',price:15000}], addons: baseAddons(20000, 10000) },
-  { id:'babyshower', name:'Babyshower', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: baseAddons(20000), albumPhotoCount: 100 },
+  { id:'birthday', name:'Birthday', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000},{name:'Album',price:15000}], addons: [...baseAddons(20000, 10000), {name:'Extended Video Film', price:5000}] },
+  { id:'babyshower', name:'Babyshower', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000},{name:'Album',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000}], albumPhotoCount: 100 },
   {
     id:'maternity_photo', name:'Photography', fullName:'Maternity Photography', type:'package',
     options:[
@@ -2185,9 +2185,12 @@ function getAlbumLines(ev){
     }
     return [];
   } else {
+    // Album can be a toggleable role (Engagement, Birthday, Babyshower) or
+    // an optional add-on (Haldi, Mehendi, Muhurtha, Sangeet, Roce, Reception)
+    // depending on the event — check both.
     const set = state[ev.id] || new Set();
     const photoCount = ev.albumPhotoCount || 150;
-    if(set.has('Album')) return [`${evLabel(ev)} Photo Album (${photoCount} Client-Selected Photos)`];
+    if(set.has('Album') || aset.has('Album')) return [`${evLabel(ev)} Photo Album (${photoCount} Client-Selected Photos)`];
     return [];
   }
 }
