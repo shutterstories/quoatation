@@ -1098,7 +1098,7 @@ const otherEvents = [
     id:'prewedding_photo', name:'Photography', fullName:'Pre-Wedding Photography', type:'package',
     options:[
       {name:'Option 1 — Single Session (1 Wear)', price:10000, includes:['1 Photographer']},
-      {name:'Option 2 — One Day (2/3 Wears)', price:15000, includes:['1 Photographer'], tagline:'Ideal for couples who want more outfit changes and locations in one day.'},
+      {name:'Option 2 — One Day (2 Wears)', price:15000, includes:['1 Photographer'], tagline:'Ideal for couples who want more outfit changes and locations in one day.'},
     ],
     addons: baseAddons(20000)
   },
@@ -1106,7 +1106,7 @@ const otherEvents = [
     id:'prewedding_photocine', name:'Photography & Cinematography', fullName:'Pre-Wedding Photography & Cinematography', type:'package',
     options:[
       {name:'Option 1 — Single Session (1 Wear)', price:22000, includes:['1 Photographer','1 Cinematographer']},
-      {name:'Option 2 — One Day (2/3 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer'], tagline:'Perfect for couples who want a cinematic pre-wedding story across a full day.'},
+      {name:'Option 2 — One Day (2 Wears)', price:35000, includes:['1 Photographer','1 Cinematographer'], tagline:'Perfect for couples who want a cinematic pre-wedding story across a full day.'},
     ],
     addons: baseAddons(20000)
   },
@@ -2026,7 +2026,7 @@ function getSessionOutfitTagline(ev){
   if(idx===null || idx===undefined) return null;
   const optName = ev.options[idx].name;
   if(optName.startsWith('Option 1')) return 'Single session, 1 outfit';
-  if(optName.startsWith('Option 2')) return 'One-day session, 2/3 outfits';
+  if(optName.startsWith('Option 2')) return 'One day session, 2 outfits';
   return null;
 }
 
@@ -2883,7 +2883,7 @@ async function buildQuotationDoc(){
         const numTeamLines = rowInfo.team.length ? rowInfo.team.length : 1;
         const padTop = data.cell.padding('top');
         const padLeft = data.cell.padding('left');
-        const lineTopY = data.cell.y + padTop + (numTeamLines * lineH);
+        const lineTopY = data.cell.y + padTop + (numTeamLines * lineH) + 1.3;
         doc.setFont(BODY, 'italic');
         doc.setTextColor(...inkSoft);
         doc.text(rowInfo.teamTagline, data.cell.x + padLeft, lineTopY + lineH*0.78);
