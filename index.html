@@ -3148,8 +3148,12 @@ async function shareOrDownloadPDF(triggerWhatsApp){
   if(SHEET_WEBHOOK_URL && (usedAccessCode !== 'OWNER-BYPASS' || ownerTaggedWithClient)){
     btn.textContent = 'Saving details…';
     const schedule = collectSchedule();
-    const pdfDataUri = doc.output('datauristring');
-    const pdfBase64 = pdfDataUri.split(',')[1];
+    // The PDF itself is no longer sent to the sheet — as the document grew
+    // to include more photos (now ~860KB, ~1.18 million characters once
+    // base64-encoded), it badly exceeded Google Sheets' 50,000-character
+    // per-cell limit, which was silently failing the sheet write (the
+    // fetch below uses no-cors + a silent catch, so there was no visible
+    // error). The sheet only ever needed the client/event details anyway.
     await logToSheet({
       stage: 'submission',
       clientName,
@@ -3157,8 +3161,7 @@ async function shareOrDownloadPDF(triggerWhatsApp){
       accessCode: usedAccessCode,
       events: lines.map(l=>l.label).join(', '),
       eventDates: schedule.map(s=>`${s.name}: ${s.date}`).join(', '),
-      total: fmt(total),
-      pdfBase64
+      total: fmt(total)
     });
   }
 
