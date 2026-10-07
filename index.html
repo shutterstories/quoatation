@@ -424,13 +424,13 @@
 </head>
 <body>
 
-  <div id="gate" style="position:fixed; inset:0; z-index:200; background:linear-gradient(180deg, #0A1B33 0%, #122A4D 100%); display:flex; align-items:center; justify-content:center; padding:24px;">
+  <div id="gate" style="position:fixed; inset:0; z-index:2147483000; background:linear-gradient(180deg, #0A1B33 0%, #122A4D 100%); display:flex; align-items:center; justify-content:center; padding:24px;">
     <div style="max-width:380px; width:100%; background:#FFFFFF; border-radius:16px; padding:28px 24px; box-shadow:0 20px 50px rgba(0,0,0,.35);">
       <div style="text-align:center; margin-bottom:18px;">
         <div style="letter-spacing:5px; font-size:10.5px; color:#C6A15B; text-transform:uppercase; font-weight:500;">Shutter Stories</div>
         <div id="gate-title" style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:26px; color:#0A1B33; margin-top:6px;">Access Required</div>
         <div id="gate-subtitle" style="font-size:12.5px; color:#5B6072; margin-top:6px;">Please enter your name and WhatsApp number to access your quotation form</div>
-        <div style="font-size:9.5px; color:#B4B2A9; margin-top:4px;">Version 7 Oct 2026, 20:15</div>
+        <div style="font-size:9.5px; color:#B4B2A9; margin-top:4px;">Version 7 Oct 2026, 21:05</div>
       </div>
 
       <!-- STEP 0: Access Code -->
@@ -855,6 +855,30 @@ document.getElementById('gate-code').addEventListener('keydown', (e)=>{
 });
 gateShowStep('code');
 
+// Safety net for desktop browsers: if some third-party element (for example
+// the MSG91 widget or a browser extension) sits invisibly on top of the gate
+// and swallows the mouse click, work out from the click position which gate
+// button was actually clicked and trigger it ourselves.
+(function(){
+  const gateButtonIds = ['gate-code-submit','owner-fields-continue','gate-submit','gate-verify'];
+  window.addEventListener('click', function(e){
+    const gate = document.getElementById('gate');
+    if(!gate || gate.style.display === 'none') return;
+    for(const id of gateButtonIds){
+      const b = document.getElementById(id);
+      if(!b || b.offsetParent === null) continue;
+      const r = b.getBoundingClientRect();
+      const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      if(inside && e.target !== b && !b.contains(e.target)){
+        e.stopPropagation();
+        e.preventDefault();
+        b.click();
+        return;
+      }
+    }
+  }, true);
+})();
+
 // Owner bypass, step 2: optional client name/number, then unlock straight away
 document.getElementById('owner-fields-continue').addEventListener('click', ()=>{
   const nameVal = document.getElementById('owner-client-name').value.trim();
@@ -1080,8 +1104,4 @@ const weddingEvents = [
     addons: [...baseAddons(30000, undefined, 8000, 5000), {name:'Additional Album', price:20000, note:'80 pages album, 250 photos • ₹200 per extra page'}, {name:'Extended Video Film', price:5000, ownerOnly:true}]
   },
   { id:'haldi1', name:'Bride', fullName:'Haldi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'haldi2', name:'Groom', fullName:'Haldi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'muhurtha1', name:'Bride', fullName:'Muhurtha Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'muhurtha2', name:'Groom', fullName:'Muhurtha Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'mehendi1', name:'Bride', fullName:'Mehendi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'mehendi2', name:'Groom', fullName:'Mehendi Groom', type:'roles', roles:[{name:'Photographer',price:10
+  { id:'haldi2', name:'Groom', fullName:'Haldi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Album', pri
