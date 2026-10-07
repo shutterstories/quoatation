@@ -463,7 +463,7 @@
         <div style="letter-spacing:5px; font-size:10.5px; color:#C6A15B; text-transform:uppercase; font-weight:500;">Shutter Stories</div>
         <div id="gate-title" style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:26px; color:#0A1B33; margin-top:6px;">Access Required</div>
         <div id="gate-subtitle" style="font-size:12.5px; color:#5B6072; margin-top:6px;">Please enter your name and WhatsApp number to access your quotation form</div>
-        <div style="font-size:9.5px; color:#B4B2A9; margin-top:4px;">Version 8 Oct 2026, 01:45</div>
+        <div style="font-size:9.5px; color:#B4B2A9; margin-top:4px;">Version 8 Oct 2026, 02:10</div>
       </div>
 
       <!-- STEP 0: Access Code -->
@@ -2063,6 +2063,23 @@ function maybeAutoCollapse(evId){
   return;
 }
 
+// Cover-page subtitle: stays "Wedding" whenever any wedding-side event
+// (Wedding, Haldi, Muhurtha, Mehendi, Sangeet, Roce, Reception, Engagement)
+// is selected. Otherwise it names what was actually selected, e.g.
+// "Babyshoot", "Birthday & Babyshoot", "Pre-Wedding", "Maternity".
+function getCoverPackageName(){
+  const weddingIds = new Set(weddingEvents.map(e=>e.id));
+  const active = allEvents.filter(isEventActive);
+  if(active.length === 0 || active.some(ev=>weddingIds.has(ev.id))) return 'Wedding';
+  const names = [];
+  otherCardGroups.forEach(g=>{
+    if(active.some(ev=>g.members.includes(ev.id)) && !names.includes(g.label)) names.push(g.label);
+  });
+  if(names.length === 0) return 'Wedding';
+  if(names.length === 1) return names[0];
+  return names.slice(0,-1).join(', ') + ' & ' + names[names.length-1];
+}
+
 function isEventActive(ev){
   const mainActive = ev.type==='roles' ? (state[ev.id] && state[ev.id].size>0) : (state[ev.id]!==null && state[ev.id]!==undefined);
   const aset = addonState[ev.id] || new Set();
@@ -2823,7 +2840,7 @@ async function buildQuotationDoc(){
     doc.setTextColor(...inkSoft);
     doc.setFont(BODY,'normal');
     doc.setFontSize(9.5);
-    doc.text('Wedding Package & Costing — Shutter Stories', 8, cy);
+    doc.text(getCoverPackageName() + ' Package & Costing — Shutter Stories', 8, cy);
     cy += 6;
     doc.setFontSize(8.5);
     doc.text('+91 99640 52479', 8, cy);
