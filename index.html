@@ -784,7 +784,7 @@ if(gateCodeToggle){
   });
 }
 
-document.getElementById('gate-code-submit').addEventListener('click', ()=>{
+function handleGateCodeSubmit(){
   const codeVal = document.getElementById('gate-code').value.trim().toUpperCase();
   const errEl = document.getElementById('gate-code-error');
   const btn = document.getElementById('gate-code-submit');
@@ -836,7 +836,20 @@ document.getElementById('gate-code-submit').addEventListener('click', ()=>{
       errEl.textContent = 'Could not verify code right now. Please check your connection and try again.';
       errEl.style.display = 'block';
     });
+}
+
+document.getElementById('gate-code-submit').addEventListener('click', ()=>{
+  try{ handleGateCodeSubmit(); }
+  catch(e){
+    const errEl = document.getElementById('gate-code-error');
+    errEl.textContent = 'Something went wrong (' + (e && e.message ? e.message : 'unknown error') + '). Please refresh the page and try again.';
+    errEl.style.display = 'block';
+  }
 });
+document.getElementById('gate-code').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('gate-code-submit').click(); }
+});
+gateShowStep('code');
 
 // Owner bypass, step 2: optional client name/number, then unlock straight away
 document.getElementById('owner-fields-continue').addEventListener('click', ()=>{
@@ -1068,6 +1081,4 @@ const weddingEvents = [
   { id:'muhurtha2', name:'Groom', fullName:'Muhurtha Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:15000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
   { id:'mehendi1', name:'Bride', fullName:'Mehendi Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
   { id:'mehendi2', name:'Groom', fullName:'Mehendi Groom', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price:15000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'roce1', name:'Bride', fullName:'Roce Bride', type:'roles', roles:[{name:'Photographer',price:10000},{name:'Cinematographer',price:20000}], addons: [...baseAddons(20000), {name:'Extended Video Film', price:5000, ownerOnly:true}, {name:'Album', price:12000}], albumPhotoCount: 50 },
-  { id:'roce2', name:'Groom', fullName:'Roce Gr
+  { id:'sangeet', name:'Sangeet', type:'roles', roles:[{name:'Photographer',price
